@@ -3,6 +3,9 @@ import "./Dashboard.css";
 import MyProfile from "./myprofile";
 import EnrolledCourses from "./EnrolledCourses";
 import Reviews from "./reviews";
+import Wishlist from "./wishlist";
+import MyQuizAttempts from "./myquizattempts";
+import OrderHistory from "./orderhistory";
 
 const SIDEBAR_MAIN = [
   { id: "dashboard",        icon: "📊", label: "Dashboard" },
@@ -122,7 +125,10 @@ export default function Dashboard() {
 
           {active === "my-profile" && <MyProfile />}
           {active === "enrolled-courses" && <EnrolledCourses />}
-            {active === "reviews" && <Reviews />}
+          {active === "reviews" && <Reviews />}
+          {active === "wishlist" && <Wishlist />}
+          {active === "quiz-attempts" && <MyQuizAttempts />}
+          {active === "order-history" && <OrderHistory />}
         </main>
 
       </div>

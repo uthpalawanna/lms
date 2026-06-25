@@ -1,17 +1,15 @@
 import React, { useState } from "react";
 
 const TABS = [
-  { id: "received", label: "Received (0)" },
+  
 ];
 
-export default function Reviews() {
-  // 1. Fixed the default active state to match our tab ID
+export default function Wishlist() {
   const [activeTab, setActiveTab] = useState("received");
 
   return (
     <div className="ec-container">
-      {/* 2. Made the main title static "Reviews" to match the screenshot */}
-      <h2 className="db-section-title">Reviews</h2>
+      <h2 className="db-section-title">Wishlist</h2>
 
       <div className="ec-tabs-header">
         {TABS.map((tab) => (
