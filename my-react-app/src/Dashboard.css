@@ -1,0 +1,229 @@
+.db-page {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: #dde1ea;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.db-profile-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.1rem 2rem;
+  background: #dde1ea;
+}
+
+.db-profile-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.db-avatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: #4a60c8;
+  color: #fff;
+  font-size: 24px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.db-username {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin-bottom: 4px;
+  letter-spacing: 0.01em;
+}
+
+.db-stars { display: flex; gap: 3px; }
+.db-star  { color: #f5a623; font-size: 16px; }
+
+.db-new-course-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 18px;
+  border: 1.5px solid #4a60c8;
+  border-radius: 6px;
+  color: #4a60c8;
+  background: transparent;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+.db-new-course-btn:hover { background: rgba(74, 96, 200, 0.07); }
+
+.db-divider {
+  border: none;
+  border-top: 1px solid #c8cdd8;
+  margin: 0 2rem;
+}
+
+.db-body {
+  display: flex;
+  flex: 1;
+  padding: 1.5rem 2rem;
+  gap: 1.5rem;
+  align-items: flex-start;
+}
+
+.db-sidebar {
+  width: 240px;
+  flex-shrink: 0;
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+}
+
+.db-sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 10px 14px;
+  font-size: 14px;
+  color: #3a3a5c;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  width: 100%;
+  text-align: left;
+  font-family: inherit;
+  border-radius: 6px;
+  transition: background 0.12s, color 0.12s;
+  margin-bottom: 1px;
+}
+.db-sidebar-item:hover {
+  background: rgba(74, 96, 200, 0.08);
+  color: #4a60c8;
+}
+.db-sidebar-item.active {
+  background: #4a60c8;
+  color: #fff;
+  font-weight: 500;
+}
+
+.db-sidebar-item .MuiSvgIcon-root {
+  font-size: 19px;
+}
+
+.db-si-icon {
+  font-size: 17px;
+  width: 22px;
+  text-align: center;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.db-sidebar-divider {
+  height: 1px;
+  background: #c8cdd8;
+  margin: 10px 0;
+}
+
+.db-sidebar-section-label {
+  font-size: 12px;
+  color: #9a9ab0;
+  font-weight: 500;
+  padding: 2px 14px 6px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.db-main { flex: 1; }
+
+.db-section-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1a1a2e;
+  margin-bottom: 1.25rem;
+}
+
+.db-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+.db-stat-card {
+  background: #fff;
+  border-radius: 10px;
+  border: 1px solid #e2e5ef;
+  padding: 2rem 1rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: 160px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.db-stat-icon-wrap {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: #eef0f8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  margin-bottom: 4px;
+}
+
+.db-stat-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1a1a2e;
+  line-height: 1;
+}
+.db-stat-value.accent { color: #4a60c8; }
+
+.db-stat-label {
+  font-size: 13px;
+  color: #888;
+}
+.db-stat-label.accent {
+  color: #4a60c8;
+  font-weight: 500;
+}
+
+@media (max-width: 900px) {
+  .db-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 680px) {
+  .db-body {
+    flex-direction: column;
+    padding: 1rem;
+  }
+  .db-sidebar {
+    width: 100%;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .db-sidebar-item {
+    width: auto;
+    flex: 1 1 auto;
+    justify-content: center;
+    font-size: 12px;
+    padding: 8px 10px;
+  }
+  .db-sidebar-divider { display: none; }
+  .db-sidebar-section-label { display: none; }
+  .db-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

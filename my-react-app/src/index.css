@@ -1,0 +1,130 @@
+.container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #eef0f8;
+  padding: 1rem;
+  font-family: 'Poppins', sans-serif;
+}
+
+.login-box {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 2.5rem 2.25rem;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.08);
+}
+
+.login-box h2 {
+  font-size: 24px;
+  font-weight: 700;
+  color: #111;
+  text-align: center;
+  margin: 0 0 1.75rem;
+}
+
+.input-group {
+  margin-bottom: 1rem;
+}
+
+.input-group input {
+  width: 100%;
+  padding: 10px 14px;
+  font-size: 14px;
+  border: 1px solid #d0d5dd;
+  border-radius: 8px;
+  outline: none;
+  color: #333;
+  font-family: inherit;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  box-sizing: border-box;
+}
+
+.input-group input:focus {
+  border-color: #3d56c8;
+  box-shadow: 0 0 0 3px rgba(61, 86, 200, 0.12);
+}
+
+.provider-link {
+  display: block;
+  font-size: 13px;
+  color: #3d56c8;
+  text-decoration: underline;
+  margin-bottom: 0.85rem;
+  cursor: pointer;
+}
+
+.options-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+}
+
+.remember-me {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  color: #555;
+  cursor: pointer;
+}
+
+.remember-me input[type="checkbox"] {
+  width: 15px;
+  height: 15px;
+  accent-color: #3d56c8;
+  flex-shrink: 0;
+  margin: 0;
+} /* ← Bug 1 fix: missing closing brace was here */
+
+.forgot-link {
+  font-size: 13px;
+  color: #3d56c8;
+  text-decoration: underline;
+  white-space: nowrap;
+}
+
+.signin-btn {
+  width: 100%;
+  padding: 11px;
+  background: #3d56c8;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  margin-bottom: 1rem;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.signin-btn:hover {
+  background: #2f44a8;
+}
+
+.signin-btn:active {
+  transform: scale(0.99);
+}
+
+.register-section {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  color: #555;
+}
+
+.register-section a {
+  color: #3d56c8;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.register-section a:hover {
+  text-decoration: underline;
+}
