@@ -1,6 +1,8 @@
 import { useState } from "react";
 import "./Dashboard.css";
 import MyProfile from "./myprofile";
+import EnrolledCourses from "./EnrolledCourses";
+import Reviews from "./reviews";
 
 const SIDEBAR_MAIN = [
   { id: "dashboard",        icon: "📊", label: "Dashboard" },
@@ -103,7 +105,6 @@ export default function Dashboard() {
         </aside>
 
         <main className="db-main">
-          {/* Conditional Rendering: Show stats ONLY if 'dashboard' is active */}
           {active === "dashboard" && (
             <>
               <h2 className="db-section-title">Dashboard</h2>
@@ -119,9 +120,9 @@ export default function Dashboard() {
             </>
           )}
 
-          {/* Conditional Rendering: Show profile ONLY if 'my-profile' is active */}
           {active === "my-profile" && <MyProfile />}
-          
+          {active === "enrolled-courses" && <EnrolledCourses />}
+            {active === "reviews" && <Reviews />}
         </main>
 
       </div>
