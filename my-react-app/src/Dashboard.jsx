@@ -1,5 +1,6 @@
 import { useState } from "react";
 import "./Dashboard.css";
+import MyProfile from "./myprofile";
 
 const SIDEBAR_MAIN = [
   { id: "dashboard",        icon: "📊", label: "Dashboard" },
@@ -37,6 +38,7 @@ export default function Dashboard() {
   const [active, setActive] = useState("dashboard");
 
   return (
+    
     <div className="db-page">
 
       <div className="db-profile-bar">
@@ -101,16 +103,25 @@ export default function Dashboard() {
         </aside>
 
         <main className="db-main">
-          <h2 className="db-section-title">Dashboard</h2>
-          <div className="db-stats-grid">
-            {STATS.map(({ icon, label, value, accent }) => (
-              <div key={label} className="db-stat-card">
-                <div className="db-stat-icon-wrap">{icon}</div>
-                <div className={`db-stat-value${accent ? " accent" : ""}`}>{value}</div>
-                <div className={`db-stat-label${accent ? " accent" : ""}`}>{label}</div>
+          {/* Conditional Rendering: Show stats ONLY if 'dashboard' is active */}
+          {active === "dashboard" && (
+            <>
+              <h2 className="db-section-title">Dashboard</h2>
+              <div className="db-stats-grid">
+                {STATS.map(({ icon, label, value, accent }) => (
+                  <div key={label} className="db-stat-card">
+                    <div className="db-stat-icon-wrap">{icon}</div>
+                    <div className={`db-stat-value${accent ? " accent" : ""}`}>{value}</div>
+                    <div className={`db-stat-label${accent ? " accent" : ""}`}>{label}</div>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+            </>
+          )}
+
+          {/* Conditional Rendering: Show profile ONLY if 'my-profile' is active */}
+          {active === "my-profile" && <MyProfile />}
+          
         </main>
 
       </div>

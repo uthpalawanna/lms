@@ -227,3 +227,41 @@
     grid-template-columns: repeat(2, 1fr);
   }
 }
+
+.db-profile-content {
+  padding: 0.5rem 0;
+  width: 100%;
+}
+
+.db-profile-subtitle {
+  font-size: 18px;
+  font-weight: 500;
+  color: #1a1a2e;
+  margin-bottom: 2rem;
+  margin-top: 0;
+}
+
+.db-profile-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem; 
+  max-width: 600px;
+}
+
+.db-profile-row {
+  display: flex;
+  align-items: flex-start;
+}
+
+.db-profile-label {
+  width: 220px; 
+  color: #5c6b8a; 
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.db-profile-value {
+  color: #1a1a2e; 
+  font-size: 14px;
+  font-weight: 400;
+}
