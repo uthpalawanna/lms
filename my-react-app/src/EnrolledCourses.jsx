@@ -7,7 +7,7 @@ const TABS = [
 ];
 
 export default function EnrolledCourses() {
-  const [activeTab, setActiveTab] = useState("completed");
+  const [activeTab, setActiveTab] = useState("enrolled");
 
   const activeTabLabel = TABS.find((tab) => tab.id === activeTab)?.label;
 
