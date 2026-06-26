@@ -1,20 +1,21 @@
 import React, { useState } from "react";
 
-const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+const MONTHS = [
+  "January", "February", "March", "April", "May", "June", 
+  "July", "August", "September", "October", "November", "December"
+];
 
 export default function OrderHistory() {
   const [activeFilter, setActiveFilter] = useState("today");
-  const [isCalendarOpen, setIsCalendarOpen] = useState(true);
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
-  const [viewDate, setViewDate] = useState(new Date(2026, 5)); // June (0-indexed, so 5 is June) 2026
-  
-  const [selectedDate, setSelectedDate] = useState(new Date(2026, 5, 25)); 
+  const [viewDate, setViewDate] = useState(new Date()); 
+  const [selectedDate, setSelectedDate] = useState(new Date()); 
 
   const currentYear = viewDate.getFullYear();
   const currentMonth = viewDate.getMonth();
 
   const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-  
   
   let firstDayIndex = new Date(currentYear, currentMonth, 1).getDay();
   firstDayIndex = firstDayIndex === 0 ? 6 : firstDayIndex - 1;
@@ -28,34 +29,35 @@ export default function OrderHistory() {
 
   const formattedDate = selectedDate 
     ? `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`
-    : "Y-M-d - Y-M-d";
+    : "Y-M-d -- Y-M-d";
 
   return (
     <div className="oh-container">
       <h2 className="db-section-title">Order History</h2>
 
       <div className="oh-filter-bar">
+        
         <div className="oh-quick-filters">
-          {["today", "monthly", "yearly"].map((filter) => (
+          {["Today", "Monthly", "Yearly"].map((filter) => (
             <button
-              key={filter}
-              className={`oh-filter-btn ${activeFilter === filter ? "active" : ""}`}
-              onClick={() => setActiveFilter(filter)}
+              key={filter.toLowerCase()}
+              className={`oh-filter-btn ${activeFilter === filter.toLowerCase() ? "active" : ""}`}
+              onClick={() => setActiveFilter(filter.toLowerCase())}
             >
-              {filter.charAt(0).toUpperCase() + filter.slice(1)}
+              {filter}
             </button>
           ))}
         </div>
 
         <div className="oh-date-wrapper">
           <div 
-            className="oh-date-input" 
+            className="oh-date-input"
             onClick={() => setIsCalendarOpen(!isCalendarOpen)}
           >
             <span className={`oh-date-placeholder ${selectedDate ? "active-text" : ""}`}>
               {formattedDate}
             </span>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a0aabf" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a0aabf" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
               <line x1="16" y1="2" x2="16" y2="6"></line>
               <line x1="8" y1="2" x2="8" y2="6"></line>

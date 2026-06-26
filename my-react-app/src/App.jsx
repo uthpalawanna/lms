@@ -4,6 +4,9 @@ import myprofile from "./myprofile";
 import EnrolledCourses from "./EnrolledCourses";
 import reviews from "./reviews";
 import wishlist from "./wishlist";
+import orderhistory from "./orderhistory";
+import questionanswer from "./QuestionAnswer";
+import mycourses from "./MyCourses";
 
 function App() {
   return <Dashboard />;

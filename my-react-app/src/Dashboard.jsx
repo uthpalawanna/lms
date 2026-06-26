@@ -6,6 +6,9 @@ import Reviews from "./reviews";
 import Wishlist from "./wishlist";
 import MyQuizAttempts from "./myquizattempts";
 import OrderHistory from "./orderhistory";
+import QuestionAnswer from "./QuestionAnswer";
+import MyCourses from "./MyCourses";
+import CourseDetails from "./CourseDetail";
 
 const SIDEBAR_MAIN = [
   { id: "dashboard",        icon: "📊", label: "Dashboard" },
@@ -15,7 +18,7 @@ const SIDEBAR_MAIN = [
   { id: "quiz-attempts",    icon: "🧩", label: "My Quiz Attempts" },
   { id: "wishlist",         icon: "🔖", label: "Wishlist" },
   { id: "order-history",    icon: "🛒", label: "Order History" },
-  { id: "qa",               icon: "💬", label: "Question & Answer" },
+  { id: "question-answer", icon: "💬", label: "Question & Answer" },
 ];
 
 const SIDEBAR_INSTRUCTOR = [
@@ -129,6 +132,9 @@ export default function Dashboard() {
           {active === "wishlist" && <Wishlist />}
           {active === "quiz-attempts" && <MyQuizAttempts />}
           {active === "order-history" && <OrderHistory />}
+          {active === "question-answer" && <QuestionAnswer />}
+          {active === "my-courses" && <MyCourses onCourseClick={() => setActive("course-details")} />}
+          {active === "course-details" && <CourseDetails onBack={() => setActive("my-courses")} />}
         </main>
 
       </div>
