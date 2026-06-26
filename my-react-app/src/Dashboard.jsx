@@ -9,53 +9,52 @@ import OrderHistory from "./orderhistory";
 import QuestionAnswer from "./QuestionAnswer";
 import MyCourses from "./MyCourses";
 import CourseDetails from "./CourseDetail";
+import InstructorProfile from "./InstructorProfile";
 
 const SIDEBAR_MAIN = [
-  { id: "dashboard",        icon: "📊", label: "Dashboard" },
-  { id: "my-profile",       icon: "👤", label: "My Profile" },
+  { id: "dashboard", icon: "📊", label: "Dashboard" },
+  { id: "my-profile", icon: "👤", label: "My Profile" },
   { id: "enrolled-courses", icon: "🎓", label: "Enrolled Courses" },
-  { id: "reviews",          icon: "⭐", label: "Reviews" },
-  { id: "quiz-attempts",    icon: "🧩", label: "My Quiz Attempts" },
-  { id: "wishlist",         icon: "🔖", label: "Wishlist" },
-  { id: "order-history",    icon: "🛒", label: "Order History" },
+  { id: "reviews", icon: "⭐", label: "Reviews" },
+  { id: "quiz-attempts", icon: "🧩", label: "My Quiz Attempts" },
+  { id: "wishlist", icon: "🔖", label: "Wishlist" },
+  { id: "order-history", icon: "🛒", label: "Order History" },
   { id: "question-answer", icon: "💬", label: "Question & Answer" },
 ];
 
 const SIDEBAR_INSTRUCTOR = [
-  { id: "my-courses",    icon: "🚀", label: "My Courses" },
+  { id: "my-courses", icon: "🚀", label: "My Courses" },
   { id: "announcements", icon: "📢", label: "Announcements" },
-  { id: "withdrawals",   icon: "💼", label: "Withdrawals" },
-  { id: "quiz-inst",     icon: "❓", label: "Quiz Attempts" },
+  { id: "withdrawals", icon: "💼", label: "Withdrawals" },
+  { id: "quiz-inst", icon: "❓", label: "Quiz Attempts" },
 ];
 
 const SIDEBAR_BOTTOM = [
   { id: "settings", icon: "⚙️", label: "Settings" },
-  { id: "logout",   icon: "🚪", label: "Logout"   },
+  { id: "logout", icon: "🚪", label: "Logout" },
 ];
 
 const STATS = [
-  { icon: "📖", label: "Enrolled Courses",  value: "0",      accent: false },
-  { icon: "🎓", label: "Active Courses",    value: "0",      accent: false },
-  { icon: "🏆", label: "Completed Courses", value: "0",      accent: false },
-  { icon: "👥", label: "Total Students",    value: "0",      accent: true  },
-  { icon: "📚", label: "Total Courses",     value: "0",      accent: true  },
-  { icon: "💰", label: "Total Earnings",    value: "Rs0.00", accent: false },
+  { icon: "📖", label: "Enrolled Courses", value: "0", accent: false },
+  { icon: "🎓", label: "Active Courses", value: "0", accent: false },
+  { icon: "🏆", label: "Completed Courses", value: "0", accent: false },
+  { icon: "👥", label: "Total Students", value: "0", accent: true },
+  { icon: "📚", label: "Total Courses", value: "0", accent: true },
+  { icon: "💰", label: "Total Earnings", value: "Rs0.00", accent: false },
 ];
 
 export default function Dashboard() {
   const [active, setActive] = useState("dashboard");
 
   return (
-    
     <div className="db-page">
-
       <div className="db-profile-bar">
         <div className="db-profile-left">
           <div className="db-avatar">D</div>
           <div>
             <div className="db-username">DINESHAN</div>
             <div className="db-stars">
-              {[1, 2, 3, 4, 5].map(i => (
+              {[1, 2, 3, 4, 5].map((i) => (
                 <span key={i} className="db-star">☆</span>
               ))}
             </div>
@@ -67,9 +66,7 @@ export default function Dashboard() {
       <hr className="db-divider" />
 
       <div className="db-body">
-
         <aside className="db-sidebar">
-
           {SIDEBAR_MAIN.map(({ id, icon, label }) => (
             <button
               key={id}
@@ -107,7 +104,6 @@ export default function Dashboard() {
               {label}
             </button>
           ))}
-
         </aside>
 
         <main className="db-main">
@@ -134,9 +130,14 @@ export default function Dashboard() {
           {active === "order-history" && <OrderHistory />}
           {active === "question-answer" && <QuestionAnswer />}
           {active === "my-courses" && <MyCourses onCourseClick={() => setActive("course-details")} />}
-          {active === "course-details" && <CourseDetails onBack={() => setActive("my-courses")} />}
+          {active === "course-details" && (
+            <CourseDetails
+              onBack={() => setActive("my-courses")}
+              onAuthorClick={() => setActive("instructor-profile")}
+            />
+          )}
+          {active === "instructor-profile" && <InstructorProfile />}
         </main>
-
       </div>
     </div>
   );

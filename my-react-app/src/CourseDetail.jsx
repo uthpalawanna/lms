@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-export default function CourseDetails({ onBack }) {
+export default function CourseDetails({ onBack, onAuthorClick }) {
   const [activeTab, setActiveTab] = useState("info");
 
   return (
@@ -131,7 +131,9 @@ export default function CourseDetails({ onBack }) {
             <h3 className="cd-card-title" style={{ fontSize: "14px", marginBottom: "1rem" }}>A course by</h3>
             <div className="cd-instructor">
               <div className="cd-avatar">D</div>
-              <span className="cd-author-name">DINESHAN</span>
+              <span className="cd-author-name" onClick={onAuthorClick} style={{ cursor: "pointer" }}>
+                DINESHAN
+              </span>
             </div>
           </div>
         </div>
