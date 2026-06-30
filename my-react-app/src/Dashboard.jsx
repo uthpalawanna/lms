@@ -10,6 +10,7 @@ import QuestionAnswer from "./QuestionAnswer";
 import MyCourses from "./MyCourses";
 import CourseDetails from "./CourseDetail";
 import InstructorProfile from "./InstructorProfile";
+import Announcements from "./Announcements";
 
 const SIDEBAR_MAIN = [
   { id: "dashboard", icon: "📊", label: "Dashboard" },
@@ -195,6 +196,7 @@ export default function Dashboard() {
             />
           )}
           {active === "instructor-profile" && <InstructorProfile />}
+          {active === "announcements" && <Announcements />}
         </main>
       </div>
     </div>
