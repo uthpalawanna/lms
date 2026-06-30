@@ -15,7 +15,9 @@
     "@mui/icons-material": "^9.1.1",
     "@mui/material": "^9.1.2",
     "react": "^19.2.7",
-    "react-dom": "^19.2.7"
+    "react-datepicker": "^9.1.0",
+    "react-dom": "^19.2.7",
+    "react-select": "^5.10.2"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.3.2",
