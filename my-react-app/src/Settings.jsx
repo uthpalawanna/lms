@@ -2,11 +2,79 @@ import React, { useState, useRef } from "react";
 
 const TABS = ["Profile", "Password", "Withdraw", "Social Profile", "Billing"];
 
-const BIO_TOOLS = [
-  { id: "bold", label: "B", style: { fontWeight: 700 } },
-  { id: "italic", label: "I", style: { fontStyle: "italic" } },
-  { id: "underline", label: "U", style: { textDecoration: "underline" } },
-];
+function PasswordTab() {
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  const handleReset = () => {
+    setError("");
+    setSuccess("");
+
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      setError("Please fill in all fields.");
+      return;
+    }
+    if (newPassword.length < 8) {
+      setError("New password must be at least 8 characters.");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setError("New password and confirmation do not match.");
+      return;
+    }
+
+    console.log({ currentPassword, newPassword });
+
+    setSuccess("Password updated successfully.");
+    setCurrentPassword("");
+    setNewPassword("");
+    setConfirmPassword("");
+  };
+
+  return (
+    <div className="settings-password-form">
+      <div className="settings-field settings-field-full">
+        <label>Current Password</label>
+        <input
+          type="password"
+          placeholder="Current Password"
+          value={currentPassword}
+          onChange={(e) => setCurrentPassword(e.target.value)}
+        />
+      </div>
+
+      <div className="settings-field settings-field-full">
+        <label>New Password</label>
+        <input
+          type="password"
+          placeholder="Type Password"
+          value={newPassword}
+          onChange={(e) => setNewPassword(e.target.value)}
+        />
+      </div>
+
+      <div className="settings-field settings-field-full">
+        <label>Re-type New Password</label>
+        <input
+          type="password"
+          placeholder="Type Password"
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+        />
+      </div>
+
+      {error && <p className="settings-password-error">{error}</p>}
+      {success && <p className="settings-password-success">{success}</p>}
+
+      <button className="settings-update-btn" onClick={handleReset}>
+        Reset Password
+      </button>
+    </div>
+  );
+}
 
 function BioToolbar() {
   return (
@@ -212,10 +280,107 @@ export default function Settings() {
       </div>
 
       {activeTab === "Profile" && <ProfileTab />}
-      {activeTab === "Password" && <PlaceholderTab name="Password" />}
-      {activeTab === "Withdraw" && <PlaceholderTab name="Withdraw" />}
+      {activeTab === "Password" && <PasswordTab />}
+      {activeTab === "Withdraw" && <WithdrawTab />}
       {activeTab === "Social Profile" && <PlaceholderTab name="Social Profile" />}
       {activeTab === "Billing" && <PlaceholderTab name="Billing" />}
     </div>
+  );
+}
+
+const WITHDRAW_METHODS = [
+  { id: "bank", label: "Bank Transfer", note: "Min withdraw Rs80.00" },
+];
+
+function WithdrawTab() {
+  const [method, setMethod] = useState("bank");
+  const [accountName, setAccountName] = useState("");
+  const [accountNumber, setAccountNumber] = useState("");
+  const [bankName, setBankName] = useState("");
+  const [iban, setIban] = useState("");
+  const [swift, setSwift] = useState("");
+  const [success, setSuccess] = useState("");
+
+  const handleSave = () => {
+    console.log({ method, accountName, accountNumber, bankName, iban, swift });
+    setSuccess("Withdrawal account saved.");
+  };
+
+  return (
+    <>
+      <h3 className="settings-subtitle">Select a withdraw method</h3>
+
+      <div className="settings-withdraw-methods">
+        {WITHDRAW_METHODS.map((m) => (
+          <label
+            key={m.id}
+            className={`settings-withdraw-method${method === m.id ? " active" : ""}`}
+          >
+            <input
+              type="radio"
+              name="withdraw-method"
+              value={m.id}
+              checked={method === m.id}
+              onChange={() => setMethod(m.id)}
+            />
+            <span className="settings-withdraw-method-text">
+              <span className="settings-withdraw-method-label">{m.label}</span>
+              <span className="settings-withdraw-method-note">{m.note}</span>
+            </span>
+          </label>
+        ))}
+      </div>
+
+      <div className="settings-form-grid">
+        <div className="settings-field">
+          <label>Account Name</label>
+          <input
+            type="text"
+            value={accountName}
+            onChange={(e) => setAccountName(e.target.value)}
+          />
+        </div>
+        <div className="settings-field">
+          <label>Account Number</label>
+          <input
+            type="text"
+            value={accountNumber}
+            onChange={(e) => setAccountNumber(e.target.value)}
+          />
+        </div>
+
+        <div className="settings-field">
+          <label>Bank Name</label>
+          <input
+            type="text"
+            value={bankName}
+            onChange={(e) => setBankName(e.target.value)}
+          />
+        </div>
+        <div className="settings-field">
+          <label>IBAN</label>
+          <input
+            type="text"
+            value={iban}
+            onChange={(e) => setIban(e.target.value)}
+          />
+        </div>
+
+        <div className="settings-field">
+          <label>BIC / SWIFT</label>
+          <input
+            type="text"
+            value={swift}
+            onChange={(e) => setSwift(e.target.value)}
+          />
+        </div>
+      </div>
+
+      {success && <p className="settings-password-success">{success}</p>}
+
+      <button className="settings-update-btn" onClick={handleSave}>
+        Save Withdrawal Account
+      </button>
+    </>
   );
 }
