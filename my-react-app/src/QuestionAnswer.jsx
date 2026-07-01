@@ -10,7 +10,7 @@ const SORT_OPTIONS = [
 ];
 
 export default function QuestionAnswer() {
-  const [isInstructor, setIsInstructor] = useState(true);
+  const [isInstructor, setIsInstructor] = useState(false);
   
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [selectedSort, setSelectedSort] = useState(SORT_OPTIONS[0]);
@@ -24,7 +24,7 @@ export default function QuestionAnswer() {
         </h2>
         
         <div className="qa-toggle-wrapper">
-          <span className={`qa-toggle-label ${!isInstructor ? 'active' : ''}`}>
+          <span className={`qa-toggle-label ${!isInstructor ? 'active-blue' : ''}`}>
             Student
           </span>
           <label className="qa-switch">
@@ -35,7 +35,7 @@ export default function QuestionAnswer() {
             />
             <span className="qa-slider"></span>
           </label>
-          <span className={`qa-toggle-label ${isInstructor ? 'active-blue' : ''}`}>
+          <span className={`qa-toggle-label ${isInstructor ? 'active' : ''}`}>
             Instructor
           </span>
         </div>
