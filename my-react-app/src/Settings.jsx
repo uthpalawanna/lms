@@ -75,7 +75,7 @@ const WITHDRAW_METHODS = [
 ];
 
 function WithdrawTab() {
-  const [method, setMethod] = useState("bank");
+  const [method, setMethod] = useState("");
   const [accountName, setAccountName] = useState("");
   const [accountNumber, setAccountNumber] = useState("");
   const [bankName, setBankName] = useState("");
@@ -113,38 +113,41 @@ function WithdrawTab() {
         ))}
       </div>
 
-      <div className="settings-form-grid">
-        <div className="settings-field">
-          <label>Account Name</label>
-          <input type="text" value={accountName} onChange={(e) => setAccountName(e.target.value)} />
-        </div>
-        <div className="settings-field">
-          <label>Account Number</label>
-          <input type="text" value={accountNumber} onChange={(e) => setAccountNumber(e.target.value)} />
-        </div>
-        <div className="settings-field">
-          <label>Bank Name</label>
-          <input type="text" value={bankName} onChange={(e) => setBankName(e.target.value)} />
-        </div>
-        <div className="settings-field">
-          <label>IBAN</label>
-          <input type="text" value={iban} onChange={(e) => setIban(e.target.value)} />
-        </div>
-        <div className="settings-field">
-          <label>BIC / SWIFT</label>
-          <input type="text" value={swift} onChange={(e) => setSwift(e.target.value)} />
-        </div>
-      </div>
+      {method && (
+  <>
+    <div className="settings-form-grid">
+      <div className="settings-field">
+        <label>Account Name</label>
+        <input type="text" value={accountName} onChange={(e) => setAccountName(e.target.value)} />
+      </div>
+      <div className="settings-field">
+        <label>Account Number</label>
+        <input type="text" value={accountNumber} onChange={(e) => setAccountNumber(e.target.value)} />
+      </div>
+      <div className="settings-field">
+        <label>Bank Name</label>
+        <input type="text" value={bankName} onChange={(e) => setBankName(e.target.value)} />
+      </div>
+      <div className="settings-field">
+        <label>IBAN</label>
+        <input type="text" value={iban} onChange={(e) => setIban(e.target.value)} />
+      </div>
+      <div className="settings-field">
+        <label>BIC / SWIFT</label>
+        <input type="text" value={swift} onChange={(e) => setSwift(e.target.value)} />
+      </div>
+    </div>
 
-      {success && <p className="settings-password-success">{success}</p>}
+    {success && <p className="settings-password-success">{success}</p>}
 
-      <button className="settings-update-btn" onClick={handleSave}>
-        Save Withdrawal Account
-      </button>
-    </>
-  );
+    <button className="settings-update-btn" onClick={handleSave}>
+      Save Withdrawal Account
+    </button>
+  </>
+      )}
+    </>
+  );
 }
-
 
 const SOCIAL_FIELDS = [
   {
