@@ -1,6 +1,7 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 
 const TABS = ["Profile", "Password", "Withdraw", "Social Profile", "Billing"];
+
 
 function PasswordTab() {
   const [currentPassword, setCurrentPassword] = useState("");
@@ -12,7 +13,6 @@ function PasswordTab() {
   const handleReset = () => {
     setError("");
     setSuccess("");
-
     if (!currentPassword || !newPassword || !confirmPassword) {
       setError("Please fill in all fields.");
       return;
@@ -25,9 +25,7 @@ function PasswordTab() {
       setError("New password and confirmation do not match.");
       return;
     }
-
     console.log({ currentPassword, newPassword });
-
     setSuccess("Password updated successfully.");
     setCurrentPassword("");
     setNewPassword("");
@@ -45,7 +43,6 @@ function PasswordTab() {
           onChange={(e) => setCurrentPassword(e.target.value)}
         />
       </div>
-
       <div className="settings-field settings-field-full">
         <label>New Password</label>
         <input
@@ -55,7 +52,6 @@ function PasswordTab() {
           onChange={(e) => setNewPassword(e.target.value)}
         />
       </div>
-
       <div className="settings-field settings-field-full">
         <label>Re-type New Password</label>
         <input
@@ -65,16 +61,285 @@ function PasswordTab() {
           onChange={(e) => setConfirmPassword(e.target.value)}
         />
       </div>
-
       {error && <p className="settings-password-error">{error}</p>}
       {success && <p className="settings-password-success">{success}</p>}
-
       <button className="settings-update-btn" onClick={handleReset}>
         Reset Password
       </button>
     </div>
   );
 }
+
+
+const WITHDRAW_METHODS = [
+  { id: "bank", label: "Bank Transfer", note: "Min withdraw Rs80.00" },
+];
+
+function WithdrawTab() {
+  const [method, setMethod] = useState("bank");
+  const [accountName, setAccountName] = useState("");
+  const [accountNumber, setAccountNumber] = useState("");
+  const [bankName, setBankName] = useState("");
+  const [iban, setIban] = useState("");
+  const [swift, setSwift] = useState("");
+  const [success, setSuccess] = useState("");
+
+  const handleSave = () => {
+    console.log({ method, accountName, accountNumber, bankName, iban, swift });
+    setSuccess("Withdrawal account saved.");
+  };
+
+  return (
+    <>
+      <h3 className="settings-subtitle">Select a withdraw method</h3>
+
+      <div className="settings-withdraw-methods">
+        {WITHDRAW_METHODS.map((m) => (
+          <label
+            key={m.id}
+            className={`settings-withdraw-method${method === m.id ? " active" : ""}`}
+          >
+            <input
+              type="radio"
+              name="withdraw-method"
+              value={m.id}
+              checked={method === m.id}
+              onChange={() => setMethod(m.id)}
+            />
+            <span className="settings-withdraw-method-text">
+              <span className="settings-withdraw-method-label">{m.label}</span>
+              <span className="settings-withdraw-method-note">{m.note}</span>
+            </span>
+          </label>
+        ))}
+      </div>
+
+      <div className="settings-form-grid">
+        <div className="settings-field">
+          <label>Account Name</label>
+          <input type="text" value={accountName} onChange={(e) => setAccountName(e.target.value)} />
+        </div>
+        <div className="settings-field">
+          <label>Account Number</label>
+          <input type="text" value={accountNumber} onChange={(e) => setAccountNumber(e.target.value)} />
+        </div>
+        <div className="settings-field">
+          <label>Bank Name</label>
+          <input type="text" value={bankName} onChange={(e) => setBankName(e.target.value)} />
+        </div>
+        <div className="settings-field">
+          <label>IBAN</label>
+          <input type="text" value={iban} onChange={(e) => setIban(e.target.value)} />
+        </div>
+        <div className="settings-field">
+          <label>BIC / SWIFT</label>
+          <input type="text" value={swift} onChange={(e) => setSwift(e.target.value)} />
+        </div>
+      </div>
+
+      {success && <p className="settings-password-success">{success}</p>}
+
+      <button className="settings-update-btn" onClick={handleSave}>
+        Save Withdrawal Account
+      </button>
+    </>
+  );
+}
+
+
+const SOCIAL_FIELDS = [
+  {
+    id: "facebook",
+    label: "Facebook",
+    placeholder: "https://facebook.com/username",
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M22 12a10 10 0 1 0-11.6 9.9v-7H7.9V12h2.5V9.8c0-2.5 1.5-3.9 3.8-3.9 1.1 0 2.2.2 2.2.2v2.4h-1.2c-1.2 0-1.6.8-1.6 1.6V12h2.8l-.4 2.9h-2.4v7A10 10 0 0 0 22 12z" />
+      </svg>
+    ),
+  },
+  {
+    id: "x",
+    label: "X",
+    placeholder: "https://x.com/username",
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M18.9 2H22l-7.6 8.7L23.3 22h-7l-5.5-6.7L4.5 22H1.4l8.1-9.3L1 2h7.2l5 6.1L18.9 2zm-1.2 18h1.7L7.4 3.9H5.6L17.7 20z" />
+      </svg>
+    ),
+  },
+  {
+    id: "linkedin",
+    label: "Linkedin",
+    placeholder: "https://linkedin.com/username",
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M20.4 20.4h-3.5v-5.5c0-1.3 0-3-1.8-3s-2.1 1.4-2.1 2.9v5.6H9.5V9h3.4v1.6h.1c.5-.9 1.6-1.8 3.3-1.8 3.6 0 4.1 2.3 4.1 5.3v6.3zM5.3 7.4a2 2 0 1 1 0-4 2 2 0 0 1 0 4zM7 20.4H3.6V9H7v11.4z" />
+      </svg>
+    ),
+  },
+  {
+    id: "website",
+    label: "Website",
+    placeholder: "https://example.com/",
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="2" y1="12" x2="22" y2="12"></line>
+        <path d="M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20z"></path>
+      </svg>
+    ),
+  },
+  {
+    id: "github",
+    label: "Github",
+    placeholder: "https://github.com/username",
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 2a10 10 0 0 0-3.2 19.5c.5.1.7-.2.7-.5v-1.7c-2.8.6-3.4-1.3-3.4-1.3-.5-1.1-1.1-1.5-1.1-1.5-.9-.6.1-.6.1-.6 1 .1 1.5 1 1.5 1 .9 1.5 2.3 1.1 2.9.8.1-.6.4-1.1.6-1.3-2.2-.3-4.6-1.1-4.6-4.9 0-1.1.4-2 1-2.7-.1-.3-.5-1.3.1-2.6 0 0 .8-.3 2.7 1a9.4 9.4 0 0 1 5 0c1.9-1.3 2.7-1 2.7-1 .6 1.3.2 2.3.1 2.6.6.7 1 1.6 1 2.7 0 3.8-2.4 4.6-4.6 4.9.4.3.7.9.7 1.9v2.8c0 .3.2.6.7.5A10 10 0 0 0 12 2z" />
+      </svg>
+    ),
+  },
+];
+
+function SocialProfileTab() {
+  const [links, setLinks] = useState({
+    facebook: "",
+    x: "",
+    linkedin: "",
+    website: "",
+    github: "",
+  });
+
+  const handleChange = (id, value) => {
+    setLinks((prev) => ({ ...prev, [id]: value }));
+  };
+
+  const handleUpdate = () => {
+    console.log(links);
+  };
+
+  return (
+    <div className="settings-social-tab">
+      <h3 className="settings-subtitle">Social Profile Link</h3>
+
+      <div className="settings-social-list">
+        {SOCIAL_FIELDS.map((field) => (
+          <div key={field.id} className="settings-social-row">
+            <span className="settings-social-label">
+              <span className="settings-social-icon">{field.icon}</span>
+              {field.label}
+            </span>
+            <input
+              type="text"
+              placeholder={field.placeholder}
+              value={links[field.id]}
+              onChange={(e) => handleChange(field.id, e.target.value)}
+              className="settings-social-input"
+            />
+          </div>
+        ))}
+      </div>
+
+      <button className="settings-update-btn" onClick={handleUpdate}>
+        Update Profile
+      </button>
+    </div>
+  );
+}
+
+
+const COUNTRIES = [
+  "Sri Lanka", "India", "United States", "United Kingdom",
+  "Australia", "Canada", "Germany", "France", "Singapore",
+];
+
+function BillingTab() {
+  const [firstName, setFirstName] = useState("");
+  const [lastName,  setLastName]  = useState("");
+  const [email,     setEmail]     = useState("");
+  const [country,   setCountry]   = useState("");
+  const [state,     setState]     = useState("N/A");
+  const [city,      setCity]      = useState("");
+  const [postcode,  setPostcode]  = useState("");
+  const [phone,     setPhone]     = useState("");
+  const [address,   setAddress]   = useState("");
+  const [success,   setSuccess]   = useState("");
+
+  const handleSave = () => {
+    console.log({ firstName, lastName, email, country, state, city, postcode, phone, address });
+    setSuccess("Address saved successfully.");
+  };
+
+  return (
+    <>
+      <h3 className="settings-subtitle">Billing Address</h3>
+
+      <div className="settings-form-grid">
+        <div className="settings-field">
+          <label>First Name</label>
+          <input type="text" placeholder="First Name" value={firstName} onChange={(e) => setFirstName(e.target.value)} />
+        </div>
+        <div className="settings-field">
+          <label>Last Name</label>
+          <input type="text" placeholder="Last Name" value={lastName} onChange={(e) => setLastName(e.target.value)} />
+        </div>
+
+        <div className="settings-field settings-field-full">
+          <label>Email Address</label>
+          <input type="email" placeholder="Email Address" value={email} onChange={(e) => setEmail(e.target.value)} />
+        </div>
+
+        <div className="settings-field settings-field-full">
+          <label>Country</label>
+          <select value={country} onChange={(e) => setCountry(e.target.value)} className="settings-display-select">
+            <option value="">Select Country</option>
+            {COUNTRIES.map((c) => (
+              <option key={c} value={c}>{c}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="settings-field">
+          <label>State</label>
+          <select value={state} onChange={(e) => setState(e.target.value)} className="settings-display-select">
+            <option value="N/A">N/A</option>
+            <option value="Western">Western</option>
+            <option value="Central">Central</option>
+            <option value="Southern">Southern</option>
+            <option value="Northern">Northern</option>
+            <option value="Eastern">Eastern</option>
+          </select>
+        </div>
+        <div className="settings-field">
+          <label>City</label>
+          <input type="text" placeholder="City" value={city} onChange={(e) => setCity(e.target.value)} />
+        </div>
+
+        <div className="settings-field">
+          <label>Postcode / ZIP</label>
+          <input type="text" placeholder="Postcode / ZIP" value={postcode} onChange={(e) => setPostcode(e.target.value)} />
+        </div>
+        <div className="settings-field">
+          <label>Phone</label>
+          <input type="text" placeholder="Phone" value={phone} onChange={(e) => setPhone(e.target.value)} />
+        </div>
+
+        <div className="settings-field settings-field-full">
+          <label>Address</label>
+          <input type="text" placeholder="Address" value={address} onChange={(e) => setAddress(e.target.value)} />
+        </div>
+      </div>
+
+      {success && <p className="settings-password-success">{success}</p>}
+
+      <button className="settings-update-btn" onClick={handleSave}>
+        Save Address
+      </button>
+    </>
+  );
+}
+
 
 function BioToolbar() {
   return (
@@ -83,7 +348,7 @@ function BioToolbar() {
       <button type="button" className="settings-bio-btn" style={{ fontStyle: "italic" }}>I</button>
       <button type="button" className="settings-bio-btn" style={{ textDecoration: "underline" }}>U</button>
       <span className="settings-bio-divider" />
-      <button type="button" className="settings-bio-btn">”</button>
+      <button type="button" className="settings-bio-btn">"</button>
       <button type="button" className="settings-bio-btn">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
       </button>
@@ -114,18 +379,20 @@ function BioToolbar() {
   );
 }
 
+// ─── Profile Tab ─────────────────────────────────────────────────────────────
+
 function ProfileTab() {
-  const [firstName, setFirstName] = useState("Kapila");
-  const [lastName, setLastName] = useState("Perera");
-  const [phone, setPhone] = useState("");
-  const [skill, setSkill] = useState("UX Designer");
-  const [bio, setBio] = useState("");
-  const [displayAs, setDisplayAs] = useState("DINESHAN");
+  const [firstName,    setFirstName]    = useState("Kapila");
+  const [lastName,     setLastName]     = useState("Perera");
+  const [phone,        setPhone]        = useState("");
+  const [skill,        setSkill]        = useState("UX Designer");
+  const [bio,          setBio]          = useState("");
+  const [displayAs,    setDisplayAs]    = useState("DINESHAN");
   const [avatarPreview, setAvatarPreview] = useState(null);
-  const [coverPreview, setCoverPreview] = useState(null);
+  const [coverPreview,  setCoverPreview]  = useState(null);
 
   const avatarInputRef = useRef(null);
-  const coverInputRef = useRef(null);
+  const coverInputRef  = useRef(null);
 
   const handleAvatarChange = (e) => {
     const file = e.target.files?.[0];
@@ -148,11 +415,7 @@ function ProfileTab() {
         style={coverPreview ? { backgroundImage: `url(${coverPreview})` } : undefined}
       >
         {coverPreview && (
-          <button
-            className="settings-cover-delete"
-            onClick={() => setCoverPreview(null)}
-            type="button"
-          >
+          <button className="settings-cover-delete" onClick={() => setCoverPreview(null)} type="button">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="3 6 5 6 21 6"></polyline>
               <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
@@ -209,12 +472,7 @@ function ProfileTab() {
         </div>
         <div className="settings-field">
           <label>Phone Number</label>
-          <input
-            type="text"
-            placeholder="Phone Number"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-          />
+          <input type="text" placeholder="Phone Number" value={phone} onChange={(e) => setPhone(e.target.value)} />
         </div>
 
         <div className="settings-field settings-field-full">
@@ -252,16 +510,20 @@ function ProfileTab() {
   );
 }
 
-function PlaceholderTab({ name }) {
-  return (
-    <div className="ec-empty-state" style={{ padding: "60px 20px" }}>
-      <p className="ec-empty-text">{name} settings coming soon.</p>
-    </div>
+
+function resolveInitialTab(initialTab) {
+  const match = TABS.find(
+    (tab) => tab.toLowerCase() === String(initialTab || "").toLowerCase()
   );
+  return match || TABS[0];
 }
 
-export default function Settings() {
-  const [activeTab, setActiveTab] = useState("Profile");
+export default function Settings({ initialTab = "Profile" }) {
+  const [activeTab, setActiveTab] = useState(() => resolveInitialTab(initialTab));
+
+  useEffect(() => {
+    setActiveTab(resolveInitialTab(initialTab));
+  }, [initialTab]);
 
   return (
     <div className="ec-container">
@@ -279,108 +541,11 @@ export default function Settings() {
         ))}
       </div>
 
-      {activeTab === "Profile" && <ProfileTab />}
-      {activeTab === "Password" && <PasswordTab />}
-      {activeTab === "Withdraw" && <WithdrawTab />}
-      {activeTab === "Social Profile" && <PlaceholderTab name="Social Profile" />}
-      {activeTab === "Billing" && <PlaceholderTab name="Billing" />}
+      {activeTab === "Profile"        && <ProfileTab />}
+      {activeTab === "Password"       && <PasswordTab />}
+      {activeTab === "Withdraw"       && <WithdrawTab />}
+      {activeTab === "Social Profile" && <SocialProfileTab />}
+      {activeTab === "Billing"        && <BillingTab />}
     </div>
-  );
-}
-
-const WITHDRAW_METHODS = [
-  { id: "bank", label: "Bank Transfer", note: "Min withdraw Rs80.00" },
-];
-
-function WithdrawTab() {
-  const [method, setMethod] = useState("bank");
-  const [accountName, setAccountName] = useState("");
-  const [accountNumber, setAccountNumber] = useState("");
-  const [bankName, setBankName] = useState("");
-  const [iban, setIban] = useState("");
-  const [swift, setSwift] = useState("");
-  const [success, setSuccess] = useState("");
-
-  const handleSave = () => {
-    console.log({ method, accountName, accountNumber, bankName, iban, swift });
-    setSuccess("Withdrawal account saved.");
-  };
-
-  return (
-    <>
-      <h3 className="settings-subtitle">Select a withdraw method</h3>
-
-      <div className="settings-withdraw-methods">
-        {WITHDRAW_METHODS.map((m) => (
-          <label
-            key={m.id}
-            className={`settings-withdraw-method${method === m.id ? " active" : ""}`}
-          >
-            <input
-              type="radio"
-              name="withdraw-method"
-              value={m.id}
-              checked={method === m.id}
-              onChange={() => setMethod(m.id)}
-            />
-            <span className="settings-withdraw-method-text">
-              <span className="settings-withdraw-method-label">{m.label}</span>
-              <span className="settings-withdraw-method-note">{m.note}</span>
-            </span>
-          </label>
-        ))}
-      </div>
-
-      <div className="settings-form-grid">
-        <div className="settings-field">
-          <label>Account Name</label>
-          <input
-            type="text"
-            value={accountName}
-            onChange={(e) => setAccountName(e.target.value)}
-          />
-        </div>
-        <div className="settings-field">
-          <label>Account Number</label>
-          <input
-            type="text"
-            value={accountNumber}
-            onChange={(e) => setAccountNumber(e.target.value)}
-          />
-        </div>
-
-        <div className="settings-field">
-          <label>Bank Name</label>
-          <input
-            type="text"
-            value={bankName}
-            onChange={(e) => setBankName(e.target.value)}
-          />
-        </div>
-        <div className="settings-field">
-          <label>IBAN</label>
-          <input
-            type="text"
-            value={iban}
-            onChange={(e) => setIban(e.target.value)}
-          />
-        </div>
-
-        <div className="settings-field">
-          <label>BIC / SWIFT</label>
-          <input
-            type="text"
-            value={swift}
-            onChange={(e) => setSwift(e.target.value)}
-          />
-        </div>
-      </div>
-
-      {success && <p className="settings-password-success">{success}</p>}
-
-      <button className="settings-update-btn" onClick={handleSave}>
-        Save Withdrawal Account
-      </button>
-    </>
   );
 }

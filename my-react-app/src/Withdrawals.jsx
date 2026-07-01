@@ -34,7 +34,7 @@ function MailboxIcon() {
   );
 }
 
-export default function Withdrawals() {
+export default function Withdrawals({ onNavigateToWithdraw }) {
   return (
     <div className="ec-container">
       <h2 className="db-section-title">Withdrawals</h2>
@@ -62,7 +62,19 @@ export default function Withdrawals() {
           <line x1="12" y1="8" x2="12.01" y2="8"></line>
         </svg>
         <span>
-          You can change your <a href="#" className="withdraw-pref-link">Withdraw Preference</a>
+          You can change your{" "}
+          <span
+            className="withdraw-pref-link"
+            role="link"
+            tabIndex={0}
+            onClick={onNavigateToWithdraw}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") onNavigateToWithdraw?.();
+            }}
+            style={{ cursor: "pointer" }}
+          >
+            Withdraw Preference
+          </span>
         </span>
       </div>
 

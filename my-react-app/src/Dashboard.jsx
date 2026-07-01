@@ -50,6 +50,7 @@ const STATS = [
 
 export default function Dashboard() {
   const [active, setActive] = useState("dashboard");
+  const [settingsTab, setSettingsTab] = useState("profile");
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
@@ -59,14 +60,19 @@ export default function Dashboard() {
     return () => window.removeEventListener("resize", fn);
   }, []);
 
-  // Close drawer when switching to desktop
   useEffect(() => {
     if (!isMobile) setDrawerOpen(false);
   }, [isMobile]);
 
-  // Close drawer on nav item click (mobile)
   const handleNav = (id) => {
     setActive(id);
+    if (id === "settings") setSettingsTab("profile");
+    setDrawerOpen(false);
+  };
+
+  const handleNavigateToWithdraw = () => {
+    setSettingsTab("withdraw");
+    setActive("settings");
     setDrawerOpen(false);
   };
 
@@ -115,10 +121,8 @@ export default function Dashboard() {
   return (
     <div className="db-page">
 
-      {/* ── Top bar ── */}
       <div className="db-profile-bar">
         <div className="db-profile-left">
-          {/* Hamburger — only on mobile */}
           {isMobile && (
             <button className="db-hamburger" onClick={() => setDrawerOpen(true)}>
               ☰
@@ -139,15 +143,12 @@ export default function Dashboard() {
 
       <hr className="db-divider" />
 
-      {/* ── Mobile drawer overlay ── */}
       {isMobile && (
         <>
-          {/* Dark backdrop */}
           <div
             className={`db-drawer-overlay${drawerOpen ? " open" : ""}`}
             onClick={() => setDrawerOpen(false)}
           />
-          {/* Drawer panel */}
           <aside className={`db-drawer${drawerOpen ? " open" : ""}`}>
             <div className="db-drawer-header">
               <div className="db-avatar" style={{ width: 36, height: 36, fontSize: 16 }}>D</div>
@@ -161,9 +162,7 @@ export default function Dashboard() {
         </>
       )}
 
-      {/* ── Body ── */}
       <div className="db-body">
-        {/* Desktop sidebar — hidden on mobile */}
         {!isMobile && (
           <aside className="db-sidebar">
             <SidebarContent />
@@ -201,9 +200,11 @@ export default function Dashboard() {
           )}
           {active === "instructor-profile" && <InstructorProfile />}
           {active === "announcements" && <Announcements />}
-          {active === "withdrawals" && <Withdrawals />}
-          {active === "quiz-attempts" && <QuizAttempts />}
-          {active === "settings" && <Settings />}
+          {active === "withdrawals" && (
+            <Withdrawals onNavigateToWithdraw={handleNavigateToWithdraw} />
+          )}
+          {active === "quiz-inst" && <QuizAttempts />}
+          {active === "settings" && <Settings initialTab={settingsTab} />}
         </main>
       </div>
     </div>

@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 
 
 const COURSES = []; 
+
 function CourseSelect({ value, onChange, showAllOption = true }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -262,7 +263,6 @@ function CloudSearchEmptyIcon() {
   );
 }
 
-// ===== Page component =====
 
 export default function QuizAttempts() {
   const [course, setCourse] = useState("all");
