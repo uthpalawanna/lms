@@ -1,7 +1,7 @@
 import { useState } from "react";
 import "./index.css";
 
-function Login() {
+function Login({ onLoginSuccess }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -13,7 +13,7 @@ function Login() {
       return;
     }
 
-    alert(`Login Successful!\nEmail: ${email}`);
+    onLoginSuccess?.();
   };
 
   return (

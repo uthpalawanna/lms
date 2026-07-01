@@ -48,9 +48,9 @@ const STATS = [
   { icon: "💰", label: "Total Earnings", value: "Rs0.00", accent: false },
 ];
 
-export default function Dashboard() {
+export default function Dashboard({ onLogout }) {
   const [active, setActive] = useState("dashboard");
-  const [settingsTab, setSettingsTab] = useState("profile");
+  const [settingsTab, setSettingsTab] = useState("Profile");
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
@@ -60,18 +60,27 @@ export default function Dashboard() {
     return () => window.removeEventListener("resize", fn);
   }, []);
 
+  // Close drawer when switching to desktop
   useEffect(() => {
     if (!isMobile) setDrawerOpen(false);
   }, [isMobile]);
 
+  // Close drawer on nav item click (mobile)
   const handleNav = (id) => {
+    if (id === "logout") {
+      setDrawerOpen(false);
+      onLogout?.();
+      return;
+    }
     setActive(id);
-    if (id === "settings") setSettingsTab("profile");
+    // Reset Settings to its default tab whenever we navigate to it via the sidebar
+    if (id === "settings") setSettingsTab("Profile");
     setDrawerOpen(false);
   };
 
+  // Jump straight to Settings > Withdraw tab (used by the "Withdraw Preference" link)
   const handleNavigateToWithdraw = () => {
-    setSettingsTab("withdraw");
+    setSettingsTab("Withdraw");
     setActive("settings");
     setDrawerOpen(false);
   };
@@ -121,8 +130,10 @@ export default function Dashboard() {
   return (
     <div className="db-page">
 
+      {/* ── Top bar ── */}
       <div className="db-profile-bar">
         <div className="db-profile-left">
+          {/* Hamburger — only on mobile */}
           {isMobile && (
             <button className="db-hamburger" onClick={() => setDrawerOpen(true)}>
               ☰
@@ -143,12 +154,15 @@ export default function Dashboard() {
 
       <hr className="db-divider" />
 
+      {/* ── Mobile drawer overlay ── */}
       {isMobile && (
         <>
+          {/* Dark backdrop */}
           <div
             className={`db-drawer-overlay${drawerOpen ? " open" : ""}`}
             onClick={() => setDrawerOpen(false)}
           />
+          {/* Drawer panel */}
           <aside className={`db-drawer${drawerOpen ? " open" : ""}`}>
             <div className="db-drawer-header">
               <div className="db-avatar" style={{ width: 36, height: 36, fontSize: 16 }}>D</div>
@@ -162,7 +176,9 @@ export default function Dashboard() {
         </>
       )}
 
+      {/* ── Body ── */}
       <div className="db-body">
+        {/* Desktop sidebar — hidden on mobile */}
         {!isMobile && (
           <aside className="db-sidebar">
             <SidebarContent />
