@@ -5,12 +5,10 @@ const TABS = [
 ];
 
 export default function Reviews() {
-  // 1. Fixed the default active state to match our tab ID
   const [activeTab, setActiveTab] = useState("received");
 
   return (
     <div className="ec-container">
-      {/* 2. Made the main title static "Reviews" to match the screenshot */}
       <h2 className="db-section-title">Reviews</h2>
 
       <div className="ec-tabs-header">

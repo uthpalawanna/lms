@@ -5,7 +5,6 @@ export default function CourseDetails({ onBack, onAuthorClick }) {
 
   return (
     <div className="cd-container">
-      {/* Header Section */}
       <div className="cd-header">
         <div className="cd-header-left">
           <div className="cd-stars">
@@ -31,7 +30,6 @@ export default function CourseDetails({ onBack, onAuthorClick }) {
         </div>
       </div>
 
-      {/* Main Layout Grid */}
       <div className="cd-layout">
         <div className="cd-main-content">
           <div className="cd-hero-image">

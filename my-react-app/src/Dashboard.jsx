@@ -60,12 +60,10 @@ export default function Dashboard({ onLogout }) {
     return () => window.removeEventListener("resize", fn);
   }, []);
 
-  // Close drawer when switching to desktop
   useEffect(() => {
     if (!isMobile) setDrawerOpen(false);
   }, [isMobile]);
 
-  // Close drawer on nav item click (mobile)
   const handleNav = (id) => {
     if (id === "logout") {
       setDrawerOpen(false);
@@ -73,12 +71,10 @@ export default function Dashboard({ onLogout }) {
       return;
     }
     setActive(id);
-    // Reset Settings to its default tab whenever we navigate to it via the sidebar
     if (id === "settings") setSettingsTab("Profile");
     setDrawerOpen(false);
   };
 
-  // Jump straight to Settings > Withdraw tab (used by the "Withdraw Preference" link)
   const handleNavigateToWithdraw = () => {
     setSettingsTab("Withdraw");
     setActive("settings");
@@ -130,10 +126,8 @@ export default function Dashboard({ onLogout }) {
   return (
     <div className="db-page">
 
-      {/* ── Top bar ── */}
       <div className="db-profile-bar">
         <div className="db-profile-left">
-          {/* Hamburger — only on mobile */}
           {isMobile && (
             <button className="db-hamburger" onClick={() => setDrawerOpen(true)}>
               ☰
@@ -154,15 +148,12 @@ export default function Dashboard({ onLogout }) {
 
       <hr className="db-divider" />
 
-      {/* ── Mobile drawer overlay ── */}
       {isMobile && (
         <>
-          {/* Dark backdrop */}
           <div
             className={`db-drawer-overlay${drawerOpen ? " open" : ""}`}
             onClick={() => setDrawerOpen(false)}
           />
-          {/* Drawer panel */}
           <aside className={`db-drawer${drawerOpen ? " open" : ""}`}>
             <div className="db-drawer-header">
               <div className="db-avatar" style={{ width: 36, height: 36, fontSize: 16 }}>D</div>
@@ -176,9 +167,7 @@ export default function Dashboard({ onLogout }) {
         </>
       )}
 
-      {/* ── Body ── */}
       <div className="db-body">
-        {/* Desktop sidebar — hidden on mobile */}
         {!isMobile && (
           <aside className="db-sidebar">
             <SidebarContent />

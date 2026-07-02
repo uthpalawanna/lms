@@ -80,7 +80,6 @@
   accent-color: #3d56c8;
   flex-shrink: 0;
   margin: 0;
-} /* ← Bug 1 fix: missing closing brace was here */
 
 .forgot-link {
   font-size: 13px;
