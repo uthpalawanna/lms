@@ -48,11 +48,12 @@ const STATS = [
   { icon: "💰", label: "Total Earnings", value: "Rs0.00", accent: false },
 ];
 
-export default function Dashboard({ onLogout }) {
+export default function Dashboard({ user, token, onLogout }) {
   const [active, setActive] = useState("dashboard");
   const [settingsTab, setSettingsTab] = useState("Profile");
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [showNewCourseModal, setShowNewCourseModal] = useState(false);
 
   useEffect(() => {
     const fn = () => setIsMobile(window.innerWidth < 768);
@@ -80,6 +81,18 @@ export default function Dashboard({ onLogout }) {
     setActive("settings");
     setDrawerOpen(false);
   };
+
+  const handleNewCourseClick = () => {
+    setActive("my-courses");
+    setShowNewCourseModal(true);
+    setDrawerOpen(false);
+  };
+
+  const displayName =
+    (user?.firstName ? user.firstName.toUpperCase() : null) ||
+    (user?.username ? user.username.toUpperCase() : null) ||
+    "USER";
+  const avatarLetter = displayName.charAt(0);
 
   const SidebarContent = () => (
     <>
@@ -126,16 +139,18 @@ export default function Dashboard({ onLogout }) {
   return (
     <div className="db-page">
 
+      {/* ── Top bar ── */}
       <div className="db-profile-bar">
         <div className="db-profile-left">
+          {/* Hamburger — only on mobile */}
           {isMobile && (
             <button className="db-hamburger" onClick={() => setDrawerOpen(true)}>
               ☰
             </button>
           )}
-          <div className="db-avatar">D</div>
+          <div className="db-avatar">{avatarLetter}</div>
           <div>
-            <div className="db-username">DINESHAN</div>
+            <div className="db-username">{displayName}</div>
             <div className="db-stars">
               {[1,2,3,4,5].map((i) => (
                 <span key={i} className="db-star">☆</span>
@@ -143,21 +158,24 @@ export default function Dashboard({ onLogout }) {
             </div>
           </div>
         </div>
-        <button className="db-new-course-btn">＋ New Course</button>
+        <button className="db-new-course-btn" onClick={handleNewCourseClick}>＋ New Course</button>
       </div>
 
       <hr className="db-divider" />
 
+      {/* ── Mobile drawer overlay ── */}
       {isMobile && (
         <>
+          {/* Dark backdrop */}
           <div
             className={`db-drawer-overlay${drawerOpen ? " open" : ""}`}
             onClick={() => setDrawerOpen(false)}
           />
+          {/* Drawer panel */}
           <aside className={`db-drawer${drawerOpen ? " open" : ""}`}>
             <div className="db-drawer-header">
-              <div className="db-avatar" style={{ width: 36, height: 36, fontSize: 16 }}>D</div>
-              <span style={{ fontWeight: 600, fontSize: 14, marginLeft: 10 }}>DINESHAN</span>
+              <div className="db-avatar" style={{ width: 36, height: 36, fontSize: 16 }}>{avatarLetter}</div>
+              <span style={{ fontWeight: 600, fontSize: 14, marginLeft: 10 }}>{displayName}</span>
               <button className="db-drawer-close" onClick={() => setDrawerOpen(false)}>✕</button>
             </div>
             <div className="db-drawer-body">
@@ -167,7 +185,9 @@ export default function Dashboard({ onLogout }) {
         </>
       )}
 
+      {/* ── Body ── */}
       <div className="db-body">
+        {/* Desktop sidebar — hidden on mobile */}
         {!isMobile && (
           <aside className="db-sidebar">
             <SidebarContent />
@@ -196,7 +216,14 @@ export default function Dashboard({ onLogout }) {
           {active === "quiz-attempts" && <MyQuizAttempts />}
           {active === "order-history" && <OrderHistory />}
           {active === "question-answer" && <QuestionAnswer />}
-          {active === "my-courses" && <MyCourses onCourseClick={() => setActive("course-details")} />}
+          {active === "my-courses" && (
+            <MyCourses
+              token={token}
+              onCourseClick={() => setActive("course-details")}
+              showModal={showNewCourseModal}
+              setShowModal={setShowNewCourseModal}
+            />
+          )}
           {active === "course-details" && (
             <CourseDetails
               onBack={() => setActive("my-courses")}
@@ -204,7 +231,7 @@ export default function Dashboard({ onLogout }) {
             />
           )}
           {active === "instructor-profile" && <InstructorProfile />}
-          {active === "announcements" && <Announcements />}
+          {active === "announcements" && <Announcements token={token} />}
           {active === "withdrawals" && (
             <Withdrawals onNavigateToWithdraw={handleNavigateToWithdraw} />
           )}
