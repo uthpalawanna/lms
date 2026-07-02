@@ -29,13 +29,11 @@ function Login({ onLoginSuccess }) {
       const data = await response.json();
 
       if (!response.ok) {
-        // Backend sent back an error message (e.g. "Invalid email or password")
         setError(data.message || "Login failed. Please try again.");
         setLoading(false);
         return;
       }
 
-      // Success — data.token and data.user are available here
       onLoginSuccess?.(data);
     } catch (err) {
       console.error(err);
