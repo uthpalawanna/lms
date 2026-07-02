@@ -1,19 +1,48 @@
 import { useState } from "react";
 import "./index.css";
 
+const API_URL = "http://localhost:5000/api/auth/login";
+
 function Login({ onLoginSuccess }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
 
     if (!email || !password) {
-      alert("Please fill all fields");
+      setError("Please fill all fields");
       return;
     }
 
-    onLoginSuccess?.();
+    setLoading(true);
+    try {
+      const response = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        // Backend sent back an error message (e.g. "Invalid email or password")
+        setError(data.message || "Login failed. Please try again.");
+        setLoading(false);
+        return;
+      }
+
+      // Success — data.token and data.user are available here
+      onLoginSuccess?.(data);
+    } catch (err) {
+      console.error(err);
+      setError("Could not reach the server. Is the backend running?");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -42,6 +71,12 @@ function Login({ onLoginSuccess }) {
             />
           </div>
 
+          {error && (
+            <p style={{ color: "#dc2626", fontSize: 13, marginBottom: "0.85rem" }}>
+              {error}
+            </p>
+          )}
+
           <a href="#" className="provider-link">
             Login with Bluehost
           </a>
@@ -57,8 +92,8 @@ function Login({ onLoginSuccess }) {
             </a>
           </div>
 
-          <button type="submit" className="signin-btn">
-            Sign In
+          <button type="submit" className="signin-btn" disabled={loading}>
+            {loading ? "Signing in..." : "Sign In"}
           </button>
 
           <div className="register-section">
