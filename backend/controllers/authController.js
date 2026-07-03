@@ -4,7 +4,7 @@ const User = require("../models/User");
 
 function generateToken(userId) {
   return jwt.sign({ id: userId }, process.env.JWT_SECRET, {
-    expiresIn: "7d", 
+    expiresIn: "7d",
   });
 }
 
@@ -90,11 +90,71 @@ async function login(req, res) {
 }
 
 async function getMe(req, res) {
-  const user = await User.findById(req.userId).select("-password");
-  if (!user) {
-    return res.status(404).json({ message: "User not found." });
+  try {
+    const user = await User.findById(req.userId).select("-password");
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+    res.json(user);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Could not fetch your profile." });
   }
-  res.json(user);
 }
 
-module.exports = { register, login, getMe };
+async function updateMe(req, res) {
+  try {
+    const user = await User.findById(req.userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    const { firstName, lastName, phone, skill, bio, avatarUrl, email, username } = req.body;
+
+    if (email !== undefined && email !== user.email) {
+      const trimmedEmail = email.trim().toLowerCase();
+      const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailPattern.test(trimmedEmail)) {
+        return res.status(400).json({ message: "Please enter a valid email address." });
+      }
+      const existing = await User.findOne({ email: trimmedEmail });
+      if (existing && existing._id.toString() !== req.userId) {
+        return res.status(400).json({ message: "That email is already in use by another account." });
+      }
+      user.email = trimmedEmail;
+    }
+
+    if (username !== undefined && username !== user.username) {
+      const trimmedUsername = username.trim();
+      if (trimmedUsername.length < 3) {
+        return res.status(400).json({ message: "Username must be at least 3 characters." });
+      }
+      const usernamePattern = /^[a-zA-Z0-9_.]+$/;
+      if (!usernamePattern.test(trimmedUsername)) {
+        return res.status(400).json({ message: "Username can only contain letters, numbers, underscores, and periods." });
+      }
+      const existing = await User.findOne({ username: trimmedUsername });
+      if (existing && existing._id.toString() !== req.userId) {
+        return res.status(400).json({ message: "That username is already taken." });
+      }
+      user.username = trimmedUsername;
+    }
+
+    if (firstName !== undefined) user.firstName = firstName;
+    if (lastName !== undefined) user.lastName = lastName;
+    if (phone !== undefined) user.phone = phone;
+    if (skill !== undefined) user.skill = skill;
+    if (bio !== undefined) user.bio = bio;
+    if (avatarUrl !== undefined) user.avatarUrl = avatarUrl;
+
+    await user.save();
+
+    const { password, ...safeUser } = user.toObject();
+    res.json(safeUser);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Could not update your profile." });
+  }
+}
+
+module.exports = { register, login, getMe, updateMe };

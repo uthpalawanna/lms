@@ -1,247 +1,8 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 
-
-const COURSES = []; 
-
-function CourseSelect({ value, onChange, showAllOption = true }) {
-  const [open, setOpen] = useState(false);
-  const [query, setQuery] = useState("");
-  const wrapRef = useRef(null);
-
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (wrapRef.current && !wrapRef.current.contains(e.target)) {
-        setOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  const filtered = COURSES.filter((c) =>
-    c.title.toLowerCase().includes(query.toLowerCase())
-  );
-
-  let selectedLabel;
-  if (showAllOption && value === "all") {
-    selectedLabel = "All";
-  } else {
-    const found = COURSES.find((c) => c.id === value)?.title;
-    selectedLabel = found || (COURSES.length === 0 ? "No course found" : "Select a course");
-  }
-
-  const handleSelect = (id) => {
-    onChange(id);
-    setOpen(false);
-    setQuery("");
-  };
-
-  return (
-    <div className="course-select" ref={wrapRef}>
-      <button type="button" className="course-select-trigger" onClick={() => setOpen((o) => !o)}>
-        <span>{selectedLabel}</span>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#374151" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <polyline points="6 9 12 15 18 9"></polyline>
-        </svg>
-      </button>
-
-      {open && (
-        <div className="course-select-panel">
-          <div className="course-select-search">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="11" cy="11" r="8"></circle>
-              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-            </svg>
-            <input
-              type="text"
-              placeholder="Search ..."
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              autoFocus
-            />
-          </div>
-
-          <div className="course-select-list">
-            {showAllOption && (
-              <div
-                className={`course-select-item${value === "all" ? " active" : ""}`}
-                onClick={() => handleSelect("all")}
-              >
-                All
-              </div>
-            )}
-
-            {filtered.length === 0 ? (
-              <div className="course-select-empty">No course found</div>
-            ) : (
-              filtered.map((c) => (
-                <div
-                  key={c.id}
-                  className={`course-select-item${value === c.id ? " active" : ""}`}
-                  onClick={() => handleSelect(c.id)}
-                >
-                  {c.title}
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function SimpleSelect({ value, options, onChange }) {
-  const [open, setOpen] = useState(false);
-  const wrapRef = useRef(null);
-
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (wrapRef.current && !wrapRef.current.contains(e.target)) {
-        setOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  const selectedLabel = options.find((o) => o.value === value)?.label || "";
-
-  const handleSelect = (val) => {
-    onChange(val);
-    setOpen(false);
-  };
-
-  return (
-    <div className="simple-select" ref={wrapRef}>
-      <button type="button" className="course-select-trigger" onClick={() => setOpen((o) => !o)}>
-        <span>{selectedLabel}</span>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#374151" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <polyline points="6 9 12 15 18 9"></polyline>
-        </svg>
-      </button>
-
-      {open && (
-        <div className="course-select-panel">
-          <div className="course-select-list">
-            {options.map((o) => (
-              <div
-                key={o.value}
-                className={`course-select-item${value === o.value ? " active" : ""}`}
-                onClick={() => handleSelect(o.value)}
-              >
-                {o.label}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-const MONTHS = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December",
-];
-
-function DateField({ value, onChange, placeholder = "Y-M-d" }) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [viewDate, setViewDate] = useState(new Date());
-  const wrapRef = useRef(null);
-
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (wrapRef.current && !wrapRef.current.contains(e.target)) {
-        setIsOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  const currentYear = viewDate.getFullYear();
-  const currentMonth = viewDate.getMonth();
-  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-
-  let firstDayIndex = new Date(currentYear, currentMonth, 1).getDay();
-  firstDayIndex = firstDayIndex === 0 ? 6 : firstDayIndex - 1;
-
-  const handlePrevMonth = () => setViewDate(new Date(currentYear, currentMonth - 1, 1));
-  const handleNextMonth = () => setViewDate(new Date(currentYear, currentMonth + 1, 1));
-
-  const selectedDate = value ? new Date(value) : null;
-
-  const handleDateClick = (day) => {
-    const picked = new Date(currentYear, currentMonth, day);
-    const formatted = `${picked.getFullYear()}-${String(picked.getMonth() + 1).padStart(2, "0")}-${String(picked.getDate()).padStart(2, "0")}`;
-    onChange(formatted);
-    setIsOpen(false);
-  };
-
-  return (
-    <div className="date-field-wrap" ref={wrapRef}>
-      <input
-        type="text"
-        placeholder={placeholder}
-        value={value}
-        readOnly
-        onClick={() => setIsOpen((o) => !o)}
-        className="date-field-input"
-      />
-      <span className="date-field-icon" onClick={() => setIsOpen((o) => !o)}>
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a0aabf" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-          <line x1="16" y1="2" x2="16" y2="6"></line>
-          <line x1="8" y1="2" x2="8" y2="6"></line>
-          <line x1="3" y1="10" x2="21" y2="10"></line>
-        </svg>
-      </span>
-
-      {isOpen && (
-        <div className="oh-calendar-popup date-field-popup">
-          <div className="oh-cal-header">
-            <div className="oh-cal-selectors">
-              <span className="oh-cal-select">{MONTHS[currentMonth]} <small>▾</small></span>
-              <span className="oh-cal-select">{currentYear} <small>▾</small></span>
-            </div>
-            <div className="oh-cal-arrows">
-              <span onClick={handlePrevMonth}>﹀</span>
-              <span onClick={handleNextMonth} style={{ transform: "rotate(180deg)", display: "inline-block" }}>﹀</span>
-            </div>
-          </div>
-
-          <div className="oh-cal-grid">
-            <div className="oh-cal-weekdays">
-              <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
-            </div>
-            <div className="oh-cal-days">
-              {[...Array(firstDayIndex)].map((_, i) => (
-                <span key={`empty-${i}`} className="oh-cal-day faded"></span>
-              ))}
-              {[...Array(daysInMonth)].map((_, i) => {
-                const day = i + 1;
-                const isSelected =
-                  selectedDate?.getDate() === day &&
-                  selectedDate?.getMonth() === currentMonth &&
-                  selectedDate?.getFullYear() === currentYear;
-                return (
-                  <span
-                    key={day}
-                    className={`oh-cal-day ${isSelected ? "active" : ""}`}
-                    onClick={() => handleDateClick(day)}
-                  >
-                    {day}
-                  </span>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
+const COURSES_URL = "http://localhost:5000/api/courses/mine";
+const QUIZZES_URL = "http://localhost:5000/api/quizzes";
+const ATTEMPTS_URL = "http://localhost:5000/api/quiz-attempts";
 
 function CloudSearchEmptyIcon() {
   return (
@@ -263,44 +24,334 @@ function CloudSearchEmptyIcon() {
   );
 }
 
+function CreateQuizModal({ token, courses, onClose, onCreated }) {
+  const [courseId, setCourseId] = useState("");
+  const [title, setTitle] = useState("");
+  const [questions, setQuestions] = useState([
+    { questionText: "", options: ["", ""], correctOptionIndex: 0 },
+  ]);
+  const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
 
-export default function QuizAttempts() {
-  const [course, setCourse] = useState("all");
-  const [sortBy, setSortBy] = useState("desc");
-  const [date, setDate] = useState("");
+  const updateQuestion = (qIndex, field, value) => {
+    setQuestions((prev) => {
+      const next = [...prev];
+      next[qIndex] = { ...next[qIndex], [field]: value };
+      return next;
+    });
+  };
+
+  const updateOption = (qIndex, oIndex, value) => {
+    setQuestions((prev) => {
+      const next = [...prev];
+      const options = [...next[qIndex].options];
+      options[oIndex] = value;
+      next[qIndex] = { ...next[qIndex], options };
+      return next;
+    });
+  };
+
+  const addOption = (qIndex) => {
+    setQuestions((prev) => {
+      const next = [...prev];
+      next[qIndex] = { ...next[qIndex], options: [...next[qIndex].options, ""] };
+      return next;
+    });
+  };
+
+  const addQuestion = () => {
+    setQuestions((prev) => [
+      ...prev,
+      { questionText: "", options: ["", ""], correctOptionIndex: 0 },
+    ]);
+  };
+
+  const removeQuestion = (qIndex) => {
+    setQuestions((prev) => prev.filter((_, i) => i !== qIndex));
+  };
+
+  const handleSubmit = async () => {
+    if (!courseId) {
+      setError("Please select a course.");
+      return;
+    }
+    if (!title.trim()) {
+      setError("Please enter a quiz title.");
+      return;
+    }
+    for (const q of questions) {
+      if (!q.questionText.trim() || q.options.some((o) => !o.trim())) {
+        setError("Every question and option needs text filled in.");
+        return;
+      }
+    }
+    setError("");
+    setSaving(true);
+    try {
+      const response = await fetch(QUIZZES_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ course: courseId, title, questions }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        setError(data.message || "Could not create the quiz.");
+        setSaving(false);
+        return;
+      }
+      onCreated(data);
+    } catch (err) {
+      console.error(err);
+      setError("Could not reach the server. Is the backend running?");
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 600 }}>
+        <div className="modal-header">
+          <h3>Create Quiz</h3>
+          <button className="modal-close-btn" onClick={onClose}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+
+        <div className="modal-body">
+          <div className="modal-field">
+            <label>Course</label>
+            <select
+              value={courseId}
+              onChange={(e) => setCourseId(e.target.value)}
+              style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: "1px solid #d0d5dd", fontSize: 14 }}
+            >
+              <option value="">Select a course...</option>
+              {courses.map((c) => (
+                <option key={c._id} value={c._id}>{c.title}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="modal-field">
+            <label>Quiz Title</label>
+            <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} />
+          </div>
+
+          {questions.map((q, qIndex) => (
+            <div
+              key={qIndex}
+              style={{ border: "1px solid #e2e5ef", borderRadius: 10, padding: "1rem", marginTop: "1rem" }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <label style={{ fontWeight: 600 }}>Question {qIndex + 1}</label>
+                {questions.length > 1 && (
+                  <button
+                    onClick={() => removeQuestion(qIndex)}
+                    style={{ background: "none", border: "none", color: "#dc2626", cursor: "pointer", fontSize: 13 }}
+                  >
+                    Remove
+                  </button>
+                )}
+              </div>
+              <input
+                type="text"
+                placeholder="Question text"
+                value={q.questionText}
+                onChange={(e) => updateQuestion(qIndex, "questionText", e.target.value)}
+                style={{ marginTop: 8 }}
+              />
+
+              <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 6 }}>
+                {q.options.map((option, oIndex) => (
+                  <div key={oIndex} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <input
+                      type="radio"
+                      name={`correct-${qIndex}`}
+                      checked={q.correctOptionIndex === oIndex}
+                      onChange={() => updateQuestion(qIndex, "correctOptionIndex", oIndex)}
+                      title="Mark as correct answer"
+                    />
+                    <input
+                      type="text"
+                      placeholder={`Option ${oIndex + 1}`}
+                      value={option}
+                      onChange={(e) => updateOption(qIndex, oIndex, e.target.value)}
+                      style={{ flex: 1 }}
+                    />
+                  </div>
+                ))}
+                <button
+                  onClick={() => addOption(qIndex)}
+                  style={{ alignSelf: "flex-start", background: "none", border: "none", color: "#4a60c8", cursor: "pointer", fontSize: 13, marginTop: 4 }}
+                >
+                  ＋ Add option
+                </button>
+              </div>
+            </div>
+          ))}
+
+          <button
+            onClick={addQuestion}
+            className="modal-cancel-btn"
+            style={{ marginTop: "1rem", width: "100%" }}
+          >
+            ＋ Add Question
+          </button>
+
+          {error && (
+            <p style={{ color: "#dc2626", fontSize: 13, marginTop: "0.75rem" }}>{error}</p>
+          )}
+        </div>
+
+        <div className="modal-footer">
+          <button className="modal-cancel-btn" onClick={onClose} disabled={saving}>Cancel</button>
+          <button className="modal-publish-btn" onClick={handleSubmit} disabled={saving}>
+            {saving ? "Creating..." : "Create Quiz"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function QuizAttempts({ token }) {
+  const [courses, setCourses] = useState([]);
+  const [attempts, setAttempts] = useState([]);
+  const [courseFilter, setCourseFilter] = useState("all");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [showModal, setShowModal] = useState(false);
+  const [message, setMessage] = useState("");
+
+  const fetchAll = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const [coursesRes, attemptsRes] = await Promise.all([
+        fetch(COURSES_URL, { headers: { Authorization: `Bearer ${token}` } }),
+        fetch(`${ATTEMPTS_URL}/received`, { headers: { Authorization: `Bearer ${token}` } }),
+      ]);
+      const coursesData = await coursesRes.json();
+      const attemptsData = await attemptsRes.json();
+
+      if (coursesRes.ok) setCourses(coursesData);
+      if (attemptsRes.ok) setAttempts(attemptsData);
+      if (!attemptsRes.ok) setError(attemptsData.message || "Could not load quiz attempts.");
+    } catch (err) {
+      console.error(err);
+      setError("Could not reach the server. Is the backend running?");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (token) fetchAll();
+  }, [token]);
+
+  const handleCreated = () => {
+    setShowModal(false);
+    setMessage("Quiz created successfully!");
+  };
+
+  const visible =
+    courseFilter === "all"
+      ? attempts
+      : attempts.filter((a) => a.course?._id === courseFilter);
 
   return (
     <div className="ec-container">
-      <h2 className="db-section-title">Quiz Attempts</h2>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.75rem" }}>
+        <h2 className="db-section-title">Quiz Attempts</h2>
+        <button className="db-new-course-btn" onClick={() => setShowModal(true)}>
+          ＋ Create Quiz
+        </button>
+      </div>
+
+      {message && (
+        <p style={{ color: "#16a34a", fontWeight: 600 }}>{message}</p>
+      )}
 
       <div className="announcement-filters">
         <div className="filter-group">
           <label>Courses</label>
-          <CourseSelect value={course} onChange={setCourse} />
-        </div>
-        <div className="filter-group">
-          <label>Sort By</label>
-          <SimpleSelect
-            value={sortBy}
-            onChange={setSortBy}
-            options={[
-              { value: "asc", label: "ASC" },
-              { value: "desc", label: "DESC" },
-            ]}
-          />
-        </div>
-        <div className="filter-group">
-          <label>Create Date</label>
-          <DateField value={date} onChange={setDate} />
+          <select
+            value={courseFilter}
+            onChange={(e) => setCourseFilter(e.target.value)}
+            style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #d0d5dd", fontSize: 14 }}
+          >
+            <option value="all">All</option>
+            {courses.map((c) => (
+              <option key={c._id} value={c._id}>{c.title}</option>
+            ))}
+          </select>
         </div>
       </div>
 
       <div className="ec-tab-content">
-        <div className="ec-empty-state">
-          <CloudSearchEmptyIcon />
-          <p className="ec-empty-text" style={{ color: "#16a34a", fontWeight: 700 }}>No Data Found.</p>
-        </div>
+        {loading ? (
+          <div className="ec-empty-state">
+            <p className="ec-empty-text">Loading...</p>
+          </div>
+        ) : error ? (
+          <div className="ec-empty-state">
+            <p className="ec-empty-text" style={{ color: "#dc2626" }}>{error}</p>
+          </div>
+        ) : visible.length === 0 ? (
+          <div className="ec-empty-state">
+            <CloudSearchEmptyIcon />
+            <p className="ec-empty-text" style={{ color: "#16a34a", fontWeight: 700 }}>No Data Found.</p>
+          </div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+            {visible.map((attempt) => (
+              <div
+                key={attempt._id}
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  background: "#fff",
+                  border: "1px solid #e2e5ef",
+                  borderRadius: 10,
+                  padding: "1rem 1.25rem",
+                }}
+              >
+                <div>
+                  <h4 style={{ margin: 0 }}>{attempt.quiz?.title || "Quiz"}</h4>
+                  <p style={{ fontSize: 12, color: "#5c6b8a", margin: "4px 0 0" }}>
+                    {attempt.course?.title} · {attempt.student?.firstName} {attempt.student?.lastName} ·{" "}
+                    {new Date(attempt.createdAt).toLocaleDateString()}
+                  </p>
+                </div>
+                <span
+                  style={{
+                    fontWeight: 700,
+                    color: attempt.percentage >= 50 ? "#16a34a" : "#dc2626",
+                  }}
+                >
+                  {attempt.score}/{attempt.totalQuestions} ({attempt.percentage}%)
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
+
+      {showModal && (
+        <CreateQuizModal
+          token={token}
+          courses={courses}
+          onClose={() => setShowModal(false)}
+          onCreated={handleCreated}
+        />
+      )}
     </div>
   );
 }

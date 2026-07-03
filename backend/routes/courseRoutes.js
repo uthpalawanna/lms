@@ -1,7 +1,20 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const { createCourse } = require('../controllers/courseController');
+const {
+  createCourse,
+  getMyCourses,
+  getPublishedCourses,
+  getCourseById,
+  updateCourse,
+  deleteCourse,
+} = require("../controllers/courseController");
+const requireAuth = require("../middleware/auth");
 
-router.post('/', createCourse);
+router.get("/mine", requireAuth, getMyCourses);
+router.get("/", getPublishedCourses);
+router.post("/", requireAuth, createCourse);
+router.get("/:id", getCourseById);
+router.put("/:id", requireAuth, updateCourse);
+router.delete("/:id", requireAuth, deleteCourse);
 
 module.exports = router;

@@ -49,6 +49,7 @@ const STATS = [
 ];
 
 export default function Dashboard({ user, token, onLogout }) {
+  const [currentUser, setCurrentUser] = useState(user);
   const [active, setActive] = useState("dashboard");
   const [settingsTab, setSettingsTab] = useState("Profile");
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -89,8 +90,8 @@ export default function Dashboard({ user, token, onLogout }) {
   };
 
   const displayName =
-    (user?.firstName ? user.firstName.toUpperCase() : null) ||
-    (user?.username ? user.username.toUpperCase() : null) ||
+    (currentUser?.firstName ? currentUser.firstName.toUpperCase() : null) ||
+    (currentUser?.username ? currentUser.username.toUpperCase() : null) ||
     "USER";
   const avatarLetter = displayName.charAt(0);
 
@@ -202,11 +203,13 @@ export default function Dashboard({ user, token, onLogout }) {
               </div>
             </>
           )}
-          {active === "my-profile" && <MyProfile />}
-          {active === "enrolled-courses" && <EnrolledCourses />}
-          {active === "reviews" && <Reviews />}
+          {active === "my-profile" && (
+            <MyProfile token={token} onProfileUpdate={setCurrentUser} />
+          )}
+          {active === "enrolled-courses" && <EnrolledCourses token={token} />}
+          {active === "reviews" && <Reviews token={token} />}
           {active === "wishlist" && <Wishlist />}
-          {active === "quiz-attempts" && <MyQuizAttempts />}
+          {active === "quiz-attempts" && <MyQuizAttempts token={token} />}
           {active === "order-history" && <OrderHistory />}
           {active === "question-answer" && <QuestionAnswer />}
           {active === "my-courses" && (
@@ -228,7 +231,7 @@ export default function Dashboard({ user, token, onLogout }) {
           {active === "withdrawals" && (
             <Withdrawals onNavigateToWithdraw={handleNavigateToWithdraw} />
           )}
-          {active === "quiz-inst" && <QuizAttempts />}
+          {active === "quiz-inst" && <QuizAttempts token={token} />}
           {active === "settings" && <Settings initialTab={settingsTab} />}
         </main>
       </div>
