@@ -139,10 +139,8 @@ export default function Dashboard({ user, token, onLogout }) {
   return (
     <div className="db-page">
 
-      {/* ── Top bar ── */}
       <div className="db-profile-bar">
         <div className="db-profile-left">
-          {/* Hamburger — only on mobile */}
           {isMobile && (
             <button className="db-hamburger" onClick={() => setDrawerOpen(true)}>
               ☰
@@ -163,15 +161,12 @@ export default function Dashboard({ user, token, onLogout }) {
 
       <hr className="db-divider" />
 
-      {/* ── Mobile drawer overlay ── */}
       {isMobile && (
         <>
-          {/* Dark backdrop */}
           <div
             className={`db-drawer-overlay${drawerOpen ? " open" : ""}`}
             onClick={() => setDrawerOpen(false)}
           />
-          {/* Drawer panel */}
           <aside className={`db-drawer${drawerOpen ? " open" : ""}`}>
             <div className="db-drawer-header">
               <div className="db-avatar" style={{ width: 36, height: 36, fontSize: 16 }}>{avatarLetter}</div>
@@ -185,9 +180,7 @@ export default function Dashboard({ user, token, onLogout }) {
         </>
       )}
 
-      {/* ── Body ── */}
       <div className="db-body">
-        {/* Desktop sidebar — hidden on mobile */}
         {!isMobile && (
           <aside className="db-sidebar">
             <SidebarContent />
