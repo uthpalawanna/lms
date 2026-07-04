@@ -1,9 +1,11 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "./index.css";
 
 const API_URL = "http://localhost:5000/api/auth/login";
 
 function Login({ onLoginSuccess }) {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -35,6 +37,7 @@ function Login({ onLoginSuccess }) {
       }
 
       onLoginSuccess?.(data);
+      navigate("/dashboard", { replace: true });
     } catch (err) {
       console.error(err);
       setError("Could not reach the server. Is the backend running?");

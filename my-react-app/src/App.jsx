@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./login";
 import Dashboard from "./Dashboard";
 
@@ -19,11 +20,38 @@ function App() {
     setIsLoggedIn(false);
   };
 
-  if (!isLoggedIn) {
-    return <Login onLoginSuccess={handleLoginSuccess} />;
-  }
-
-  return <Dashboard user={user} token={token} onLogout={handleLogout} />;
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route
+          path="/signin"
+          element={<Login onLoginSuccess={handleLoginSuccess} />}
+        />
+        <Route
+          path="/dashboard"
+          element={
+            isLoggedIn ? (
+              <Dashboard user={user} token={token} onLogout={handleLogout} />
+            ) : (
+              <Navigate to="/signin" replace />
+            )
+          }
+        />
+        <Route
+          path="/"
+          element={
+            <Navigate to={isLoggedIn ? "/dashboard" : "/signin"} replace />
+          }
+        />
+        <Route
+          path="*"
+          element={
+            <Navigate to={isLoggedIn ? "/dashboard" : "/signin"} replace />
+          }
+        />
+      </Routes>
+    </BrowserRouter>
+  );
 }
 
 export default App;
