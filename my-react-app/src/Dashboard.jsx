@@ -15,6 +15,8 @@ import Withdrawals from "./Withdrawals";
 import QuizAttempts from "./QuizAttempts";
 import Settings from "./Settings";
 
+const ENROLLMENTS_URL = "http://localhost:5000/api/enrollments";
+const INSTRUCTOR_STATS_URL = "http://localhost:5000/api/courses/mine/stats";
 
 const SIDEBAR_MAIN = [
   { id: "dashboard", icon: "📊", label: "Dashboard" },
@@ -39,15 +41,6 @@ const SIDEBAR_BOTTOM = [
   { id: "logout", icon: "🚪", label: "Logout" },
 ];
 
-const STATS = [
-  { icon: "📖", label: "Enrolled Courses", value: "0", accent: false },
-  { icon: "🎓", label: "Active Courses", value: "0", accent: false },
-  { icon: "🏆", label: "Completed Courses", value: "0", accent: false },
-  { icon: "👥", label: "Total Students", value: "0", accent: true },
-  { icon: "📚", label: "Total Courses", value: "0", accent: true },
-  { icon: "💰", label: "Total Earnings", value: "Rs0.00", accent: false },
-];
-
 export default function Dashboard({ user, token, onLogout }) {
   const [currentUser, setCurrentUser] = useState(user);
   const [active, setActive] = useState("dashboard");
@@ -55,9 +48,15 @@ export default function Dashboard({ user, token, onLogout }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [showNewCourseModal, setShowNewCourseModal] = useState(false);
-  // Tracks which course was clicked in MyCourses, so CourseDetails knows
-  // which one to actually display instead of showing generic placeholders.
   const [selectedCourse, setSelectedCourse] = useState(null);
+
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [enrolledCount, setEnrolledCount] = useState(0);
+  const [activeCount, setActiveCount] = useState(0);
+  const [completedCount, setCompletedCount] = useState(0);
+  const [totalStudents, setTotalStudents] = useState(0);
+  const [totalCourses, setTotalCourses] = useState(0);
+  const [totalEarnings, setTotalEarnings] = useState(0);
 
   useEffect(() => {
     const fn = () => setIsMobile(window.innerWidth < 768);
@@ -68,6 +67,80 @@ export default function Dashboard({ user, token, onLogout }) {
   useEffect(() => {
     if (!isMobile) setDrawerOpen(false);
   }, [isMobile]);
+
+  const fetchDashboardStats = async () => {
+    if (!token) return;
+    setStatsLoading(true);
+    try {
+      const [enrollRes, instructorRes] = await Promise.all([
+        fetch(ENROLLMENTS_URL, { headers: { Authorization: `Bearer ${token}` } }),
+        fetch(INSTRUCTOR_STATS_URL, { headers: { Authorization: `Bearer ${token}` } }),
+      ]);
+
+      if (enrollRes.ok) {
+        const enrollments = await enrollRes.json();
+        setEnrolledCount(enrollments.length);
+        setActiveCount(enrollments.filter((e) => e.status === "active").length);
+        setCompletedCount(enrollments.filter((e) => e.status === "completed").length);
+      }
+
+      if (instructorRes.ok) {
+        const stats = await instructorRes.json();
+        setTotalStudents(stats.totalStudents || 0);
+        setTotalCourses(stats.totalCourses || 0);
+        setTotalEarnings(stats.totalRevenue || 0);
+      }
+    } catch (err) {
+      console.error("Could not load dashboard stats:", err);
+    } finally {
+      setStatsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (active === "dashboard" && token) {
+      fetchDashboardStats();
+    }
+  }, [active, token]);
+
+  const STATS = [
+    {
+      icon: "📖",
+      label: "Enrolled Courses",
+      value: statsLoading ? "…" : String(enrolledCount),
+      accent: false,
+    },
+    {
+      icon: "🎓",
+      label: "Active Courses",
+      value: statsLoading ? "…" : String(activeCount),
+      accent: false,
+    },
+    {
+      icon: "🏆",
+      label: "Completed Courses",
+      value: statsLoading ? "…" : String(completedCount),
+      accent: false,
+    },
+    {
+      icon: "👥",
+      label: "Total Students",
+      value: statsLoading ? "…" : String(totalStudents),
+      accent: true,
+    },
+    {
+      icon: "📚",
+      label: "Total Courses",
+      value: statsLoading ? "…" : String(totalCourses),
+      accent: true,
+    },
+    {
+      icon: "💰",
+      label: "Total Earnings",
+      value: statsLoading ? "…" : `Rs${totalEarnings.toFixed(2)}`,
+      accent: false,
+    },
+  ];
 
   const handleNav = (id) => {
     if (id === "logout") {
@@ -92,7 +165,6 @@ export default function Dashboard({ user, token, onLogout }) {
     setDrawerOpen(false);
   };
 
-  // Called from MyCourses when a course card/title is clicked.
   const handleCourseClick = (course) => {
     setSelectedCourse(course);
     setActive("course-details");
@@ -215,7 +287,9 @@ export default function Dashboard({ user, token, onLogout }) {
           {active === "my-profile" && (
             <MyProfile token={token} onProfileUpdate={setCurrentUser} />
           )}
-          {active === "enrolled-courses" && <EnrolledCourses token={token} />}
+          {active === "enrolled-courses" && (
+            <EnrolledCourses token={token} onCourseClick={handleCourseClick} />
+          )}
           {active === "reviews" && <Reviews token={token} />}
           {active === "wishlist" && <Wishlist token={token} />}
           {active === "quiz-attempts" && <MyQuizAttempts token={token} />}
@@ -252,9 +326,7 @@ export default function Dashboard({ user, token, onLogout }) {
             <Withdrawals token={token} onNavigateToWithdraw={handleNavigateToWithdraw} />
           )}
           {active === "quiz-inst" && <QuizAttempts token={token} />}
-          {active === "settings" && (
-            <Settings token={token} initialTab={settingsTab} onProfileUpdate={setCurrentUser} />
-          )}
+          {active === "settings" && <Settings initialTab={settingsTab} />}
         </main>
       </div>
     </div>

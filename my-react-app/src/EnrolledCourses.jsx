@@ -10,6 +10,35 @@ const TABS = [
   { id: "completed", label: "Completed Courses" },
 ];
 
+function resolveThumbnailUrl(thumbnail) {
+  if (!thumbnail) return null;
+  return thumbnail.startsWith("/uploads")
+    ? `http://localhost:5000${thumbnail}`
+    : thumbnail;
+}
+
+function CourseThumbnail({ thumbnail, title }) {
+  const resolvedUrl = resolveThumbnailUrl(thumbnail);
+  return (
+    <div className="course-img-placeholder">
+      {resolvedUrl ? (
+        <img
+          src={resolvedUrl}
+          alt={title}
+          style={{ width: "100%", height: "100%", objectFit: "cover" }}
+        />
+      ) : (
+        <svg width="100%" height="100%" viewBox="0 0 400 200" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="400" height="200" fill="#f0f2f8"/>
+          <circle cx="100" cy="60" r="20" fill="#dce1f0"/>
+          <path d="M150 200 L250 80 L350 200 Z" fill="#e2e5ef"/>
+          <path d="M250 200 L320 120 L400 200 Z" fill="#dce1f0"/>
+        </svg>
+      )}
+    </div>
+  );
+}
+
 function EmptyState({ text, color }) {
   return (
     <div className="ec-empty-state">
@@ -26,7 +55,7 @@ function EmptyState({ text, color }) {
   );
 }
 
-export default function EnrolledCourses({ token }) {
+export default function EnrolledCourses({ token, onCourseClick }) {
   const [activeTab, setActiveTab] = useState("browse");
 
   const [courses, setCourses] = useState([]);
@@ -34,6 +63,8 @@ export default function EnrolledCourses({ token }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [enrollingId, setEnrollingId] = useState(null);
+  const [unenrollingId, setUnenrollingId] = useState(null);
+  const [openingId, setOpeningId] = useState(null);
   const [message, setMessage] = useState("");
 
   const fetchAll = async () => {
@@ -64,7 +95,6 @@ export default function EnrolledCourses({ token }) {
 
   useEffect(() => {
     if (token) fetchAll();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
   const isEnrolled = (courseId) =>
@@ -95,6 +125,51 @@ export default function EnrolledCourses({ token }) {
       setMessage("Could not reach the server. Is the backend running?");
     } finally {
       setEnrollingId(null);
+    }
+  };
+
+  const handleUnenroll = async (enrollmentId, courseTitle) => {
+    const confirmed = window.confirm(
+      `Unenroll from "${courseTitle}"? Your progress on this course will be lost.`
+    );
+    if (!confirmed) return;
+
+    setUnenrollingId(enrollmentId);
+    try {
+      const response = await fetch(`${ENROLLMENTS_URL}/${enrollmentId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (response.ok) {
+        setEnrollments((prev) => prev.filter((e) => e._id !== enrollmentId));
+      } else {
+        const data = await response.json();
+        alert(data.message || "Could not unenroll from this course.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Could not reach the server. Is the backend running?");
+    } finally {
+      setUnenrollingId(null);
+    }
+  };
+
+  const handleOpenEnrolledCourse = async (courseId) => {
+    if (!courseId) return;
+    setOpeningId(courseId);
+    try {
+      const response = await fetch(`${COURSES_URL}/${courseId}`);
+      const data = await response.json();
+      if (!response.ok) {
+        alert(data.message || "Could not open this course.");
+        return;
+      }
+      onCourseClick?.(data);
+    } catch (err) {
+      console.error(err);
+      alert("Could not reach the server. Is the backend running?");
+    } finally {
+      setOpeningId(null);
     }
   };
 
@@ -139,18 +214,19 @@ export default function EnrolledCourses({ token }) {
                 const enrolled = isEnrolled(course._id);
                 return (
                   <div key={course._id} className="course-card">
-                    <div className="course-img-placeholder">
-                      <svg width="100%" height="100%" viewBox="0 0 400 200" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <rect width="400" height="200" fill="#f0f2f8"/>
-                        <circle cx="100" cy="60" r="20" fill="#dce1f0"/>
-                        <path d="M150 200 L250 80 L350 200 Z" fill="#e2e5ef"/>
-                        <path d="M250 200 L320 120 L400 200 Z" fill="#dce1f0"/>
-                      </svg>
+                    <div onClick={() => onCourseClick?.(course)} style={{ cursor: "pointer" }}>
+                      <CourseThumbnail thumbnail={course.thumbnail} title={course.title} />
                     </div>
 
                     <div className="course-content">
                       <p className="course-date">{course.category}</p>
-                      <h3 className="course-title">{course.title}</h3>
+                      <h3
+                        className="course-title"
+                        onClick={() => onCourseClick?.(course)}
+                        style={{ cursor: "pointer" }}
+                      >
+                        {course.title}
+                      </h3>
                       {course.instructor && (
                         <p style={{ fontSize: 12, color: "#5c6b8a", marginTop: 4 }}>
                           By {course.instructor.firstName} {course.instructor.lastName}
@@ -181,28 +257,57 @@ export default function EnrolledCourses({ token }) {
           <EmptyState text="No Data Available in this Section" />
         ) : (
           <div className="course-grid">
-            {visibleEnrollments.map((enrollment) => (
-              <div key={enrollment._id} className="course-card">
-                <div className="course-img-placeholder">
-                  <svg width="100%" height="100%" viewBox="0 0 400 200" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect width="400" height="200" fill="#f0f2f8"/>
-                    <circle cx="100" cy="60" r="20" fill="#dce1f0"/>
-                    <path d="M150 200 L250 80 L350 200 Z" fill="#e2e5ef"/>
-                    <path d="M250 200 L320 120 L400 200 Z" fill="#dce1f0"/>
-                  </svg>
+            {visibleEnrollments.map((enrollment) => {
+              const courseId = enrollment.course?._id;
+              const isOpening = openingId === courseId;
+              return (
+                <div key={enrollment._id} className="course-card">
+                  <div
+                    onClick={() => handleOpenEnrolledCourse(courseId)}
+                    style={{ cursor: "pointer" }}
+                  >
+                    <CourseThumbnail
+                      thumbnail={enrollment.course?.thumbnail}
+                      title={enrollment.course?.title}
+                    />
+                  </div>
+                  <div className="course-content">
+                    <p className="course-date">{enrollment.course?.category}</p>
+                    <h3
+                      className="course-title"
+                      onClick={() => handleOpenEnrolledCourse(courseId)}
+                      style={{ cursor: "pointer" }}
+                    >
+                      {isOpening ? "Opening..." : enrollment.course?.title}
+                    </h3>
+                  </div>
+                  <div className="course-footer" style={{ flexWrap: "wrap", gap: 8 }}>
+                    <div>
+                      <span className="course-price">{enrollment.progress}% complete</span>
+                      <span style={{ fontSize: 12, color: "#5c6b8a", textTransform: "capitalize", marginLeft: 8 }}>
+                        {enrollment.status}
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => handleUnenroll(enrollment._id, enrollment.course?.title)}
+                      disabled={unenrollingId === enrollment._id}
+                      style={{
+                        background: "none",
+                        border: "1px solid #fca5a5",
+                        color: "#dc2626",
+                        borderRadius: 6,
+                        padding: "5px 12px",
+                        fontSize: 12,
+                        fontWeight: 600,
+                        cursor: "pointer",
+                      }}
+                    >
+                      {unenrollingId === enrollment._id ? "Removing..." : "Unenroll"}
+                    </button>
+                  </div>
                 </div>
-                <div className="course-content">
-                  <p className="course-date">{enrollment.course?.category}</p>
-                  <h3 className="course-title">{enrollment.course?.title}</h3>
-                </div>
-                <div className="course-footer">
-                  <span className="course-price">{enrollment.progress}% complete</span>
-                  <span style={{ fontSize: 12, color: "#5c6b8a", textTransform: "capitalize" }}>
-                    {enrollment.status}
-                  </span>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

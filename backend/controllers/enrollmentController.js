@@ -60,4 +60,20 @@ async function updateEnrollment(req, res) {
   }
 }
 
-module.exports = { enroll, getMyEnrollments, updateEnrollment };
+async function unenroll(req, res) {
+  try {
+    const enrollment = await Enrollment.findById(req.params.id);
+    if (!enrollment) return res.status(404).json({ message: "Enrollment not found." });
+    if (enrollment.student.toString() !== req.userId) {
+      return res.status(403).json({ message: "This isn't your enrollment." });
+    }
+
+    await enrollment.deleteOne();
+    res.json({ message: "Unenrolled successfully." });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Could not unenroll from the course." });
+  }
+}
+
+module.exports = { enroll, getMyEnrollments, updateEnrollment, unenroll };

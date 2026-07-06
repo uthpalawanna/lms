@@ -42,10 +42,11 @@ export default function Withdrawals({ token, onNavigateToWithdraw }) {
     let cancelled = false;
 
     fetch(INSTRUCTOR_STATS_URL, { headers: { Authorization: `Bearer ${token}` } })
-      .then((res) => (res.ok ? res.json() : { totalEarnings: 0 }))
+      .then((res) => (res.ok ? res.json() : { totalRevenue: 0 }))
       .then((data) => {
         if (!cancelled) {
-          setBalance(data.totalEarnings || 0);
+         
+          setBalance(data.totalRevenue || 0);
           setLoading(false);
         }
       })
