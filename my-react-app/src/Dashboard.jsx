@@ -55,6 +55,8 @@ export default function Dashboard({ user, token, onLogout }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [showNewCourseModal, setShowNewCourseModal] = useState(false);
+  // Tracks which course was clicked in MyCourses, so CourseDetails knows
+  // which one to actually display instead of showing generic placeholders.
   const [selectedCourse, setSelectedCourse] = useState(null);
 
   useEffect(() => {
@@ -90,6 +92,7 @@ export default function Dashboard({ user, token, onLogout }) {
     setDrawerOpen(false);
   };
 
+  // Called from MyCourses when a course card/title is clicked.
   const handleCourseClick = (course) => {
     setSelectedCourse(course);
     setActive("course-details");
@@ -249,7 +252,9 @@ export default function Dashboard({ user, token, onLogout }) {
             <Withdrawals token={token} onNavigateToWithdraw={handleNavigateToWithdraw} />
           )}
           {active === "quiz-inst" && <QuizAttempts token={token} />}
-          {active === "settings" && <Settings initialTab={settingsTab} />}
+          {active === "settings" && (
+            <Settings token={token} initialTab={settingsTab} onProfileUpdate={setCurrentUser} />
+          )}
         </main>
       </div>
     </div>

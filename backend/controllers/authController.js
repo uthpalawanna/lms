@@ -54,17 +54,13 @@ async function register(req, res) {
 
 async function login(req, res) {
   try {
-    // The frontend allows the user to enter either an email or a username
-    // in the same input. Treat the submitted value as an identifier and
-    // try to find a user by email or username.
     const { email, password } = req.body;
-    const identifier = (email || "").toString().trim();
 
-    if (!identifier || !password) {
-      return res.status(400).json({ message: "Please provide email/username and password." });
+    if (!email || !password) {
+      return res.status(400).json({ message: "Please provide email and password." });
     }
 
-    const user = await User.findOne({ $or: [{ email: identifier }, { username: identifier }] });
+    const user = await User.findOne({ email });
     if (!user) {
       return res.status(401).json({ message: "Invalid email or password." });
     }
@@ -113,7 +109,7 @@ async function updateMe(req, res) {
       return res.status(404).json({ message: "User not found." });
     }
 
-    const { firstName, lastName, phone, skill, bio, avatarUrl, email, username } = req.body;
+    const { firstName, lastName, phone, skill, bio, avatarUrl, coverPhotoUrl, displayName, email, username } = req.body;
 
     if (email !== undefined && email !== user.email) {
       const trimmedEmail = email.trim().toLowerCase();
@@ -150,6 +146,8 @@ async function updateMe(req, res) {
     if (skill !== undefined) user.skill = skill;
     if (bio !== undefined) user.bio = bio;
     if (avatarUrl !== undefined) user.avatarUrl = avatarUrl;
+    if (coverPhotoUrl !== undefined) user.coverPhotoUrl = coverPhotoUrl;
+    if (displayName !== undefined) user.displayName = displayName;
 
     await user.save();
 
