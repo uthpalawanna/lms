@@ -1,5 +1,19 @@
 const Course = require("../models/Course");
-const Enrollment = require("../models/Enrollment");
+
+const EDITABLE_FIELDS = [
+  "title", "slug", "description", "difficultyLevel", "isPublicPreview",
+  "enableQA", "visibility", "scheduledAt", "thumbnail", "introVideoUrl",
+  "price", "categories", "tags", "category", "curriculum",
+  "requirements", "targetAudience", "materials", "faqs", "status",
+];
+
+function pickEditableFields(body) {
+  const result = {};
+  for (const key of EDITABLE_FIELDS) {
+    if (body[key] !== undefined) result[key] = body[key];
+  }
+  return result;
+}
 
 async function getPublishedCourses(req, res) {
   try {
@@ -15,19 +29,20 @@ async function getPublishedCourses(req, res) {
 
 async function createCourse(req, res) {
   try {
-    const { title, description, category, price, thumbnail, status } = req.body;
+    const fields = pickEditableFields(req.body);
 
-    if (!title || !title.trim()) {
+    if (!fields.title || !fields.title.trim()) {
       return res.status(400).json({ message: "Course title is required." });
     }
 
+    
+    if (fields.categories && fields.categories.length > 0 && !fields.category) {
+      fields.category = fields.categories[0];
+    }
+
     const course = await Course.create({
-      title: title.trim(),
-      description: description || "",
-      category: category || "Uncategorized",
-      price: price || 0,
-      thumbnail: thumbnail || "",
-      status: status || "draft",
+      ...fields,
+      title: fields.title.trim(),
       instructor: req.userId,
     });
 
@@ -45,42 +60,6 @@ async function getMyCourses(req, res) {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Could not fetch your courses." });
-  }
-}
-
-async function getInstructorStats(req, res) {
-  try {
-    const myCourses = await Course.find({ instructor: req.userId }, "_id price");
-    const courseIds = myCourses.map((c) => c._id);
-
-    if (courseIds.length === 0) {
-      return res.json({ totalCourses: 0, totalStudents: 0, totalEarnings: 0 });
-    }
-
-    const priceByCourseId = {};
-    myCourses.forEach((c) => {
-      priceByCourseId[c._id.toString()] = c.price || 0;
-    });
-
-    const enrollments = await Enrollment.find(
-      { course: { $in: courseIds } },
-      "student course"
-    );
-
-    const uniqueStudentIds = new Set(enrollments.map((e) => e.student.toString()));
-    const totalEarnings = enrollments.reduce(
-      (sum, e) => sum + (priceByCourseId[e.course.toString()] || 0),
-      0
-    );
-
-    res.json({
-      totalCourses: myCourses.length,
-      totalStudents: uniqueStudentIds.size,
-      totalEarnings,
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Could not fetch instructor stats." });
   }
 }
 
@@ -110,13 +89,11 @@ async function updateCourse(req, res) {
       return res.status(403).json({ message: "You don't own this course." });
     }
 
-    const { title, description, category, price, thumbnail, status } = req.body;
-    if (title !== undefined) course.title = title;
-    if (description !== undefined) course.description = description;
-    if (category !== undefined) course.category = category;
-    if (price !== undefined) course.price = price;
-    if (thumbnail !== undefined) course.thumbnail = thumbnail;
-    if (status !== undefined) course.status = status;
+    const fields = pickEditableFields(req.body);
+    if (fields.categories && fields.categories.length > 0 && !fields.category) {
+      fields.category = fields.categories[0];
+    }
+    Object.assign(course, fields);
 
     await course.save();
     res.json(course);
@@ -147,7 +124,6 @@ async function deleteCourse(req, res) {
 module.exports = {
   createCourse,
   getMyCourses,
-  getInstructorStats,
   getPublishedCourses,
   getCourseById,
   updateCourse,

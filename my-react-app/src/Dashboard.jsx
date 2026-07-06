@@ -39,8 +39,14 @@ const SIDEBAR_BOTTOM = [
   { id: "logout", icon: "🚪", label: "Logout" },
 ];
 
-const ENROLLMENTS_URL = "http://localhost:5000/api/enrollments";
-const INSTRUCTOR_STATS_URL = "http://localhost:5000/api/courses/mine/stats";
+const STATS = [
+  { icon: "📖", label: "Enrolled Courses", value: "0", accent: false },
+  { icon: "🎓", label: "Active Courses", value: "0", accent: false },
+  { icon: "🏆", label: "Completed Courses", value: "0", accent: false },
+  { icon: "👥", label: "Total Students", value: "0", accent: true },
+  { icon: "📚", label: "Total Courses", value: "0", accent: true },
+  { icon: "💰", label: "Total Earnings", value: "Rs0.00", accent: false },
+];
 
 export default function Dashboard({ user, token, onLogout }) {
   const [currentUser, setCurrentUser] = useState(user);
@@ -49,65 +55,7 @@ export default function Dashboard({ user, token, onLogout }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [showNewCourseModal, setShowNewCourseModal] = useState(false);
-  const [stats, setStats] = useState({
-    enrolled: 0,
-    active: 0,
-    completed: 0,
-    totalCourses: 0,
-    totalStudents: 0,
-    totalEarnings: 0,
-    loading: true,
-  });
-
-  useEffect(() => {
-    if (!token) return;
-    let cancelled = false;
-
-    async function loadStats() {
-      try {
-        const [enrollRes, instructorStatsRes] = await Promise.all([
-          fetch(ENROLLMENTS_URL, { headers: { Authorization: `Bearer ${token}` } }),
-          fetch(INSTRUCTOR_STATS_URL, { headers: { Authorization: `Bearer ${token}` } }),
-        ]);
-        const enrollments = enrollRes.ok ? await enrollRes.json() : [];
-        const instructorStats = instructorStatsRes.ok
-          ? await instructorStatsRes.json()
-          : { totalCourses: 0, totalStudents: 0, totalEarnings: 0 };
-
-        if (cancelled) return;
-        setStats({
-          enrolled: Array.isArray(enrollments) ? enrollments.length : 0,
-          active: Array.isArray(enrollments)
-            ? enrollments.filter((e) => e.status === "active").length
-            : 0,
-          completed: Array.isArray(enrollments)
-            ? enrollments.filter((e) => e.status === "completed").length
-            : 0,
-          totalCourses: instructorStats.totalCourses || 0,
-          totalStudents: instructorStats.totalStudents || 0,
-          totalEarnings: instructorStats.totalEarnings || 0,
-          loading: false,
-        });
-      } catch (err) {
-        console.error(err);
-        if (!cancelled) setStats((prev) => ({ ...prev, loading: false }));
-      }
-    }
-
-    loadStats();
-    return () => {
-      cancelled = true;
-    };
-  }, [token, active]);
-
-  const STATS = [
-    { icon: "📖", label: "Enrolled Courses", value: stats.loading ? "…" : String(stats.enrolled), accent: false },
-    { icon: "🎓", label: "Active Courses", value: stats.loading ? "…" : String(stats.active), accent: false },
-    { icon: "🏆", label: "Completed Courses", value: stats.loading ? "…" : String(stats.completed), accent: false },
-    { icon: "👥", label: "Total Students", value: stats.loading ? "…" : String(stats.totalStudents), accent: true },
-    { icon: "📚", label: "Total Courses", value: stats.loading ? "…" : String(stats.totalCourses), accent: true },
-    { icon: "💰", label: "Total Earnings", value: stats.loading ? "…" : `Rs${stats.totalEarnings.toFixed(2)}`, accent: false },
-  ];
+  const [selectedCourse, setSelectedCourse] = useState(null);
 
   useEffect(() => {
     const fn = () => setIsMobile(window.innerWidth < 768);
@@ -140,6 +88,11 @@ export default function Dashboard({ user, token, onLogout }) {
     setActive("my-courses");
     setShowNewCourseModal(true);
     setDrawerOpen(false);
+  };
+
+  const handleCourseClick = (course) => {
+    setSelectedCourse(course);
+    setActive("course-details");
   };
 
   const displayName =
@@ -261,25 +214,36 @@ export default function Dashboard({ user, token, onLogout }) {
           )}
           {active === "enrolled-courses" && <EnrolledCourses token={token} />}
           {active === "reviews" && <Reviews token={token} />}
-          {active === "wishlist" && <Wishlist />}
+          {active === "wishlist" && <Wishlist token={token} />}
           {active === "quiz-attempts" && <MyQuizAttempts token={token} />}
-          {active === "order-history" && <OrderHistory />}
-          {active === "question-answer" && <QuestionAnswer />}
+          {active === "order-history" && <OrderHistory token={token} />}
+          {active === "question-answer" && <QuestionAnswer token={token} />}
           {active === "my-courses" && (
             <MyCourses
               token={token}
-              onCourseClick={() => setActive("course-details")}
+              user={currentUser}
+              onCourseClick={handleCourseClick}
               showModal={showNewCourseModal}
               setShowModal={setShowNewCourseModal}
             />
           )}
           {active === "course-details" && (
             <CourseDetails
+              course={selectedCourse}
+              token={token}
+              user={currentUser}
               onBack={() => setActive("my-courses")}
               onAuthorClick={() => setActive("instructor-profile")}
             />
           )}
-          {active === "instructor-profile" && <InstructorProfile />}
+          {active === "instructor-profile" && (
+            <InstructorProfile
+              user={currentUser}
+              token={token}
+              onNewCourse={handleNewCourseClick}
+              onEditProfile={() => setActive("my-profile")}
+            />
+          )}
           {active === "announcements" && <Announcements token={token} />}
           {active === "withdrawals" && (
             <Withdrawals token={token} onNavigateToWithdraw={handleNavigateToWithdraw} />

@@ -1,4 +1,7 @@
 import React, { useState, useEffect } from "react";
+import CourseBuilderModal from "./CourseBuilderModal";
+
+const API_URL = "http://localhost:5000/api/courses";
 
 const TABS = [
   { id: "publish", label: "Publish" },
@@ -6,8 +9,6 @@ const TABS = [
   { id: "draft", label: "Draft" },
   { id: "schedule", label: "Schedule" },
 ];
-
-const API_URL = "http://localhost:5000/api/courses";
 
 function formatDate(dateString) {
   const d = new Date(dateString);
@@ -24,41 +25,50 @@ function formatPrice(price) {
   return price === 0 || price === undefined ? "Free" : `Rs${price}`;
 }
 
-export default function MyCourses({ token, refreshKey, onCourseClick }) {
+export default function MyCourses({
+  token,
+  user,
+  refreshKey,
+  onCourseClick,
+  showModal: showModalProp,
+  setShowModal: setShowModalProp,
+}) {
   const [activeTab, setActiveTab] = useState("draft");
   const [openMenuId, setOpenMenuId] = useState(null);
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  useEffect(() => {
+  const [localShowModal, setLocalShowModal] = useState(false);
+  const showBuilder = showModalProp !== undefined ? showModalProp : localShowModal;
+  const setShowBuilder = setShowModalProp || setLocalShowModal;
+
+  const fetchCourses = async () => {
     if (!token) return;
-
-    async function fetchCourses() {
-      setLoading(true);
-      setError("");
-      try {
-        const response = await fetch(`${API_URL}/mine`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const data = await response.json();
-
-        if (!response.ok) {
-          setError(data.message || "Could not load courses.");
-          setLoading(false);
-          return;
-        }
-
-        setCourses(data);
-      } catch (err) {
-        console.error(err);
-        setError("Could not reach the server. Is the backend running?");
-      } finally {
+    setLoading(true);
+    setError("");
+    try {
+      const response = await fetch(`${API_URL}/mine`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        setError(data.message || "Could not load courses.");
         setLoading(false);
+        return;
       }
+      setCourses(data);
+    } catch (err) {
+      console.error(err);
+      setError("Could not reach the server. Is the backend running?");
+    } finally {
+      setLoading(false);
     }
+  };
 
+  useEffect(() => {
     fetchCourses();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token, refreshKey]);
 
   const handleDelete = async (id) => {
@@ -76,12 +86,23 @@ export default function MyCourses({ token, refreshKey, onCourseClick }) {
     }
   };
 
+  const handleCourseSaved = (newCourse) => {
+    setCourses((prev) => [newCourse, ...prev]);
+    setShowBuilder(false);
+    setActiveTab(newCourse.status);
+  };
+
   const coursesForTab = courses.filter((c) => c.status === activeTab);
   const countFor = (status) => courses.filter((c) => c.status === status).length;
 
   return (
     <div className="ec-container">
-      <h2 className="db-section-title">My Courses</h2>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.75rem" }}>
+        <h2 className="db-section-title">My Courses</h2>
+        <button className="db-new-course-btn" onClick={() => setShowBuilder(true)}>
+          ＋ Add New Course
+        </button>
+      </div>
 
       <div className="ec-tabs-header">
         {TABS.map((tab) => (
@@ -116,7 +137,7 @@ export default function MyCourses({ token, refreshKey, onCourseClick }) {
                 <div className="course-img-placeholder">
                   {course.thumbnail ? (
                     <img
-                      src={course.thumbnail}
+                      src={course.thumbnail.startsWith("/uploads") ? `http://localhost:5000${course.thumbnail}` : course.thumbnail}
                       alt={course.title}
                       style={{ width: "100%", height: "100%", objectFit: "cover" }}
                     />
@@ -132,7 +153,7 @@ export default function MyCourses({ token, refreshKey, onCourseClick }) {
 
                 <div className="course-content">
                   <p className="course-date">{formatDate(course.createdAt)}</p>
-                  <h3 className="course-title" onClick={() => onCourseClick(course)} style={{ cursor: "pointer" }}>
+                  <h3 className="course-title" onClick={() => onCourseClick?.(course)} style={{ cursor: "pointer" }}>
                     {course.title}
                   </h3>
                   {course.category && (
@@ -145,7 +166,7 @@ export default function MyCourses({ token, refreshKey, onCourseClick }) {
 
                   <div className="course-actions" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
 
-                    <button className="course-menu-btn" onClick={() => console.log("Edit course:", course._id)}>
+                    <button className="course-menu-btn" onClick={() => onCourseClick?.(course)}>
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5c6b8a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                         <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
@@ -180,6 +201,15 @@ export default function MyCourses({ token, refreshKey, onCourseClick }) {
           </div>
         )}
       </div>
+
+      {showBuilder && (
+        <CourseBuilderModal
+          token={token}
+          user={user}
+          onClose={() => setShowBuilder(false)}
+          onSaved={handleCourseSaved}
+        />
+      )}
     </div>
   );
 }
