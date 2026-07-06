@@ -6,7 +6,7 @@ const {
   getQuizById,
   getMyQuizzes,
   deleteQuiz,
-} = require("../controllers/quizController");
+} = require("../controllers/QuizController");
 const requireAuth = require("../middleware/auth");
 
 router.post("/", requireAuth, createQuiz);

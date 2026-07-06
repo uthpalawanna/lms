@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { getMyWishlist, addToWishlist, removeFromWishlist } = require("../controllers/wishlistController");
+const { getMyWishlist, addToWishlist, removeFromWishlist } = require("../controllers/WishlistController");
 const requireAuth = require("../middleware/auth");
 
 router.get("/", requireAuth, getMyWishlist);

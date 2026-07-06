@@ -4,7 +4,7 @@ const {
   createAnnouncement,
   getAnnouncements,
   deleteAnnouncement,
-} = require("../controllers/announcementController");
+} = require("../controllers/Announcementcontroller");
 const requireAuth = require("../middleware/auth");
 
 router.post("/", requireAuth, createAnnouncement);

@@ -4,7 +4,7 @@ const {
   submitAttempt,
   getMyAttempts,
   getReceivedAttempts,
-} = require("../controllers/quizAttemptController");
+} = require("../controllers/QuizAttemptController");
 const requireAuth = require("../middleware/auth");
 
 router.post("/", requireAuth, submitAttempt);

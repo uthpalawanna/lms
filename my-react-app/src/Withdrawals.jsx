@@ -1,7 +1,6 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 
-const BALANCE = 0;
-const formattedBalance = `Rs${BALANCE.toFixed(2)}`;
+const INSTRUCTOR_STATS_URL = "http://localhost:5000/api/courses/mine/stats";
 
 function MailboxIcon() {
   return (
@@ -34,7 +33,35 @@ function MailboxIcon() {
   );
 }
 
-export default function Withdrawals({ onNavigateToWithdraw }) {
+export default function Withdrawals({ token, onNavigateToWithdraw }) {
+  const [balance, setBalance] = useState(0);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!token) return;
+    let cancelled = false;
+
+    fetch(INSTRUCTOR_STATS_URL, { headers: { Authorization: `Bearer ${token}` } })
+      .then((res) => (res.ok ? res.json() : { totalEarnings: 0 }))
+      .then((data) => {
+        if (!cancelled) {
+          setBalance(data.totalEarnings || 0);
+          setLoading(false);
+        }
+      })
+      .catch((err) => {
+        console.error(err);
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [token]);
+
+  const formattedBalance = loading ? "…" : `Rs${balance.toFixed(2)}`;
+  const hasBalance = !loading && balance > 0;
+
   return (
     <div className="ec-container">
       <h2 className="db-section-title">Withdrawals</h2>
@@ -50,7 +77,8 @@ export default function Withdrawals({ onNavigateToWithdraw }) {
         <div>
           <p className="withdraw-balance-label">Current Balance is {formattedBalance}</p>
           <p className="withdraw-balance-main">
-            You have <strong>{formattedBalance}</strong> and this is insufficient balance to withdraw
+            You have <strong>{formattedBalance}</strong>
+            {hasBalance ? " available to withdraw" : " and this is insufficient balance to withdraw"}
           </p>
         </div>
       </div>

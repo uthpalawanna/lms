@@ -1,4 +1,5 @@
 const Course = require("../models/Course");
+const Enrollment = require("../models/Enrollment");
 
 async function getPublishedCourses(req, res) {
   try {
@@ -44,6 +45,42 @@ async function getMyCourses(req, res) {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Could not fetch your courses." });
+  }
+}
+
+async function getInstructorStats(req, res) {
+  try {
+    const myCourses = await Course.find({ instructor: req.userId }, "_id price");
+    const courseIds = myCourses.map((c) => c._id);
+
+    if (courseIds.length === 0) {
+      return res.json({ totalCourses: 0, totalStudents: 0, totalEarnings: 0 });
+    }
+
+    const priceByCourseId = {};
+    myCourses.forEach((c) => {
+      priceByCourseId[c._id.toString()] = c.price || 0;
+    });
+
+    const enrollments = await Enrollment.find(
+      { course: { $in: courseIds } },
+      "student course"
+    );
+
+    const uniqueStudentIds = new Set(enrollments.map((e) => e.student.toString()));
+    const totalEarnings = enrollments.reduce(
+      (sum, e) => sum + (priceByCourseId[e.course.toString()] || 0),
+      0
+    );
+
+    res.json({
+      totalCourses: myCourses.length,
+      totalStudents: uniqueStudentIds.size,
+      totalEarnings,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Could not fetch instructor stats." });
   }
 }
 
@@ -110,6 +147,7 @@ async function deleteCourse(req, res) {
 module.exports = {
   createCourse,
   getMyCourses,
+  getInstructorStats,
   getPublishedCourses,
   getCourseById,
   updateCourse,

@@ -13,11 +13,11 @@ const cors = require("cors");
 const connectDB = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
 const courseRoutes = require("./routes/courseRoutes");
-const announcementRoutes = require("./routes/announcementRoutes");
+const announcementRoutes = require("./routes/Announcementroutes");
 const enrollmentRoutes = require("./routes/enrollmentRoutes");
-const reviewRoutes = require("./routes/reviewRoutes");
-const quizRoutes = require("./routes/quizRoutes");
-const quizAttemptRoutes = require("./routes/quizAttemptRoutes");
+const reviewRoutes = require("./routes/ReviewRoutes");
+const quizRoutes = require("./routes/QuizRoutes");
+const quizAttemptRoutes = require("./routes/QuizAttemptRoutes");
 
 const app = express();
 

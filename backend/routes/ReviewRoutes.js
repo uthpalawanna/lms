@@ -6,7 +6,7 @@ const {
   getCourseReviews,
   getReceivedReviews,
   deleteReview,
-} = require("../controllers/reviewController");
+} = require("../controllers/Reviewcontroller");
 const requireAuth = require("../middleware/auth");
 
 router.post("/", requireAuth, createReview);

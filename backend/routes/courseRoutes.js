@@ -3,6 +3,7 @@ const router = express.Router();
 const {
   createCourse,
   getMyCourses,
+  getInstructorStats,
   getPublishedCourses,
   getCourseById,
   updateCourse,
@@ -11,6 +12,7 @@ const {
 const requireAuth = require("../middleware/auth");
 
 router.get("/mine", requireAuth, getMyCourses);
+router.get("/mine/stats", requireAuth, getInstructorStats);
 router.get("/", getPublishedCourses);
 router.post("/", requireAuth, createCourse);
 router.get("/:id", getCourseById);
