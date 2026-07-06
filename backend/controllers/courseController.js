@@ -1,4 +1,5 @@
 const Course = require("../models/Course");
+const Enrollment = require("../models/Enrollment");
 
 const EDITABLE_FIELDS = [
   "title", "slug", "description", "difficultyLevel", "isPublicPreview",
@@ -30,22 +31,18 @@ async function getPublishedCourses(req, res) {
 async function createCourse(req, res) {
   try {
     const fields = pickEditableFields(req.body);
-
     if (!fields.title || !fields.title.trim()) {
       return res.status(400).json({ message: "Course title is required." });
     }
 
-    
     if (fields.categories && fields.categories.length > 0 && !fields.category) {
       fields.category = fields.categories[0];
     }
-
     const course = await Course.create({
       ...fields,
       title: fields.title.trim(),
       instructor: req.userId,
     });
-
     res.status(201).json(course);
   } catch (error) {
     console.error(error);
@@ -88,13 +85,11 @@ async function updateCourse(req, res) {
     if (course.instructor.toString() !== req.userId) {
       return res.status(403).json({ message: "You don't own this course." });
     }
-
     const fields = pickEditableFields(req.body);
     if (fields.categories && fields.categories.length > 0 && !fields.category) {
       fields.category = fields.categories[0];
     }
     Object.assign(course, fields);
-
     await course.save();
     res.json(course);
   } catch (error) {
@@ -112,7 +107,6 @@ async function deleteCourse(req, res) {
     if (course.instructor.toString() !== req.userId) {
       return res.status(403).json({ message: "You don't own this course." });
     }
-
     await course.deleteOne();
     res.json({ message: "Course deleted." });
   } catch (error) {
@@ -121,9 +115,45 @@ async function deleteCourse(req, res) {
   }
 }
 
+
+async function getInstructorStats(req, res) {
+  try {
+    const courses = await Course.find({ instructor: req.userId });
+    const courseIds = courses.map((c) => c._id);
+
+    const totalCourses = courses.length;
+
+    const enrollments = await Enrollment.find({ course: { $in: courseIds } });
+    const totalStudents = new Set(
+      enrollments.map((e) => e.student?.toString())
+    ).size;
+
+    const priceByCourse = {};
+    courses.forEach((c) => {
+      priceByCourse[c._id.toString()] = c.price || 0;
+    });
+
+    const totalRevenue = enrollments.reduce((sum, e) => {
+      const price = priceByCourse[e.course?.toString()] || 0;
+      return sum + price;
+    }, 0);
+
+    res.json({
+      totalCourses,
+      totalStudents,
+      totalEnrollments: enrollments.length,
+      totalRevenue,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Could not fetch instructor stats." });
+  }
+}
+
 module.exports = {
   createCourse,
   getMyCourses,
+  getInstructorStats,
   getPublishedCourses,
   getCourseById,
   updateCourse,

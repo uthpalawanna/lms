@@ -68,7 +68,6 @@ export default function MyCourses({
 
   useEffect(() => {
     fetchCourses();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token, refreshKey]);
 
   const handleDelete = async (id) => {
