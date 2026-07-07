@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 
-const INSTRUCTOR_STATS_URL = "http://localhost:5000/api/courses/mine/stats";
+const BALANCE_URL = "http://localhost:5000/api/withdrawals/balance";
+const WITHDRAWALS_URL = "http://localhost:5000/api/withdrawals";
 
 function MailboxIcon() {
   return (
@@ -33,35 +34,56 @@ function MailboxIcon() {
   );
 }
 
+function statusColor(status) {
+  switch (status) {
+    case "approved":
+    case "paid":
+      return "#16a34a";
+    case "rejected":
+      return "#dc2626";
+    default:
+      return "#d97706"; 
+  }
+}
+
 export default function Withdrawals({ token, onNavigateToWithdraw }) {
-  const [balance, setBalance] = useState(0);
+  const [available, setAvailable] = useState(0);
+  const [totalRevenue, setTotalRevenue] = useState(0);
+  const [totalWithdrawn, setTotalWithdrawn] = useState(0);
+  const [withdrawals, setWithdrawals] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const fetchAll = async () => {
     if (!token) return;
-    let cancelled = false;
+    setLoading(true);
+    try {
+      const [balanceRes, listRes] = await Promise.all([
+        fetch(BALANCE_URL, { headers: { Authorization: `Bearer ${token}` } }),
+        fetch(`${WITHDRAWALS_URL}/mine`, { headers: { Authorization: `Bearer ${token}` } }),
+      ]);
+      if (balanceRes.ok) {
+        const data = await balanceRes.json();
+        setAvailable(data.available || 0);
+        setTotalRevenue(data.totalRevenue || 0);
+        setTotalWithdrawn(data.totalWithdrawn || 0);
+      }
+      if (listRes.ok) {
+        const data = await listRes.json();
+        setWithdrawals(data);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetch(INSTRUCTOR_STATS_URL, { headers: { Authorization: `Bearer ${token}` } })
-      .then((res) => (res.ok ? res.json() : { totalRevenue: 0 }))
-      .then((data) => {
-        if (!cancelled) {
-         
-          setBalance(data.totalRevenue || 0);
-          setLoading(false);
-        }
-      })
-      .catch((err) => {
-        console.error(err);
-        if (!cancelled) setLoading(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
+  useEffect(() => {
+    fetchAll();
   }, [token]);
 
-  const formattedBalance = loading ? "…" : `Rs${balance.toFixed(2)}`;
-  const hasBalance = !loading && balance > 0;
+  const formattedBalance = loading ? "…" : `Rs${available.toFixed(2)}`;
+  const hasBalance = !loading && available > 0;
 
   return (
     <div className="ec-container">
@@ -81,6 +103,11 @@ export default function Withdrawals({ token, onNavigateToWithdraw }) {
             You have <strong>{formattedBalance}</strong>
             {hasBalance ? " available to withdraw" : " and this is insufficient balance to withdraw"}
           </p>
+          {!loading && (
+            <p style={{ fontSize: 12, color: "#9ca3af", marginTop: 4 }}>
+              Total earned: Rs{totalRevenue.toFixed(2)} · Already withdrawn: Rs{totalWithdrawn.toFixed(2)}
+            </p>
+          )}
         </div>
       </div>
 
@@ -107,10 +134,53 @@ export default function Withdrawals({ token, onNavigateToWithdraw }) {
         </span>
       </div>
 
-      <div className="withdraw-empty-state">
-        <MailboxIcon />
-        <p className="withdraw-empty-text">No Data Available in this Section</p>
-      </div>
+      {loading ? (
+        <div className="withdraw-empty-state">
+          <p className="withdraw-empty-text">Loading...</p>
+        </div>
+      ) : withdrawals.length === 0 ? (
+        <div className="withdraw-empty-state">
+          <MailboxIcon />
+          <p className="withdraw-empty-text">No Data Available in this Section</p>
+        </div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", marginTop: "1rem" }}>
+          {withdrawals.map((w) => (
+            <div
+              key={w._id}
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                background: "#fff",
+                border: "1px solid #e2e5ef",
+                borderRadius: 10,
+                padding: "1rem 1.25rem",
+              }}
+            >
+              <div>
+                <p style={{ margin: 0, fontWeight: 600 }}>Rs{w.amount.toFixed(2)}</p>
+                <p style={{ margin: "4px 0 0", fontSize: 12, color: "#5c6b8a", textTransform: "capitalize" }}>
+                  {w.method} · {new Date(w.createdAt).toLocaleDateString()}
+                </p>
+                {w.notes && (
+                  <p style={{ margin: "4px 0 0", fontSize: 12, color: "#9ca3af" }}>{w.notes}</p>
+                )}
+              </div>
+              <span
+                style={{
+                  fontWeight: 700,
+                  fontSize: 12,
+                  textTransform: "uppercase",
+                  color: statusColor(w.status),
+                }}
+              >
+                {w.status}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

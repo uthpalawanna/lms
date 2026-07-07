@@ -55,12 +55,13 @@ async function register(req, res) {
 async function login(req, res) {
   try {
     const { email, password } = req.body;
+    const identifier = (email || "").toString().trim();
 
-    if (!email || !password) {
-      return res.status(400).json({ message: "Please provide email and password." });
+    if (!identifier || !password) {
+      return res.status(400).json({ message: "Please provide email/username and password." });
     }
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ $or: [{ email: identifier }, { username: identifier }] });
     if (!user) {
       return res.status(401).json({ message: "Invalid email or password." });
     }
@@ -109,7 +110,10 @@ async function updateMe(req, res) {
       return res.status(404).json({ message: "User not found." });
     }
 
-    const { firstName, lastName, phone, skill, bio, avatarUrl, coverPhotoUrl, displayName, email, username } = req.body;
+    const {
+      firstName, lastName, phone, skill, bio, avatarUrl, coverPhotoUrl, displayName, email, username,
+      socialLinks, bankDetails, billingAddress,
+    } = req.body;
 
     if (email !== undefined && email !== user.email) {
       const trimmedEmail = email.trim().toLowerCase();
@@ -148,6 +152,15 @@ async function updateMe(req, res) {
     if (avatarUrl !== undefined) user.avatarUrl = avatarUrl;
     if (coverPhotoUrl !== undefined) user.coverPhotoUrl = coverPhotoUrl;
     if (displayName !== undefined) user.displayName = displayName;
+    if (socialLinks !== undefined) {
+      user.socialLinks = { ...(user.socialLinks?.toObject?.() || user.socialLinks || {}), ...socialLinks };
+    }
+    if (bankDetails !== undefined) {
+      user.bankDetails = { ...(user.bankDetails?.toObject?.() || user.bankDetails || {}), ...bankDetails };
+    }
+    if (billingAddress !== undefined) {
+      user.billingAddress = { ...(user.billingAddress?.toObject?.() || user.billingAddress || {}), ...billingAddress };
+    }
 
     await user.save();
 
@@ -159,4 +172,36 @@ async function updateMe(req, res) {
   }
 }
 
-module.exports = { register, login, getMe, updateMe };
+async function changePassword(req, res) {
+  try {
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ message: "Please provide your current and new password." });
+    }
+    if (newPassword.length < 8) {
+      return res.status(400).json({ message: "New password must be at least 8 characters." });
+    }
+
+    const user = await User.findById(req.userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ message: "Current password is incorrect." });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(newPassword, salt);
+    await user.save();
+
+    res.json({ message: "Password updated successfully." });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Could not update your password." });
+  }
+}
+
+module.exports = { register, login, getMe, updateMe, changePassword };

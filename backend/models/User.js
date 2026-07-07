@@ -13,7 +13,28 @@ const userSchema = new mongoose.Schema(
     bio: { type: String, default: "" },
     avatarUrl: { type: String, default: "" },
     coverPhotoUrl: { type: String, default: "" },
-    displayName: { type: String, default: "" }, // shown publicly instead of username, if set
+    displayName: { type: String, default: "" },
+    socialLinks: {
+      facebook: { type: String, default: "" },
+      twitter: { type: String, default: "" },
+      linkedin: { type: String, default: "" },
+      youtube: { type: String, default: "" },
+      website: { type: String, default: "" },
+    },
+    bankDetails: {
+      accountName: { type: String, default: "" },
+      accountNumber: { type: String, default: "" },
+      bankName: { type: String, default: "" },
+      iban: { type: String, default: "" },
+      bicSwift: { type: String, default: "" },
+    },
+    billingAddress: {
+      address: { type: String, default: "" },
+      city: { type: String, default: "" },
+      state: { type: String, default: "" },
+      country: { type: String, default: "" },
+      postcode: { type: String, default: "" },
+    },
   },
   { timestamps: true }
 );

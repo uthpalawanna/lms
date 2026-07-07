@@ -326,7 +326,13 @@ export default function Dashboard({ user, token, onLogout }) {
             <Withdrawals token={token} onNavigateToWithdraw={handleNavigateToWithdraw} />
           )}
           {active === "quiz-inst" && <QuizAttempts token={token} />}
-          {active === "settings" && <Settings initialTab={settingsTab} />}
+          {active === "settings" && (
+            <Settings
+              token={token}
+              initialTab={settingsTab}
+              onProfileUpdate={setCurrentUser}
+            />
+          )}
         </main>
       </div>
     </div>
