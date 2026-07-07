@@ -54,6 +54,7 @@ function ProfileTab({ token, onProfileUpdate }) {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [skill, setSkill] = useState("");
   const [bio, setBio] = useState("");
@@ -79,6 +80,7 @@ function ProfileTab({ token, onProfileUpdate }) {
         setFirstName(data.firstName || "");
         setLastName(data.lastName || "");
         setUsername(data.username || "");
+        setEmail(data.email || "");
         setPhone(data.phone || "");
         setSkill(data.skill || "");
         setBio(data.bio || "");
@@ -110,6 +112,7 @@ function ProfileTab({ token, onProfileUpdate }) {
           firstName,
           lastName,
           username,
+          email,
           phone,
           skill,
           bio,
@@ -240,6 +243,10 @@ function ProfileTab({ token, onProfileUpdate }) {
           <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} />
         </div>
         <div className="modal-field">
+          <label>Email</label>
+          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+        </div>
+        <div className="modal-field">
           <label>Phone Number</label>
           <input type="text" placeholder="Phone Number" value={phone} onChange={(e) => setPhone(e.target.value)} />
         </div>
@@ -356,10 +363,6 @@ function WithdrawTab({ token }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
-
-  // Starts unselected (matches the "nothing chosen yet" state). Only becomes
-  // "bank" once the user actually clicks the radio, or if we loaded a
-  // previously-saved account from the backend.
   const [method, setMethod] = useState(null);
 
   const [accountName, setAccountName] = useState("");
@@ -379,11 +382,6 @@ function WithdrawTab({ token }) {
         setBankName(bd.bankName || "");
         setIban(bd.iban || "");
         setBicSwift(bd.bicSwift || "");
-
-        // Only auto-select the radio if the user actually has a saved account
-        if (bd.accountName || bd.accountNumber || bd.bankName) {
-          setMethod("bank");
-        }
       })
       .catch((err) => console.error(err))
       .finally(() => setLoading(false));
@@ -451,7 +449,8 @@ function WithdrawTab({ token }) {
           type="radio"
           name="withdraw-method"
           checked={method === "bank"}
-          onChange={() => setMethod("bank")}
+          onClick={() => setMethod((prev) => (prev === "bank" ? null : "bank"))}
+          onChange={() => {}}
           style={{ width: 18, height: 18, accentColor: "#4a60c8" }}
         />
         <div>

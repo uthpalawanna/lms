@@ -55,7 +55,7 @@ function EmptyState({ text, color }) {
   );
 }
 
-export default function EnrolledCourses({ token, onCourseClick }) {
+export default function EnrolledCourses({ token, user, onCourseClick }) {
   const [activeTab, setActiveTab] = useState("browse");
 
   const [courses, setCourses] = useState([]);
@@ -65,6 +65,7 @@ export default function EnrolledCourses({ token, onCourseClick }) {
   const [enrollingId, setEnrollingId] = useState(null);
   const [unenrollingId, setUnenrollingId] = useState(null);
   const [openingId, setOpeningId] = useState(null);
+  const [deletingId, setDeletingId] = useState(null);
   const [message, setMessage] = useState("");
 
   const fetchAll = async () => {
@@ -125,6 +126,35 @@ export default function EnrolledCourses({ token, onCourseClick }) {
       setMessage("Could not reach the server. Is the backend running?");
     } finally {
       setEnrollingId(null);
+    }
+  };
+
+  const isOwnCourse = (course) =>
+    (course.instructor?._id || course.instructor) === user?.id;
+
+  const handleDeleteCourse = async (courseId, courseTitle) => {
+    const confirmed = window.confirm(
+      `Delete "${courseTitle}" permanently? This cannot be undone.`
+    );
+    if (!confirmed) return;
+
+    setDeletingId(courseId);
+    try {
+      const response = await fetch(`${COURSES_URL}/${courseId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (response.ok) {
+        setCourses((prev) => prev.filter((c) => c._id !== courseId));
+      } else {
+        const data = await response.json();
+        alert(data.message || "Could not delete this course.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Could not reach the server. Is the backend running?");
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -234,19 +264,41 @@ export default function EnrolledCourses({ token, onCourseClick }) {
                       )}
                     </div>
 
-                    <div className="course-footer">
+                    <div className="course-footer" style={{ gap: 8 }}>
                       <span className="course-price">
                         {course.price > 0 ? `Rs${course.price}` : "Free"}
                       </span>
 
-                      <button
-                        className="db-new-course-btn"
-                        style={{ padding: "6px 14px", fontSize: 13 }}
-                        disabled={enrolled || enrollingId === course._id}
-                        onClick={() => handleEnroll(course._id)}
-                      >
-                        {enrolled ? "Enrolled" : enrollingId === course._id ? "Enrolling..." : "Enroll"}
-                      </button>
+                      <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                        {isOwnCourse(course) && (
+                          <button
+                            onClick={() => handleDeleteCourse(course._id, course.title)}
+                            disabled={deletingId === course._id}
+                            title="Delete this course"
+                            style={{
+                              background: "none",
+                              border: "1px solid #fca5a5",
+                              color: "#dc2626",
+                              borderRadius: 6,
+                              padding: "6px 10px",
+                              fontSize: 13,
+                              fontWeight: 600,
+                              cursor: "pointer",
+                            }}
+                          >
+                            {deletingId === course._id ? "Deleting..." : "Delete"}
+                          </button>
+                        )}
+
+                        <button
+                          className="db-new-course-btn"
+                          style={{ padding: "6px 14px", fontSize: 13 }}
+                          disabled={enrolled || enrollingId === course._id}
+                          onClick={() => handleEnroll(course._id)}
+                        >
+                          {enrolled ? "Enrolled" : enrollingId === course._id ? "Enrolling..." : "Enroll"}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 );

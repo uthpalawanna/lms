@@ -288,7 +288,7 @@ export default function Dashboard({ user, token, onLogout }) {
             <MyProfile token={token} onProfileUpdate={setCurrentUser} />
           )}
           {active === "enrolled-courses" && (
-            <EnrolledCourses token={token} onCourseClick={handleCourseClick} />
+            <EnrolledCourses token={token} user={currentUser} onCourseClick={handleCourseClick} />
           )}
           {active === "reviews" && <Reviews token={token} />}
           {active === "wishlist" && <Wishlist token={token} />}
