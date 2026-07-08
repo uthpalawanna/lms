@@ -27,6 +27,7 @@ const withdrawalRoutes = require("./routes/withdrawalRoutes");
 const orderRoutes = require("./routes/orderRoutes");
 const questionRoutes = require("./routes/questionRoutes");
 const uploadRoutes = require("./routes/uploadRoutes");
+const adminRoutes = require("./routes/adminRoutes");
 
 const app = express();
 
@@ -61,6 +62,7 @@ app.use("/api/withdrawals", withdrawalRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/questions", questionRoutes);
 app.use("/api/uploads", uploadRoutes);
+app.use("/api/admin", adminRoutes);
 
 // A simple test route to check the server is alive
 app.get("/", (req, res) => {

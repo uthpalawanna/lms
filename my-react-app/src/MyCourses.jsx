@@ -33,7 +33,7 @@ export default function MyCourses({
   showModal: showModalProp,
   setShowModal: setShowModalProp,
 }) {
-  const [activeTab, setActiveTab] = useState("draft");
+  const [activeTab, setActiveTab] = useState("publish");
   const [openMenuId, setOpenMenuId] = useState(null);
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
