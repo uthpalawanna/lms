@@ -291,7 +291,9 @@ export default function Dashboard({ user, token, onLogout }) {
             <EnrolledCourses token={token} user={currentUser} onCourseClick={handleCourseClick} />
           )}
           {active === "reviews" && <Reviews token={token} />}
-          {active === "wishlist" && <Wishlist token={token} />}
+          {active === "wishlist" && (
+            <Wishlist token={token} onCourseClick={handleCourseClick} />
+          )}
           {active === "quiz-attempts" && <MyQuizAttempts token={token} />}
           {active === "order-history" && <OrderHistory token={token} />}
           {active === "question-answer" && <QuestionAnswer token={token} />}

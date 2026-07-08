@@ -25,7 +25,7 @@ function EmptyState({ text, color }) {
   );
 }
 
-export default function Wishlist({ token }) {
+export default function Wishlist({ token, onCourseClick }) {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -94,7 +94,11 @@ export default function Wishlist({ token }) {
               const resolvedUrl = resolveThumbnailUrl(course.thumbnail);
               return (
                 <div key={item._id} className="course-card">
-                  <div className="course-img-placeholder" style={{ position: "relative" }}>
+                  <div
+                    className="course-img-placeholder"
+                    style={{ position: "relative", cursor: "pointer" }}
+                    onClick={() => onCourseClick?.(course)}
+                  >
                     {resolvedUrl ? (
                       <img
                         src={resolvedUrl}
@@ -110,7 +114,10 @@ export default function Wishlist({ token }) {
                       </svg>
                     )}
                     <button
-                      onClick={() => handleRemove(course._id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRemove(course._id);
+                      }}
                       disabled={removingId === course._id}
                       title="Remove from wishlist"
                       style={{
@@ -141,7 +148,13 @@ export default function Wishlist({ token }) {
 
                   <div className="course-content">
                     <p className="course-date">{course.category}</p>
-                    <h3 className="course-title">{course.title}</h3>
+                    <h3
+                      className="course-title"
+                      onClick={() => onCourseClick?.(course)}
+                      style={{ cursor: "pointer" }}
+                    >
+                      {course.title}
+                    </h3>
                   </div>
 
                   <div className="course-footer">
