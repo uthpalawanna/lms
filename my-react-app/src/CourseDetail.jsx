@@ -5,6 +5,7 @@ import TakeQuizModal from "./TakeQuizModal";
 const QUIZ_URL = "http://localhost:5000/api/quizzes";
 const REVIEWS_URL = "http://localhost:5000/api/reviews";
 const WISHLIST_URL = "http://localhost:5000/api/wishlist";
+const ANNOUNCEMENTS_URL = "http://localhost:5000/api/announcements";
 
 function Stars({ rating }) {
   return (
@@ -187,7 +188,7 @@ function QuizzesTab({ course, token, user }) {
 
   const handleDeleteQuiz = async (quizId, quizTitle) => {
     const confirmed = window.confirm(
-      `Delete "${quizTitle}" permanently? Student attempts for this quiz will remain in history, but the quiz can no longer be taken.`
+      `Delete "${quizTitle}" permanently? This will also delete every student's attempt history for this quiz, from both their "My Quiz Attempts" page and your "Quiz Attempts" page. This cannot be undone.`
     );
     if (!confirmed) return;
 
@@ -327,6 +328,74 @@ function QuizzesTab({ course, token, user }) {
   );
 }
 
+function AnnouncementsTab({ course }) {
+  const [announcements, setAnnouncements] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const fetchAnnouncements = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const response = await fetch(`${ANNOUNCEMENTS_URL}/course/${course._id}`);
+      const data = await response.json();
+      if (!response.ok) {
+        setError(data.message || "Could not load announcements.");
+        setLoading(false);
+        return;
+      }
+      setAnnouncements(data);
+    } catch (err) {
+      console.error(err);
+      setError("Could not reach the server. Is the backend running?");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (course?._id) fetchAnnouncements();
+  }, [course?._id]);
+
+  return (
+    <div className="cd-reviews-section">
+      <h3 className="cd-section-heading" style={{ marginBottom: 16 }}>Announcements</h3>
+
+      {loading ? (
+        <p style={{ fontSize: 14, color: "#9ca3af" }}>Loading announcements...</p>
+      ) : error ? (
+        <p style={{ fontSize: 14, color: "#dc2626" }}>{error}</p>
+      ) : announcements.length === 0 ? (
+        <div className="ec-empty-state" style={{ marginTop: "3rem" }}>
+          <svg className="ec-empty-icon" viewBox="0 0 120 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M40 80C35 80 25 70 25 50C25 30 35 20 40 20L80 20C85 20 95 30 95 50C95 70 85 80 80 80L40 80Z" fill="#E2E5EF"/>
+            <path d="M40 80C35 80 25 70 25 50C25 30 35 20 40 20L45 20C40 20 30 30 30 50C30 70 40 80 45 80L40 80Z" fill="#C8CDD8"/>
+            <rect x="75" y="10" width="10" height="20" rx="2" fill="#4A60C8" transform="rotate(30 75 10)"/>
+            <circle cx="10" cy="40" r="2" fill="#C8CDD8"/>
+            <circle cx="20" cy="25" r="1.5" fill="#C8CDD8"/>
+            <circle cx="105" cy="60" r="2.5" fill="#C8CDD8"/>
+          </svg>
+          <p className="ec-empty-text">No Announcements Yet</p>
+        </div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {announcements.map((a) => (
+            <div key={a._id} style={{ border: "1px solid #e5e7eb", borderRadius: 10, padding: "12px 16px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: 6 }}>
+                <span style={{ fontWeight: 600, fontSize: 14 }}>{a.title}</span>
+                <span style={{ fontSize: 12, color: "#9ca3af" }}>{new Date(a.createdAt).toLocaleDateString()}</span>
+              </div>
+              {a.summary && (
+                <p style={{ marginTop: 6, marginBottom: 0, fontSize: 14, color: "#374151" }}>{a.summary}</p>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function CourseDetails({ course, token, user, onBack, onAuthorClick }) {
   const [activeTab, setActiveTab] = useState("info");
   const [inWishlist, setInWishlist] = useState(false);
@@ -451,19 +520,7 @@ export default function CourseDetails({ course, token, user, onBack, onAuthorCli
             )}
 
             {activeTab === "announcements" && (
-              <div className="cd-reviews-section">
-                <div className="ec-empty-state" style={{ marginTop: "3rem" }}>
-                  <svg className="ec-empty-icon" viewBox="0 0 120 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M40 80C35 80 25 70 25 50C25 30 35 20 40 20L80 20C85 20 95 30 95 50C95 70 85 80 80 80L40 80Z" fill="#E2E5EF"/>
-                    <path d="M40 80C35 80 25 70 25 50C25 30 35 20 40 20L45 20C40 20 30 30 30 50C30 70 40 80 45 80L40 80Z" fill="#C8CDD8"/>
-                    <rect x="75" y="10" width="10" height="20" rx="2" fill="#4A60C8" transform="rotate(30 75 10)"/>
-                    <circle cx="10" cy="40" r="2" fill="#C8CDD8"/>
-                    <circle cx="20" cy="25" r="1.5" fill="#C8CDD8"/>
-                    <circle cx="105" cy="60" r="2.5" fill="#C8CDD8"/>
-                  </svg>
-                  <p className="ec-empty-text">No Review Yet</p>
-                </div>
-              </div>
+              <AnnouncementsTab course={course} />
             )}
 
             {activeTab === "quizzes" && (

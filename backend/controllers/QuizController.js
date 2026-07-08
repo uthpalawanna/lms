@@ -1,4 +1,5 @@
 const Quiz = require("../models/Quiz");
+const QuizAttempt = require("../models/QuizAttempt");
 const Course = require("../models/Course");
 
 async function createQuiz(req, res) {
@@ -114,8 +115,11 @@ async function deleteQuiz(req, res) {
     if (quiz.instructor.toString() !== req.userId) {
       return res.status(403).json({ message: "You don't own this quiz." });
     }
+
+    await QuizAttempt.deleteMany({ quiz: quiz._id });
+
     await quiz.deleteOne();
-    res.json({ message: "Quiz deleted." });
+    res.json({ message: "Quiz and all related attempts deleted." });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Could not delete the quiz." });

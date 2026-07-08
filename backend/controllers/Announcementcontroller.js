@@ -67,4 +67,15 @@ async function deleteAnnouncement(req, res) {
   }
 }
 
-module.exports = { createAnnouncement, getAnnouncements, deleteAnnouncement };
+async function getCourseAnnouncements(req, res) {
+  try {
+    const announcements = await Announcement.find({ course: req.params.courseId })
+      .sort({ createdAt: -1 });
+    res.json(announcements);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Could not fetch announcements for this course." });
+  }
+}
+
+module.exports = { createAnnouncement, getAnnouncements, getCourseAnnouncements, deleteAnnouncement };
