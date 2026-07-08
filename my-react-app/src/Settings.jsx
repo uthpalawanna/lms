@@ -592,17 +592,26 @@ function SocialProfileTab({ token }) {
   );
 }
 
+const COUNTRIES = [
+  "Sri Lanka", "India", "United States", "United Kingdom", "Canada",
+  "Australia", "Germany", "France", "Singapore", "United Arab Emirates",
+];
+
 function BillingTab({ token }) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
-  const [address, setAddress] = useState("");
-  const [city, setCity] = useState("");
-  const [state, setState] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [country, setCountry] = useState("");
+  const [state, setState] = useState("N/A");
+  const [city, setCity] = useState("");
   const [postcode, setPostcode] = useState("");
+  const [address, setAddress] = useState("");
 
   useEffect(() => {
     if (!token) return;
@@ -610,11 +619,15 @@ function BillingTab({ token }) {
       .then((res) => res.json())
       .then((data) => {
         const b = data.billingAddress || {};
-        setAddress(b.address || "");
-        setCity(b.city || "");
-        setState(b.state || "");
+        setFirstName(b.firstName || data.firstName || "");
+        setLastName(b.lastName || data.lastName || "");
+        setEmail(b.email || data.email || "");
+        setPhone(b.phone || data.phone || "");
         setCountry(b.country || "");
+        setState(b.state || "N/A");
+        setCity(b.city || "");
         setPostcode(b.postcode || "");
+        setAddress(b.address || "");
       })
       .catch((err) => console.error(err))
       .finally(() => setLoading(false));
@@ -632,7 +645,7 @@ function BillingTab({ token }) {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          billingAddress: { address, city, state, country, postcode },
+          billingAddress: { firstName, lastName, email, phone, country, state, city, postcode, address },
         }),
       });
       const data = await response.json();
@@ -652,40 +665,85 @@ function BillingTab({ token }) {
 
   if (loading) return <p style={{ padding: "2rem" }}>Loading...</p>;
 
+  const fieldStyle = {
+    width: "100%",
+    padding: "10px 12px",
+    borderRadius: 8,
+    border: "1px solid #d0d5dd",
+    boxSizing: "border-box",
+    fontSize: 14,
+  };
+
   return (
-    <div style={{ maxWidth: 460 }}>
-      <p style={{ fontSize: 13, color: "#6b7280", marginBottom: 16 }}>
-        This address is used on invoices for your purchases.
-      </p>
+    <div style={{ maxWidth: 720 }}>
+      <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 20 }}>Billing Address</h3>
 
       {message && <p style={{ color: "#16a34a", fontWeight: 600 }}>{message}</p>}
       {error && <p style={{ color: "#dc2626", fontWeight: 600 }}>{error}</p>}
 
-      <div className="modal-field">
-        <label>Street Address</label>
-        <input type="text" value={address} onChange={(e) => setAddress(e.target.value)} />
-      </div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 16 }}>
         <div className="modal-field">
-          <label>City</label>
-          <input type="text" value={city} onChange={(e) => setCity(e.target.value)} />
+          <label>First Name</label>
+          <input type="text" placeholder="First Name" value={firstName} onChange={(e) => setFirstName(e.target.value)} style={fieldStyle} />
         </div>
         <div className="modal-field">
-          <label>State / Province</label>
-          <input type="text" value={state} onChange={(e) => setState(e.target.value)} />
-        </div>
-        <div className="modal-field">
-          <label>Country</label>
-          <input type="text" value={country} onChange={(e) => setCountry(e.target.value)} />
-        </div>
-        <div className="modal-field">
-          <label>Postcode</label>
-          <input type="text" value={postcode} onChange={(e) => setPostcode(e.target.value)} />
+          <label>Last Name</label>
+          <input type="text" placeholder="Last Name" value={lastName} onChange={(e) => setLastName(e.target.value)} style={fieldStyle} />
         </div>
       </div>
 
-      <button className="db-new-course-btn" onClick={handleSave} disabled={saving} style={{ marginTop: 8 }}>
-        {saving ? "Saving..." : "Save Billing Address"}
+      <div className="modal-field" style={{ marginBottom: 16 }}>
+        <label>Email Address</label>
+        <input type="email" placeholder="Email Address" value={email} onChange={(e) => setEmail(e.target.value)} style={fieldStyle} />
+      </div>
+
+      <div className="modal-field" style={{ marginBottom: 16 }}>
+        <label>Country</label>
+        <select value={country} onChange={(e) => setCountry(e.target.value)} style={fieldStyle}>
+          <option value="">Select Country</option>
+          {COUNTRIES.map((c) => (
+            <option key={c} value={c}>{c}</option>
+          ))}
+        </select>
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 16 }}>
+        <div className="modal-field">
+          <label>State</label>
+          <select value={state} onChange={(e) => setState(e.target.value)} style={fieldStyle}>
+            <option value="N/A">N/A</option>
+            <option value="Western">Western</option>
+            <option value="Central">Central</option>
+            <option value="Southern">Southern</option>
+            <option value="Northern">Northern</option>
+            <option value="Eastern">Eastern</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <div className="modal-field">
+          <label>City</label>
+          <input type="text" placeholder="City" value={city} onChange={(e) => setCity(e.target.value)} style={fieldStyle} />
+        </div>
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 16 }}>
+        <div className="modal-field">
+          <label>Postcode / ZIP</label>
+          <input type="text" placeholder="Postcode / ZIP" value={postcode} onChange={(e) => setPostcode(e.target.value)} style={fieldStyle} />
+        </div>
+        <div className="modal-field">
+          <label>Phone</label>
+          <input type="text" placeholder="Phone" value={phone} onChange={(e) => setPhone(e.target.value)} style={fieldStyle} />
+        </div>
+      </div>
+
+      <div className="modal-field" style={{ marginBottom: 20 }}>
+        <label>Address</label>
+        <input type="text" placeholder="Address" value={address} onChange={(e) => setAddress(e.target.value)} style={fieldStyle} />
+      </div>
+
+      <button className="db-new-course-btn" onClick={handleSave} disabled={saving}>
+        {saving ? "Saving..." : "Save Address"}
       </button>
     </div>
   );

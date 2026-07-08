@@ -181,8 +181,35 @@ function QuizzesTab({ course, token, user }) {
   const [error, setError] = useState("");
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [takingQuizId, setTakingQuizId] = useState(null);
+  const [deletingQuizId, setDeletingQuizId] = useState(null);
 
   const isOwner = course?.instructor && (course.instructor._id || course.instructor) === user?.id;
+
+  const handleDeleteQuiz = async (quizId, quizTitle) => {
+    const confirmed = window.confirm(
+      `Delete "${quizTitle}" permanently? Student attempts for this quiz will remain in history, but the quiz can no longer be taken.`
+    );
+    if (!confirmed) return;
+
+    setDeletingQuizId(quizId);
+    try {
+      const response = await fetch(`${QUIZ_URL}/${quizId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (response.ok) {
+        setQuizzes((prev) => prev.filter((q) => q._id !== quizId));
+      } else {
+        const data = await response.json();
+        alert(data.message || "Could not delete the quiz.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Could not reach the server. Is the backend running?");
+    } finally {
+      setDeletingQuizId(null);
+    }
+  };
 
   const fetchQuizzes = async () => {
     setLoading(true);
@@ -249,7 +276,25 @@ function QuizzesTab({ course, token, user }) {
                   {q.questions.length} question{q.questions.length !== 1 ? "s" : ""}
                 </p>
               </div>
-              {!isOwner && (
+              {isOwner ? (
+                <button
+                  onClick={() => handleDeleteQuiz(q._id, q.title)}
+                  disabled={deletingQuizId === q._id}
+                  title="Delete this quiz"
+                  style={{
+                    background: "none",
+                    border: "1px solid #fca5a5",
+                    color: "#dc2626",
+                    borderRadius: 6,
+                    padding: "6px 12px",
+                    fontSize: 13,
+                    fontWeight: 600,
+                    cursor: "pointer",
+                  }}
+                >
+                  {deletingQuizId === q._id ? "Deleting..." : "Delete"}
+                </button>
+              ) : (
                 <button className="modal-publish-btn" onClick={() => setTakingQuizId(q._id)}>
                   Take Quiz
                 </button>

@@ -29,6 +29,10 @@ const userSchema = new mongoose.Schema(
       bicSwift: { type: String, default: "" },
     },
     billingAddress: {
+      firstName: { type: String, default: "" },
+      lastName: { type: String, default: "" },
+      email: { type: String, default: "" },
+      phone: { type: String, default: "" },
       address: { type: String, default: "" },
       city: { type: String, default: "" },
       state: { type: String, default: "" },
