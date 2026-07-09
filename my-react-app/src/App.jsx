@@ -3,12 +3,20 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./login";
 import Register from "./Register";
 import Dashboard from "./Dashboard";
-import AdminDashboard from "./AdminDashboard";
+
+function getStoredUser() {
+  try {
+    const raw = localStorage.getItem("user");
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
 
 function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [user, setUser] = useState(null);
-  const [token, setToken] = useState(null);
+  const [token, setToken] = useState(() => localStorage.getItem("token"));
+  const [user, setUser] = useState(getStoredUser);
+  const [isLoggedIn, setIsLoggedIn] = useState(() => !!localStorage.getItem("token"));
 
   const handleLoginSuccess = ({ token, user }) => {
     setToken(token);
@@ -17,12 +25,12 @@ function App() {
   };
 
   const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
     setToken(null);
     setUser(null);
     setIsLoggedIn(false);
   };
-
-  const homeRoute = user?.role === "admin" ? "/admin" : "/dashboard";
 
   return (
     <BrowserRouter>
@@ -46,27 +54,15 @@ function App() {
           }
         />
         <Route
-          path="/admin"
-          element={
-            isLoggedIn && user?.role === "admin" ? (
-              <AdminDashboard token={token} currentUserId={user.id} onLogout={handleLogout} />
-            ) : isLoggedIn ? (
-              <Navigate to="/dashboard" replace />
-            ) : (
-              <Navigate to="/signin" replace />
-            )
-          }
-        />
-        <Route
           path="/"
           element={
-            <Navigate to={isLoggedIn ? homeRoute : "/signin"} replace />
+            <Navigate to={isLoggedIn ? "/dashboard" : "/signin"} replace />
           }
         />
         <Route
           path="*"
           element={
-            <Navigate to={isLoggedIn ? homeRoute : "/signin"} replace />
+            <Navigate to={isLoggedIn ? "/dashboard" : "/signin"} replace />
           }
         />
       </Routes>
