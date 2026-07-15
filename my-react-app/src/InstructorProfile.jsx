@@ -1,3 +1,5 @@
+import { useState, useEffect } from "react";
+
 const S = {
   wrap: 
   { fontFamily: "system-ui, sans-serif" },
@@ -233,23 +235,62 @@ function Empty({ icon, text, cta, onClick }) {
   );
 }
 
-export default function InstructorProfile({ user = {}, onNewCourse, onEditProfile, onAddBio }) {
+const API_BASE = "http://localhost:5000/api";
+
+export default function InstructorProfile({ instructorId, currentUser = {}, token, onNewCourse, onEditProfile, onAddBio }) {
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (!instructorId) {
+      setError("No instructor selected.");
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    setError("");
+    fetch(`${API_BASE}/instructor/${instructorId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(async (res) => {
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || "Could not load instructor profile.");
+        setProfile(data);
+      })
+      .catch((err) => setError(err.message || "Could not load instructor profile."))
+      .finally(() => setLoading(false));
+  }, [instructorId, token]);
+
+  if (loading) {
+    return <div style={{ padding: "2rem", fontFamily: "system-ui, sans-serif" }}>Loading profile...</div>;
+  }
+
+  if (error || !profile) {
+    return (
+      <div style={{ padding: "2rem", fontFamily: "system-ui, sans-serif", color: "#dc2626" }}>
+        {error || "Instructor profile unavailable."}
+      </div>
+    );
+  }
+
+  const isOwnProfile =
+    (currentUser?._id || currentUser?.id) &&
+    String(currentUser._id || currentUser.id) === String(profile._id);
+
   const name =
-    user.name ||
-    user.username ||
-    user.full_name ||
-    user.fullName ||
-    (user.first_name ? `${user.first_name} ${user.last_name || ""}`.trim() : null) ||
-    (user.firstName ? `${user.firstName} ${user.lastName || ""}`.trim() : null) ||
+    profile.displayName ||
+    (profile.firstName ? `${profile.firstName} ${profile.lastName || ""}`.trim() : null) ||
+    profile.username ||
     "Instructor";
 
-  const avatarUrl = user.avatarUrl || user.avatar || user.profile_picture || user.photo || null;
-  const courseCount = user.courseCount ?? user.course_count ?? 0;
-  const studentCount = user.studentCount ?? user.student_count ?? 0;
-  const reviewCount = user.reviewCount ?? user.review_count ?? 0;
-  const rating = user.rating ?? user.average_rating ?? 0;
-  const bio = user.bio || user.biography || user.about || "";
-  const courses = user.courses || [];
+  const avatarUrl = profile.avatarUrl || null;
+  const courseCount = profile.courseCount ?? 0;
+  const studentCount = profile.studentCount ?? 0;
+  const reviewCount = profile.reviewCount ?? 0;
+  const rating = profile.rating ?? 0;
+  const bio = profile.bio || "";
+  const courses = profile.courses || [];
 
   const initials = name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
 
@@ -276,10 +317,12 @@ export default function InstructorProfile({ user = {}, onNewCourse, onEditProfil
             <h1 style={S.name}>{name}</h1>
             <span style={S.badge}>Instructor</span>
           </div>
-          <div style={S.btnRow}>
-            <button style={S.btnOutline} onClick={onEditProfile}>Edit profile</button>
-            <button style={S.btnPrimary} onClick={onNewCourse}>+ New course</button>
-          </div>
+          {isOwnProfile && (
+            <div style={S.btnRow}>
+              <button style={S.btnOutline} onClick={onEditProfile}>Edit profile</button>
+              <button style={S.btnPrimary} onClick={onNewCourse}>+ New course</button>
+            </div>
+          )}
         </div>
 
         <div style={S.statsBar}>
@@ -305,7 +348,9 @@ export default function InstructorProfile({ user = {}, onNewCourse, onEditProfil
           <p style={S.sectionLabel}>Biography</p>
           {bio
             ? <p style={{ fontSize: 14, color: "#4b5563", lineHeight: 1.7 }}>{bio}</p>
-            : <Empty icon="✍️" text="No bio added yet. Tell students about yourself." cta="Add bio" onClick={onAddBio} />
+            : isOwnProfile
+              ? <Empty icon="✍️" text="No bio added yet. Tell students about yourself." cta="Add bio" onClick={onAddBio} />
+              : <Empty icon="✍️" text="This instructor hasn't added a bio yet." />
           }
 
           <hr style={S.divider} />
@@ -320,7 +365,9 @@ export default function InstructorProfile({ user = {}, onNewCourse, onEditProfil
                   </div>
                 ))}
               </div>
-            : <Empty icon="📚" text="You haven't created any courses yet." cta="Create first course" onClick={onNewCourse} />
+            : isOwnProfile
+              ? <Empty icon="📚" text="You haven't created any courses yet." cta="Create first course" onClick={onNewCourse} />
+              : <Empty icon="📚" text="This instructor hasn't published any courses yet." />
           }
         </div>
       </div>

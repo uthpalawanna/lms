@@ -49,7 +49,7 @@ function App() {
           path="/admin"
           element={
             isLoggedIn && user?.role === "admin" ? (
-              <AdminDashboard token={token} currentUserId={user.id} onLogout={handleLogout} />
+              <AdminDashboard token={token} currentUserId={user._id} onLogout={handleLogout} />
             ) : isLoggedIn ? (
               <Navigate to="/dashboard" replace />
             ) : (

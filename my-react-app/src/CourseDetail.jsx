@@ -67,7 +67,20 @@ function CourseReviewsTab({ course, token, user }) {
     if (course?._id) fetchReviews();
   }, [course?._id]);
 
-  const myExistingReview = reviews.find((r) => r.student?._id === user?.id || r.student === user?.id);
+  const myExistingReview = reviews.find(
+    (r) => r.student?._id === (user?._id || user?.id) || r.student === (user?._id || user?.id)
+  );
+
+  const openForm = () => {
+    if (myExistingReview) {
+      setRating(myExistingReview.rating);
+      setComment(myExistingReview.comment || "");
+    } else {
+      setRating(0);
+      setComment("");
+    }
+    setShowForm((s) => !s);
+  };
 
   const handleSubmit = async () => {
     setFormError("");
@@ -109,7 +122,7 @@ function CourseReviewsTab({ course, token, user }) {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
         <h3 className="cd-section-heading" style={{ margin: 0 }}>Student Ratings & Reviews</h3>
         {token && (
-          <button className="db-new-course-btn" onClick={() => setShowForm((s) => !s)}>
+          <button className="db-new-course-btn" onClick={openForm}>
             {myExistingReview ? "Edit My Review" : "+ Write a Review"}
           </button>
         )}
@@ -133,7 +146,7 @@ function CourseReviewsTab({ course, token, user }) {
           </div>
           {formError && <p style={{ color: "#dc2626", fontSize: 13, marginBottom: 8 }}>{formError}</p>}
           <button className="modal-publish-btn" onClick={handleSubmit} disabled={saving}>
-            {saving ? "Saving..." : "Submit Review"}
+            {saving ? "Saving..." : myExistingReview ? "Update Review" : "Submit Review"}
           </button>
         </div>
       )}
@@ -184,7 +197,7 @@ function QuizzesTab({ course, token, user }) {
   const [takingQuizId, setTakingQuizId] = useState(null);
   const [deletingQuizId, setDeletingQuizId] = useState(null);
 
-  const isOwner = course?.instructor && (course.instructor._id || course.instructor) === user?.id;
+  const isOwner = course?.instructor && (course.instructor._id || course.instructor) === (user?._id || user?.id);
 
   const handleDeleteQuiz = async (quizId, quizTitle) => {
     const confirmed = window.confirm(
@@ -396,10 +409,194 @@ function AnnouncementsTab({ course }) {
   );
 }
 
+function CurriculumTab({ course, token, enrollment, onLessonToggled }) {
+  const topics = course?.curriculum || [];
+  const [selected, setSelected] = useState(null);
+  const [busy, setBusy] = useState(false);
+
+  const hasAccess = !!enrollment;
+  const completedLessons = enrollment?.completedLessons || [];
+
+  useEffect(() => {
+    if (!selected && topics.length > 0 && topics[0].lessons?.length > 0) {
+      setSelected({ t: 0, l: 0 });
+    }
+  }, [topics.length]);
+
+  const selectedKey = selected ? `${selected.t}-${selected.l}` : null;
+  const selectedLesson = selected ? topics[selected.t]?.lessons?.[selected.l] : null;
+  const selectedDone = selectedKey ? completedLessons.includes(selectedKey) : false;
+
+  const embedUrl = (() => {
+    const url = selectedLesson?.videoUrl || "";
+    const ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]+)/);
+    if (ytMatch) return `https://www.youtube.com/embed/${ytMatch[1]}`;
+    return null;
+  })();
+
+  const handleToggleComplete = async () => {
+    if (!enrollment || !selectedKey || busy) return;
+    setBusy(true);
+    try {
+      const res = await fetch(`http://localhost:5000/api/enrollments/${enrollment._id}/lesson`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ lessonKey: selectedKey, completed: !selectedDone }),
+      });
+      const data = await res.json();
+      if (res.ok) onLessonToggled(data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  if (topics.length === 0) {
+    return (
+      <div className="ec-empty-state">
+        <p className="ec-empty-text">This course doesn't have any lessons yet.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      <div>
+        {topics.map((topic, tIndex) => (
+          <div key={tIndex} style={{ marginBottom: 16 }}>
+            <p style={{ fontWeight: 700, fontSize: 13, color: "#374151", margin: "0 0 8px" }}>{topic.title}</p>
+            {(topic.lessons || []).map((lesson, lIndex) => {
+              const key = `${tIndex}-${lIndex}`;
+              const isSelected = selectedKey === key;
+              const done = completedLessons.includes(key);
+              return (
+                <div
+                  key={key}
+                  onClick={() => setSelected({ t: tIndex, l: lIndex })}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 10,
+                    padding: "10px 12px", borderRadius: 8, marginBottom: 6,
+                    border: `1px solid ${isSelected ? "#4a60c8" : "#e5e7eb"}`,
+                    background: isSelected ? "#f5f7ff" : "#fff",
+                    cursor: "pointer",
+                  }}
+                >
+                  <span style={{ fontSize: 15 }}>{done ? "✅" : "▶️"}</span>
+                  <span style={{ fontSize: 13, flex: 1 }}>{lesson.title}</span>
+                </div>
+              );
+            })}
+          </div>
+        ))}
+      </div>
+
+      <div style={{ borderTop: "1px solid #e5e7eb", paddingTop: 20 }}>
+        {!hasAccess ? (
+          <div className="ec-empty-state">
+            <p className="ec-empty-text">Enroll in this course to unlock lessons and track your progress.</p>
+          </div>
+        ) : selectedLesson ? (
+          <>
+            <h3 className="cd-section-heading">{selectedLesson.title}</h3>
+            {embedUrl ? (
+              <div style={{ marginBottom: 16, position: "relative", paddingTop: "56.25%" }}>
+                <iframe
+                  src={embedUrl}
+                  title={selectedLesson.title}
+                  allowFullScreen
+                  style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", border: 0, borderRadius: 10 }}
+                />
+              </div>
+            ) : selectedLesson.videoUrl ? (
+              <video controls style={{ width: "100%", borderRadius: 10, background: "#000", marginBottom: 16 }} src={selectedLesson.videoUrl} />
+            ) : null}
+            {selectedLesson.content && (
+              <p style={{ fontSize: 14, lineHeight: 1.7, color: "#374151", whiteSpace: "pre-wrap" }}>{selectedLesson.content}</p>
+            )}
+            <button className="cd-complete-btn" onClick={handleToggleComplete} disabled={busy} style={{ marginTop: 12 }}>
+              {busy ? "Saving..." : selectedDone ? "✓ Completed — Mark Incomplete" : "Mark as Complete"}
+            </button>
+          </>
+        ) : (
+          <p style={{ fontSize: 14, color: "#9ca3af" }}>Select a lesson to begin.</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function CertificateTab({ course, user, enrollment }) {
+  if (!enrollment || enrollment.status !== "completed") {
+    return (
+      <div className="ec-empty-state">
+        <p className="ec-empty-text">Complete every lesson in this course to unlock your certificate.</p>
+      </div>
+    );
+  }
+
+  const studentName = user?.firstName
+    ? `${user.firstName} ${user.lastName || ""}`.trim()
+    : user?.username || "Student";
+  const completedDate = enrollment.updatedAt
+    ? new Date(enrollment.updatedAt).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" })
+    : "";
+  const instructorName = course?.instructor
+    ? `${course.instructor.firstName || ""} ${course.instructor.lastName || ""}`.trim() || "Instructor"
+    : "Instructor";
+
+  return (
+    <div>
+      <div style={{
+        border: "10px solid #4a60c8", borderRadius: 12, padding: "48px 40px",
+        textAlign: "center", background: "#fff", fontFamily: "Georgia, serif",
+      }}>
+        <p style={{ letterSpacing: 4, fontSize: 12, color: "#9ca3af", textTransform: "uppercase", margin: 0 }}>SHRI Learning Management System</p>
+        <h1 style={{ fontSize: 30, margin: "16px 0 4px", color: "#111827" }}>Certificate of Completion</h1>
+        <p style={{ fontSize: 14, color: "#6b7280", margin: "0 0 20px" }}>This certifies that</p>
+        <h2 style={{ fontSize: 26, color: "#4a60c8", margin: "0 0 20px", fontFamily: "system-ui, sans-serif" }}>{studentName}</h2>
+        <p style={{ fontSize: 14, color: "#6b7280", margin: "0 0 8px" }}>has successfully completed the course</p>
+        <h3 style={{ fontSize: 19, color: "#111827", margin: "0 0 32px" }}>{course?.title}</h3>
+        <div style={{ display: "flex", justifyContent: "space-between", marginTop: 40, fontSize: 13, color: "#6b7280" }}>
+          <span>Instructor: {instructorName}</span>
+          <span>Completed: {completedDate}</span>
+        </div>
+      </div>
+      <button
+        className="cd-complete-btn"
+        style={{ marginTop: 16 }}
+        onClick={() => window.print()}
+      >
+        Download / Print Certificate
+      </button>
+    </div>
+  );
+}
+
 export default function CourseDetails({ course, token, user, onBack, onAuthorClick }) {
   const [activeTab, setActiveTab] = useState("info");
   const [inWishlist, setInWishlist] = useState(false);
   const [wishlistBusy, setWishlistBusy] = useState(false);
+  const [enrollment, setEnrollment] = useState(null);
+
+  const fetchEnrollment = () => {
+    if (!token || !course?._id) return;
+    fetch(`http://localhost:5000/api/enrollments?course=${course._id}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data) => {
+        setEnrollment(Array.isArray(data) && data.length > 0 ? data[0] : null);
+      })
+      .catch((err) => console.error(err));
+  };
+
+  useEffect(() => {
+    fetchEnrollment();
+  }, [token, course?._id]);
 
   useEffect(() => {
     if (!token || !course?._id) return;
@@ -452,7 +649,7 @@ export default function CourseDetails({ course, token, user, onBack, onAuthorCli
   const description = course?.description || "Welcome to this course! Add your course description content here.";
   const instructorName = course?.instructor
     ? `${course.instructor.firstName || ""} ${course.instructor.lastName || ""}`.trim() || "Instructor"
-    : "DINESHAN";
+    : "Instructor";
 
   return (
     <div className="cd-container">
@@ -499,10 +696,12 @@ export default function CourseDetails({ course, token, user, onBack, onAuthorCli
 
           <div className="cd-tabs-bar">
             {[
+              { id: "curriculum", label: "Curriculum" },
               { id: "info", label: "Course Info" },
               { id: "reviews", label: "Reviews" },
               { id: "announcements", label: "Announcements" },
               { id: "quizzes", label: "Quizzes" },
+              { id: "certificate", label: "Certificate" },
             ].map(tab => (
               <button
                 key={tab.id}
@@ -515,6 +714,19 @@ export default function CourseDetails({ course, token, user, onBack, onAuthorCli
           </div>
 
           <div className="cd-tab-content-area">
+            {activeTab === "curriculum" && (
+              <CurriculumTab
+                course={course}
+                token={token}
+                enrollment={enrollment}
+                onLessonToggled={(updated) => setEnrollment(updated)}
+              />
+            )}
+
+            {activeTab === "certificate" && (
+              <CertificateTab course={course} user={user} enrollment={enrollment} />
+            )}
+
             {activeTab === "reviews" && (
               <CourseReviewsTab course={course} token={token} user={user} />
             )}
@@ -539,14 +751,39 @@ export default function CourseDetails({ course, token, user, onBack, onAuthorCli
         <div className="cd-sidebar">
           <div className="cd-card">
             <h3 className="cd-card-title">Course Progress</h3>
-            <div className="cd-progress-stats">
-              <span>0/0</span>
-              <span>0% Complete</span>
-            </div>
-            <div className="cd-progress-track">
-              <div className="cd-progress-fill" style={{ width: "0%" }}></div>
-            </div>
-            <button className="cd-complete-btn">Complete Course</button>
+            {(() => {
+              const totalLessons = (course?.curriculum || []).reduce(
+                (sum, t) => sum + (t.lessons?.length || 0), 0
+              );
+              const doneLessons = enrollment?.completedLessons?.length || 0;
+              const pct = enrollment?.progress ?? 0;
+              return (
+                <>
+                  <div className="cd-progress-stats">
+                    <span>{doneLessons}/{totalLessons}</span>
+                    <span>{pct}% Complete</span>
+                  </div>
+                  <div className="cd-progress-track">
+                    <div className="cd-progress-fill" style={{ width: `${pct}%` }}></div>
+                  </div>
+                  {enrollment ? (
+                    enrollment.status === "completed" ? (
+                      <button className="cd-complete-btn" onClick={() => setActiveTab("certificate")}>
+                        🎓 View Certificate
+                      </button>
+                    ) : (
+                      <button className="cd-complete-btn" onClick={() => setActiveTab("curriculum")}>
+                        Continue Learning
+                      </button>
+                    )
+                  ) : (
+                    <button className="cd-complete-btn" disabled>
+                      Enroll to Start
+                    </button>
+                  )}
+                </>
+              );
+            })()}
             <div className="cd-meta-list">
               <div className="cd-meta-item">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg>
@@ -563,7 +800,11 @@ export default function CourseDetails({ course, token, user, onBack, onAuthorCli
             <h3 className="cd-card-title" style={{ fontSize: "14px", marginBottom: "1rem" }}>A course by</h3>
             <div className="cd-instructor">
               <div className="cd-avatar">{instructorName[0] || "D"}</div>
-              <span className="cd-author-name" onClick={onAuthorClick} style={{ cursor: "pointer" }}>
+              <span
+                className="cd-author-name"
+                onClick={() => onAuthorClick && onAuthorClick(course?.instructor?._id || course?.instructor)}
+                style={{ cursor: "pointer" }}
+              >
                 {instructorName}
               </span>
             </div>

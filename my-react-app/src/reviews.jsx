@@ -228,11 +228,6 @@ export default function Reviews({ token }) {
     <div className="ec-container">
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.75rem" }}>
         <h2 className="db-section-title">Reviews</h2>
-        {activeTab === "given" && (
-          <button className="db-new-course-btn" onClick={() => setShowModal(true)}>
-            ＋ Write a Review
-          </button>
-        )}
       </div>
 
       <div className="ec-tabs-header">
@@ -327,15 +322,6 @@ export default function Reviews({ token }) {
           </div>
         )}
       </div>
-
-      {showModal && (
-        <WriteReviewModal
-          token={token}
-          enrollments={enrollments}
-          onClose={() => setShowModal(false)}
-          onSaved={handleSaved}
-        />
-      )}
     </div>
   );
 }

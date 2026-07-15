@@ -29,6 +29,7 @@ async function getMyEnrollments(req, res) {
   try {
     const filter = { student: req.userId };
     if (req.query.status) filter.status = req.query.status;
+    if (req.query.course) filter.course = req.query.course;
 
     const enrollments = await Enrollment.find(filter)
       .populate("course", "title thumbnail category price")
@@ -80,4 +81,40 @@ async function unenroll(req, res) {
   }
 }
 
-module.exports = { enroll, getMyEnrollments, updateEnrollment, unenroll };
+async function toggleLessonComplete(req, res) {
+  try {
+    const enrollment = await Enrollment.findById(req.params.id).populate("course", "curriculum");
+    if (!enrollment) return res.status(404).json({ message: "Enrollment not found." });
+    if (enrollment.student.toString() !== req.userId) {
+      return res.status(403).json({ message: "This isn't your enrollment." });
+    }
+
+    const { lessonKey, completed } = req.body;
+    if (!lessonKey) return res.status(400).json({ message: "lessonKey is required." });
+
+    const alreadyDone = enrollment.completedLessons.includes(lessonKey);
+    if (completed && !alreadyDone) {
+      enrollment.completedLessons.push(lessonKey);
+    } else if (!completed && alreadyDone) {
+      enrollment.completedLessons = enrollment.completedLessons.filter((k) => k !== lessonKey);
+    }
+
+    const totalLessons = (enrollment.course?.curriculum || []).reduce(
+      (sum, topic) => sum + (topic.lessons?.length || 0),
+      0
+    );
+
+    enrollment.progress = totalLessons > 0
+      ? Math.round((enrollment.completedLessons.length / totalLessons) * 100)
+      : 0;
+    enrollment.status = enrollment.progress >= 100 ? "completed" : "active";
+
+    await enrollment.save();
+    res.json(enrollment);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Could not update lesson progress." });
+  }
+}
+
+module.exports = { enroll, getMyEnrollments, updateEnrollment, unenroll, toggleLessonComplete };

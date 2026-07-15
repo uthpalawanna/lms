@@ -49,6 +49,7 @@ export default function Dashboard({ user, token, onLogout }) {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [showNewCourseModal, setShowNewCourseModal] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState(null);
+  const [selectedInstructorId, setSelectedInstructorId] = useState(null);
 
   const [statsLoading, setStatsLoading] = useState(true);
   const [enrolledCount, setEnrolledCount] = useState(0);
@@ -386,12 +387,16 @@ export default function Dashboard({ user, token, onLogout }) {
               token={token}
               user={currentUser}
               onBack={() => setActive("my-courses")}
-              onAuthorClick={() => setActive("instructor-profile")}
+              onAuthorClick={(instructorId) => {
+                setSelectedInstructorId(instructorId);
+                setActive("instructor-profile");
+              }}
             />
           )}
           {active === "instructor-profile" && (
             <InstructorProfile
-              user={currentUser}
+              instructorId={selectedInstructorId}
+              currentUser={currentUser}
               token={token}
               onNewCourse={handleNewCourseClick}
               onEditProfile={() => setActive("my-profile")}

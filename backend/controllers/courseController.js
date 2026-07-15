@@ -6,6 +6,7 @@ const Review = require("../models/Review");
 const Announcement = require("../models/Announcement");
 const Wishlist = require("../models/Wishlist");
 const Question = require("../models/Question");
+const User = require("../models/User");
 
 async function cascadeDeleteCourse(courseId) {
   const quizzes = await Quiz.find({ course: courseId }).select("_id");
@@ -161,10 +162,66 @@ async function getInstructorStats(req, res) {
   }
 }
 
+async function getInstructorProfile(req, res) {
+  try {
+    const instructorId = req.params.id;
+
+    const instructor = await User.findById(instructorId).select(
+      "firstName lastName username displayName avatarUrl bio"
+    );
+    if (!instructor) {
+      return res.status(404).json({ message: "Instructor not found." });
+    }
+
+    const courses = await Course.find({
+      instructor: instructorId,
+      status: "publish",
+    }).select("title");
+    const courseIds = courses.map((c) => c._id);
+
+    const enrollments = await Enrollment.find({ course: { $in: courseIds } });
+    const studentCountByCourse = {};
+    for (const e of enrollments) {
+      const cId = e.course.toString();
+      studentCountByCourse[cId] = (studentCountByCourse[cId] || 0) + 1;
+    }
+    const totalStudents = new Set(enrollments.map((e) => e.student?.toString())).size;
+
+    const reviews = await Review.find({ course: { $in: courseIds } });
+    const totalReviews = reviews.length;
+    const averageRating = totalReviews > 0
+      ? reviews.reduce((sum, r) => sum + r.rating, 0) / totalReviews
+      : 0;
+
+    res.json({
+      _id: instructor._id,
+      firstName: instructor.firstName,
+      lastName: instructor.lastName,
+      username: instructor.username,
+      displayName: instructor.displayName,
+      avatarUrl: instructor.avatarUrl,
+      bio: instructor.bio,
+      courseCount: courses.length,
+      studentCount: totalStudents,
+      reviewCount: totalReviews,
+      rating: averageRating,
+      courses: courses.map((c) => ({
+        id: c._id,
+        title: c.title,
+        studentCount: studentCountByCourse[c._id.toString()] || 0,
+      })),
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Could not fetch instructor profile." });
+  }
+}
+
 module.exports = {
   createCourse,
   getMyCourses,
   getInstructorStats,
+  getInstructorProfile,
   getPublishedCourses,
   getCourseById,
   updateCourse,

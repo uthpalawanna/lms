@@ -10,6 +10,7 @@ const enrollmentSchema = new mongoose.Schema(
       default: "active",
     },
     progress: { type: Number, default: 0, min: 0, max: 100 },
+    completedLessons: { type: [String], default: [] },
     pricePaid: { type: Number, default: 0 },
   },
   { timestamps: true }
