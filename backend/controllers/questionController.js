@@ -1,5 +1,6 @@
 ﻿const Question = require("../models/Question");
 const Course = require("../models/Course");
+const Enrollment = require("../models/Enrollment");
 
 async function askQuestion(req, res) {
   try {
@@ -11,6 +12,11 @@ async function askQuestion(req, res) {
 
     const courseDoc = await Course.findById(course);
     if (!courseDoc) return res.status(404).json({ message: "Course not found." });
+
+    const enrollment = await Enrollment.findOne({ student: req.userId, course });
+    if (!enrollment) {
+      return res.status(403).json({ message: "You must be enrolled in this course to ask a question." });
+    }
 
     const question = await Question.create({
       student: req.userId,
@@ -63,8 +69,16 @@ async function answerQuestion(req, res) {
       return res.status(400).json({ message: "Answer text is required." });
     }
 
-    const question = await Question.findById(req.params.id);
+    const question = await Question.findById(req.params.id).populate("course", "instructor");
     if (!question) return res.status(404).json({ message: "Question not found." });
+
+    const isCourseInstructor =
+      question.course?.instructor && question.course.instructor.toString() === req.userId;
+    const isEnrolledClassmate = await Enrollment.findOne({ student: req.userId, course: question.course?._id });
+
+    if (!isCourseInstructor && !isEnrolledClassmate) {
+      return res.status(403).json({ message: "You must be the instructor or enrolled in this course to answer." });
+    }
 
     question.answers.push({ responder: req.userId, text: text.trim() });
     await question.save();

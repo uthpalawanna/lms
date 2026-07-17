@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import CheckoutModal from "./CheckoutModal";
 
 const COURSES_URL = "http://localhost:5000/api/courses";
 const ENROLLMENTS_URL = "http://localhost:5000/api/enrollments";
@@ -42,6 +43,9 @@ export default function BrowseCourses({ token }) {
   const [error, setError] = useState("");
   const [enrollingId, setEnrollingId] = useState(null);
   const [message, setMessage] = useState("");
+  const [checkoutCourse, setCheckoutCourse] = useState(null);
+  const [checkoutSubmitting, setCheckoutSubmitting] = useState(false);
+  const [checkoutError, setCheckoutError] = useState("");
 
   const fetchData = async () => {
     setLoading(true);
@@ -77,20 +81,27 @@ export default function BrowseCourses({ token }) {
     myEnrollments.some((e) => e.course?._id === courseId || e.course === courseId);
 
   const handleEnroll = async (courseId) => {
-    setEnrollingId(courseId);
-    setMessage("");
     const course = courses.find((c) => c._id === courseId);
     const isPaid = course && course.price > 0;
-    const url = isPaid ? CHECKOUT_URL : ENROLLMENTS_URL;
-    const body = isPaid ? { course: courseId, paymentMethod: "Credit Card" } : { course: courseId };
+
+    if (isPaid) {
+      // Paid courses go through the checkout modal so real payment details
+      // are actually collected, instead of enrolling for free.
+      setCheckoutError("");
+      setCheckoutCourse(course);
+      return;
+    }
+
+    setEnrollingId(courseId);
+    setMessage("");
     try {
-      const response = await fetch(url, {
+      const response = await fetch(ENROLLMENTS_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(body),
+        body: JSON.stringify({ course: courseId }),
       });
       const data = await response.json();
       if (!response.ok) {
@@ -98,13 +109,43 @@ export default function BrowseCourses({ token }) {
         setEnrollingId(null);
         return;
       }
-      setMyEnrollments((prev) => [...prev, isPaid ? data.enrollment : data]);
-      setMessage(isPaid ? "Payment successful, you're enrolled!" : "Enrolled successfully!");
+      setMyEnrollments((prev) => [...prev, data]);
+      setMessage("Enrolled successfully!");
     } catch (err) {
       console.error(err);
       setMessage("Could not reach the server. Is the backend running?");
     } finally {
       setEnrollingId(null);
+    }
+  };
+
+  const handleCheckoutConfirm = async (paymentDetails) => {
+    if (!checkoutCourse) return;
+    setCheckoutSubmitting(true);
+    setCheckoutError("");
+    try {
+      const response = await fetch(CHECKOUT_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ course: checkoutCourse._id, ...paymentDetails }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        setCheckoutError(data.message || "Payment failed.");
+        setCheckoutSubmitting(false);
+        return;
+      }
+      setMyEnrollments((prev) => [...prev, data.enrollment]);
+      setMessage("Payment successful, you're enrolled!");
+      setCheckoutCourse(null);
+    } catch (err) {
+      console.error(err);
+      setCheckoutError("Could not reach the server. Is the backend running?");
+    } finally {
+      setCheckoutSubmitting(false);
     }
   };
 
@@ -169,6 +210,16 @@ export default function BrowseCourses({ token }) {
           </div>
         )}
       </div>
+
+      {checkoutCourse && (
+        <CheckoutModal
+          course={checkoutCourse}
+          onClose={() => { setCheckoutCourse(null); setCheckoutError(""); }}
+          onConfirm={handleCheckoutConfirm}
+          submitting={checkoutSubmitting}
+          errorMessage={checkoutError}
+        />
+      )}
     </div>
   );
 }

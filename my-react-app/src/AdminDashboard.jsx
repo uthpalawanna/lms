@@ -4,6 +4,7 @@ const ADMIN_URL = "http://localhost:5000/api/admin";
 
 const ROLE_STYLES = {
   admin: "bg-purple-100 text-purple-700",
+  instructor: "bg-blue-100 text-blue-700",
   student: "bg-gray-100 text-gray-600",
 };
 
@@ -246,6 +247,7 @@ export default function AdminDashboard({ token, currentUserId, onLogout }) {
                                 className="text-[12px] border border-[#dfe2ec] rounded-md px-1.5 py-1"
                               >
                                 <option value="student">student</option>
+                                <option value="instructor">instructor</option>
                                 <option value="admin">admin</option>
                               </select>
                             </div>

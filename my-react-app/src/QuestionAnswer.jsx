@@ -127,7 +127,7 @@ function AskQuestionModal({ courses, onClose, onSubmit, submitting, error }) {
 }
 
 export default function QuestionAnswer({ token, user }) {
-  const isInstructor = user?.role === "admin";
+  const isInstructor = user?.role === "instructor" || user?.role === "admin";
 
   const [courses, setCourses] = useState([]);
   const [questions, setQuestions] = useState([]);

@@ -18,6 +18,9 @@ import Settings from "./Settings";
 const ENROLLMENTS_URL = "http://localhost:5000/api/enrollments";
 const INSTRUCTOR_STATS_URL = "http://localhost:5000/api/courses/mine/stats";
 
+// Instructors and admins both get access to the instructor-side tools.
+const isInstructorRole = (user) => user?.role === "instructor" || user?.role === "admin";
+
 const SIDEBAR_MAIN = [
   { id: "dashboard", icon: "📊", label: "Dashboard" },
   { id: "my-profile", icon: "👤", label: "My Profile" },
@@ -74,7 +77,7 @@ export default function Dashboard({ user, token, onLogout }) {
     if (!token) return;
     setStatsLoading(true);
     try {
-      if (currentUser?.role === "admin") {
+      if (isInstructorRole(currentUser)) {
         const instructorRes = await fetch(INSTRUCTOR_STATS_URL, { headers: { Authorization: `Bearer ${token}` } });
         if (instructorRes.ok) {
           const stats = await instructorRes.json();
@@ -148,7 +151,7 @@ export default function Dashboard({ user, token, onLogout }) {
   ];
 
   const STATS =
-    currentUser?.role === "admin" ? INSTRUCTOR_STATS : STUDENT_STATS;
+    isInstructorRole(currentUser) ? INSTRUCTOR_STATS : STUDENT_STATS;
 
   const handleNav = (id) => {
     if (id === "logout") {
@@ -197,7 +200,7 @@ export default function Dashboard({ user, token, onLogout }) {
 
   const SidebarContent = () => (
     <>
-      {(currentUser?.role === "admin"
+      {(isInstructorRole(currentUser)
         ? SIDEBAR_MAIN.filter((item) => ["dashboard", "reviews", "question-answer"].includes(item.id))
         : SIDEBAR_MAIN
       ).map(({ id, icon, label }) => (
@@ -211,7 +214,7 @@ export default function Dashboard({ user, token, onLogout }) {
         </button>
       ))}
 
-      {currentUser?.role === "admin" && (
+      {isInstructorRole(currentUser) && (
         <>
           <div className="db-sidebar-divider" />
           <div className="db-sidebar-section-label">Instructor</div>
@@ -264,7 +267,7 @@ export default function Dashboard({ user, token, onLogout }) {
             </div>
           </div>
         </div>
-        {currentUser?.role === "admin" && (
+        {isInstructorRole(currentUser) && (
           <button className="db-new-course-btn" onClick={handleNewCourseClick}>＋ New Course</button>
         )}
       </div>
@@ -311,7 +314,7 @@ export default function Dashboard({ user, token, onLogout }) {
                 ))}
               </div>
 
-              {currentUser?.role !== "admin" && !statsLoading && enrolledCourses.length > 0 && (
+              {!isInstructorRole(currentUser) && !statsLoading && enrolledCourses.length > 0 && (
                 <>
                   <h3 style={{ fontSize: 14, fontWeight: 600, margin: "1.5rem 0 0.75rem" }}>
                     Continue learning

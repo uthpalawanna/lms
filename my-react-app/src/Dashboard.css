@@ -3496,3 +3496,140 @@
   font-weight: 700;
   text-decoration: none;
 }
+/* --- Checkout modal --- */
+.checkout-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 20, 35, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+}
+
+.checkout-modal {
+  background: #fff;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 380px;
+  padding: 20px;
+  box-shadow: 0 20px 50px rgba(15, 20, 35, 0.25);
+}
+
+.checkout-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.checkout-modal-header h3 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.checkout-modal-close {
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  color: #5c6b8a;
+}
+
+.checkout-modal-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f6f7fb;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 14px;
+  font-size: 14px;
+}
+
+.checkout-method-toggle {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.checkout-method-toggle button {
+  flex: 1;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid #dfe2ec;
+  background: #fff;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: #5c6b8a;
+}
+
+.checkout-method-toggle button.active {
+  border-color: #4b5df0;
+  color: #4b5df0;
+  background: #eef0fe;
+}
+
+.checkout-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.checkout-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: #5c6b8a;
+  font-weight: 600;
+}
+
+.checkout-form input {
+  border: 1px solid #dfe2ec;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 14px;
+  color: #1a2035;
+}
+
+.checkout-form-row {
+  display: flex;
+  gap: 10px;
+}
+
+.checkout-form-row label {
+  flex: 1;
+}
+
+.checkout-form-error {
+  color: #dc2626;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.checkout-disclaimer {
+  font-size: 11px;
+  color: #8892a8;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.checkout-submit-btn {
+  background: #4b5df0;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.checkout-submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+

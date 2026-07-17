@@ -21,10 +21,11 @@ async function getAllUsers(req, res) {
 async function updateUserRole(req, res) {
   try {
     const { role } = req.body;
-    if (!["student", "admin"].includes(role)) {
+    if (!["student", "instructor", "admin"].includes(role)) {
       return res.status(400).json({ message: "Invalid role." });
     }
-    if (req.params.id === req.userId && role !== "admin") {
+    const requester = await User.findById(req.userId);
+    if (req.params.id === req.userId && requester?.role === "admin" && role !== "admin") {
       return res.status(400).json({ message: "You can't remove your own admin access." });
     }
     const user = await User.findById(req.params.id);
@@ -47,7 +48,7 @@ async function deleteUser(req, res) {
     const user = await User.findById(req.params.id);
     if (!user) return res.status(404).json({ message: "User not found." });
 
-    if (user.role === "admin") {
+    if (user.role === "instructor" || user.role === "admin") {
       const ownedCourses = await Course.find({ instructor: user._id }).select("_id");
       for (const c of ownedCourses) {
         await cascadeDeleteCourse(c._id);
@@ -99,7 +100,7 @@ async function getPlatformStats(req, res) {
   try {
     const [totalUsers, totalInstructors, totalCourses, totalEnrollments] = await Promise.all([
       User.countDocuments(),
-      User.countDocuments({ role: "admin" }),
+      User.countDocuments({ role: { $in: ["instructor", "admin"] } }),
       Course.countDocuments(),
       Enrollment.countDocuments(),
     ]);

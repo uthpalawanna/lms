@@ -10,7 +10,7 @@ function generateToken(userId) {
 
 async function register(req, res) {
   try {
-    const { firstName, lastName, username, email, password, role } = req.body;
+    const { firstName, lastName, username, email, password } = req.body;
 
     if (!firstName || !lastName || !username || !email || !password) {
       return res.status(400).json({ message: "Please fill in all required fields." });
@@ -24,13 +24,16 @@ async function register(req, res) {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
+    // Role is never taken from the request body — every self-registration is a
+    // student. Instructor/admin access can only be granted afterwards by an
+    // existing admin via updateUserRole.
     const newUser = await User.create({
       firstName,
       lastName,
       username,
       email,
       password: hashedPassword,
-      role: role || "student",
+      role: "student",
     });
 
     const token = generateToken(newUser._id);

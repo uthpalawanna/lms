@@ -1,6 +1,7 @@
 const Review = require("../models/Review");
 const Course = require("../models/Course");
 const Enrollment = require("../models/Enrollment");
+const User = require("../models/User");
 
 async function createReview(req, res) {
   try {
@@ -83,16 +84,19 @@ async function getReceivedReviews(req, res) {
 
 async function deleteReview(req, res) {
   try {
-    const review = await Review.findById(req.params.id).populate("course", "instructor");
+    const review = await Review.findById(req.params.id);
     if (!review) {
       return res.status(404).json({ message: "Review not found." });
     }
 
     const isAuthor = review.student.toString() === req.userId;
-    const isCourseInstructor =
-      review.course?.instructor && review.course.instructor.toString() === req.userId;
+    // Course instructors can no longer delete reviews on their own courses —
+    // that let them silently remove negative feedback. Only the review's
+    // author, or a platform admin doing moderation, can remove it.
+    const requester = isAuthor ? null : await User.findById(req.userId).select("role");
+    const isPlatformAdmin = requester?.role === "admin";
 
-    if (!isAuthor && !isCourseInstructor) {
+    if (!isAuthor && !isPlatformAdmin) {
       return res.status(403).json({ message: "You don't have permission to delete this review." });
     }
 
