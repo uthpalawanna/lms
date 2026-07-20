@@ -1,10 +1,6 @@
 import React, { useState } from "react";
+import "./dashboard.css"
 
-// This project doesn't integrate a real payment processor. This modal exists
-// so checkout at least *asks for and validates* plausible payment details
-// client-side before hitting the backend, instead of granting a paid course
-// for free with a single click. Swap in a real gateway (Stripe Elements,
-// PayPal SDK, etc.) before this ever goes to production.
 export default function CheckoutModal({ course, onClose, onConfirm, submitting, errorMessage }) {
   const [method, setMethod] = useState("Credit Card");
   const [cardNumber, setCardNumber] = useState("");
@@ -130,7 +126,7 @@ export default function CheckoutModal({ course, onClose, onConfirm, submitting, 
                     autoComplete="cc-exp"
                   />
                 </label>
-                <label>
+                <label className="checkout-cvv-field">
                   CVV
                   <input
                     type="text"

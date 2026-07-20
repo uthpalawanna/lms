@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from "react";
+import CheckoutModal from "./CheckoutModal";
+import "./Dashboard.css";
 
 const COURSES_URL = "http://localhost:5000/api/courses";
 const ENROLLMENTS_URL = "http://localhost:5000/api/enrollments";
+const CHECKOUT_URL = "http://localhost:5000/api/orders/checkout";
 
 const TABS = [
   { id: "browse", label: "Browse Courses" },
@@ -68,6 +71,9 @@ export default function EnrolledCourses({ token, user, onCourseClick }) {
   const [unenrollingId, setUnenrollingId] = useState(null);
   const [openingId, setOpeningId] = useState(null);
   const [message, setMessage] = useState("");
+  const [checkoutCourse, setCheckoutCourse] = useState(null);
+  const [checkoutSubmitting, setCheckoutSubmitting] = useState(false);
+  const [checkoutError, setCheckoutError] = useState("");
 
   const fetchAll = async () => {
     setLoading(true);
@@ -103,6 +109,16 @@ export default function EnrolledCourses({ token, user, onCourseClick }) {
     enrollments.some((e) => e.course?._id === courseId || e.course === courseId);
 
   const handleEnroll = async (courseId) => {
+    const course = courses.find((c) => c._id === courseId);
+    const isPaid = course && course.price > 0;
+
+    if (isPaid) {
+      
+      setCheckoutError("");
+      setCheckoutCourse(course);
+      return;
+    }
+
     setEnrollingId(courseId);
     setMessage("");
     try {
@@ -127,6 +143,36 @@ export default function EnrolledCourses({ token, user, onCourseClick }) {
       setMessage("Could not reach the server. Is the backend running?");
     } finally {
       setEnrollingId(null);
+    }
+  };
+
+  const handleCheckoutConfirm = async (paymentDetails) => {
+    if (!checkoutCourse) return;
+    setCheckoutSubmitting(true);
+    setCheckoutError("");
+    try {
+      const response = await fetch(CHECKOUT_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ course: checkoutCourse._id, ...paymentDetails }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        setCheckoutError(data.message || "Payment failed.");
+        setCheckoutSubmitting(false);
+        return;
+      }
+      setEnrollments((prev) => [...prev, data.enrollment]);
+      setMessage("Payment successful, you're enrolled!");
+      setCheckoutCourse(null);
+    } catch (err) {
+      console.error(err);
+      setCheckoutError("Could not reach the server. Is the backend running?");
+    } finally {
+      setCheckoutSubmitting(false);
     }
   };
 
@@ -313,6 +359,16 @@ export default function EnrolledCourses({ token, user, onCourseClick }) {
           </div>
         )}
       </div>
+
+      {checkoutCourse && (
+        <CheckoutModal
+          course={checkoutCourse}
+          onClose={() => { setCheckoutCourse(null); setCheckoutError(""); }}
+          onConfirm={handleCheckoutConfirm}
+          submitting={checkoutSubmitting}
+          errorMessage={checkoutError}
+        />
+      )}
     </div>
   );
 }
