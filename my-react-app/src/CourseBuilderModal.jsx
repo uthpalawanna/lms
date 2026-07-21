@@ -153,6 +153,64 @@ function FileUploadField({ label, hint, token, value, onChange, accept }) {
   );
 }
 
+function LessonVideoUpload({ token, value, onChange }) {
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setUploading(true);
+    setError("");
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const response = await fetch(UPLOAD_URL, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        setError(data.message || "Upload failed.");
+        setUploading(false);
+        return;
+      }
+      onChange(data.url);
+    } catch (err) {
+      console.error(err);
+      setError("Could not reach the server. Is the backend running?");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6 }}>
+      <label
+        style={{
+          display: "inline-block",
+          background: "#eef0fb",
+          color: "#4a60c8",
+          padding: "6px 12px",
+          borderRadius: 8,
+          fontSize: 12,
+          fontWeight: 600,
+          cursor: uploading ? "default" : "pointer",
+          whiteSpace: "nowrap",
+        }}
+      >
+        {uploading ? "Uploading..." : "Upload Video File"}
+        <input type="file" accept="video/mp4,video/webm" onChange={handleFileChange} style={{ display: "none" }} disabled={uploading} />
+      </label>
+      {value && value.startsWith("/uploads") && (
+        <span style={{ fontSize: 12, color: "#16a34a" }}>✓ Video uploaded</span>
+      )}
+      {error && <span style={{ fontSize: 12, color: "#dc2626" }}>{error}</span>}
+    </div>
+  );
+}
+
 const emptyLesson = () => ({ title: "", content: "", videoUrl: "" });
 const emptyTopic = () => ({ title: "", lessons: [emptyLesson()] });
 const emptyFaq = () => ({ question: "", answer: "" });
@@ -604,9 +662,14 @@ export default function CourseBuilderModal({ token, user, onClose, onSaved }) {
                       />
                       <input
                         type="text"
-                        placeholder="Lesson video URL (optional)"
+                        placeholder="Lesson video URL (or upload a file below)"
                         value={lesson.videoUrl}
                         onChange={(e) => updateLesson(tIndex, lIndex, "videoUrl", e.target.value)}
+                      />
+                      <LessonVideoUpload
+                        token={token}
+                        value={lesson.videoUrl}
+                        onChange={(url) => updateLesson(tIndex, lIndex, "videoUrl", url)}
                       />
                     </div>
                   ))}

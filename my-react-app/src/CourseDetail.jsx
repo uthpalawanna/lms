@@ -7,6 +7,33 @@ const REVIEWS_URL = "http://localhost:5000/api/reviews";
 const WISHLIST_URL = "http://localhost:5000/api/wishlist";
 const ANNOUNCEMENTS_URL = "http://localhost:5000/api/announcements";
 
+function resolveThumbnailUrl(thumbnail) {
+  if (!thumbnail) return null;
+  if (thumbnail.startsWith("http://") || thumbnail.startsWith("https://")) return thumbnail;
+  if (thumbnail.startsWith("/uploads")) return `http://localhost:5000${thumbnail}`;
+  return `http://localhost:5000/uploads/${thumbnail}`;
+}
+
+function CourseHeroImage({ thumbnail, title }) {
+  const [failed, setFailed] = useState(false);
+  const resolvedUrl = resolveThumbnailUrl(thumbnail);
+  return resolvedUrl && !failed ? (
+    <img
+      src={resolvedUrl}
+      alt={title}
+      style={{ width: "100%", height: "100%", objectFit: "cover" }}
+      onError={() => setFailed(true)}
+    />
+  ) : (
+    <svg width="100%" height="100%" viewBox="0 0 800 400" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="800" height="400" fill="#eef0f8"/>
+      <circle cx="200" cy="120" r="40" fill="#dce1f0"/>
+      <path d="M300 400 L500 160 L700 400 Z" fill="#e2e5ef"/>
+      <path d="M500 400 L640 240 L800 400 Z" fill="#dce1f0"/>
+    </svg>
+  );
+}
+
 function Stars({ rating }) {
   return (
     <span>
@@ -197,7 +224,9 @@ function QuizzesTab({ course, token, user }) {
   const [takingQuizId, setTakingQuizId] = useState(null);
   const [deletingQuizId, setDeletingQuizId] = useState(null);
 
-  const isOwner = course?.instructor && (course.instructor._id || course.instructor) === (user?._id || user?.id);
+  const courseInstructorId = course?.instructor?._id || course?.instructor;
+  const currentUserId = user?._id || user?.id;
+  const isOwner = !!courseInstructorId && !!currentUserId && String(courseInstructorId) === String(currentUserId);
 
   const handleDeleteQuiz = async (quizId, quizTitle) => {
     const confirmed = window.confirm(
@@ -409,12 +438,12 @@ function AnnouncementsTab({ course }) {
   );
 }
 
-function CurriculumTab({ course, token, enrollment, onLessonToggled }) {
+function CurriculumTab({ course, token, enrollment, isOwner, onLessonToggled }) {
   const topics = course?.curriculum || [];
   const [selected, setSelected] = useState(null);
   const [busy, setBusy] = useState(false);
 
-  const hasAccess = !!enrollment;
+  const hasAccess = !!enrollment || !!isOwner;
   const completedLessons = enrollment?.completedLessons || [];
 
   useEffect(() => {
@@ -432,6 +461,14 @@ function CurriculumTab({ course, token, enrollment, onLessonToggled }) {
     const ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]+)/);
     if (ytMatch) return `https://www.youtube.com/embed/${ytMatch[1]}`;
     return null;
+  })();
+
+  const resolvedVideoSrc = (() => {
+    const url = selectedLesson?.videoUrl || "";
+    if (!url) return "";
+    if (url.startsWith("http://") || url.startsWith("https://")) return url;
+    if (url.startsWith("/uploads")) return `http://localhost:5000${url}`;
+    return url;
   })();
 
   const handleToggleComplete = async () => {
@@ -512,12 +549,17 @@ function CurriculumTab({ course, token, enrollment, onLessonToggled }) {
                 />
               </div>
             ) : selectedLesson.videoUrl ? (
-              <video controls style={{ width: "100%", borderRadius: 10, background: "#000", marginBottom: 16 }} src={selectedLesson.videoUrl} />
+              <video controls style={{ width: "100%", borderRadius: 10, background: "#000", marginBottom: 16 }} src={resolvedVideoSrc} />
             ) : null}
             {selectedLesson.content && (
               <p style={{ fontSize: 14, lineHeight: 1.7, color: "#374151", whiteSpace: "pre-wrap" }}>{selectedLesson.content}</p>
             )}
-            <button className="cd-complete-btn" onClick={handleToggleComplete} disabled={busy} style={{ marginTop: 12 }}>
+            <button
+              className="cd-complete-btn"
+              onClick={handleToggleComplete}
+              disabled={busy}
+              style={{ marginTop: 12, display: enrollment ? "inline-block" : "none" }}
+            >
               {busy ? "Saving..." : selectedDone ? "✓ Completed — Mark Incomplete" : "Mark as Complete"}
             </button>
           </>
@@ -650,6 +692,10 @@ export default function CourseDetails({ course, token, user, onBack, onAuthorCli
   const instructorName = course?.instructor
     ? `${course.instructor.firstName || ""} ${course.instructor.lastName || ""}`.trim() || "Instructor"
     : "Instructor";
+  const courseInstructorId = course?.instructor?._id || course?.instructor;
+  const currentUserId = user?._id || user?.id;
+  const isOwner = !!courseInstructorId && !!currentUserId && String(courseInstructorId) === String(currentUserId);
+  console.log("[CourseDetail owner check]", { courseInstructorId, currentUserId, isOwner });
 
   return (
     <div className="cd-container">
@@ -686,12 +732,7 @@ export default function CourseDetails({ course, token, user, onBack, onAuthorCli
       <div className="cd-layout">
         <div className="cd-main-content">
           <div className="cd-hero-image">
-            <svg width="100%" height="100%" viewBox="0 0 800 400" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect width="800" height="400" fill="#eef0f8"/>
-              <circle cx="200" cy="120" r="40" fill="#dce1f0"/>
-              <path d="M300 400 L500 160 L700 400 Z" fill="#e2e5ef"/>
-              <path d="M500 400 L640 240 L800 400 Z" fill="#dce1f0"/>
-            </svg>
+            <CourseHeroImage thumbnail={course?.thumbnail} title={title} />
           </div>
 
           <div className="cd-tabs-bar">
@@ -719,6 +760,7 @@ export default function CourseDetails({ course, token, user, onBack, onAuthorCli
                 course={course}
                 token={token}
                 enrollment={enrollment}
+                isOwner={isOwner}
                 onLessonToggled={(updated) => setEnrollment(updated)}
               />
             )}
