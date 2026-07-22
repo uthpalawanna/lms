@@ -6,9 +6,19 @@ function emptyQuestion() {
   return { questionText: "", options: ["", ""], correctOptionIndex: 0 };
 }
 
-export default function CreateQuizModal({ token, courseId, onClose, onCreated }) {
-  const [title, setTitle] = useState("");
-  const [questions, setQuestions] = useState([emptyQuestion()]);
+export default function CreateQuizModal({ token, courseId, quiz, onClose, onCreated, onUpdated }) {
+  const isEditing = !!quiz;
+
+  const [title, setTitle] = useState(quiz?.title || "");
+  const [questions, setQuestions] = useState(
+    quiz?.questions?.length
+      ? quiz.questions.map((q) => ({
+          questionText: q.questionText,
+          options: [...q.options],
+          correctOptionIndex: q.correctOptionIndex,
+        }))
+      : [emptyQuestion()]
+  );
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -52,7 +62,7 @@ export default function CreateQuizModal({ token, courseId, onClose, onCreated })
     setQuestions((prev) => prev.filter((_, i) => i !== qIndex));
   };
 
-  const handleCreate = async () => {
+  const handleSave = async () => {
     setError("");
 
     if (!title.trim()) {
@@ -72,24 +82,30 @@ export default function CreateQuizModal({ token, courseId, onClose, onCreated })
 
     setLoading(true);
     try {
-      const response = await fetch(API_URL, {
-        method: "POST",
+      const response = await fetch(isEditing ? `${API_URL}/${quiz._id}` : API_URL, {
+        method: isEditing ? "PUT" : "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ course: courseId, title, questions }),
+        body: JSON.stringify(
+          isEditing ? { title, questions } : { course: courseId, title, questions }
+        ),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        setError(data.message || "Could not create the quiz.");
+        setError(data.message || `Could not ${isEditing ? "update" : "create"} the quiz.`);
         setLoading(false);
         return;
       }
 
-      onCreated?.(data);
+      if (isEditing) {
+        onUpdated?.(data);
+      } else {
+        onCreated?.(data);
+      }
     } catch (err) {
       console.error(err);
       setError("Could not reach the server. Is the backend running?");
@@ -101,7 +117,7 @@ export default function CreateQuizModal({ token, courseId, onClose, onCreated })
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 640, maxHeight: "85vh", overflowY: "auto" }}>
         <div className="modal-header">
-          <h3>Create Quiz</h3>
+          <h3>{isEditing ? "Edit Quiz" : "Create Quiz"}</h3>
           <button className="modal-close-btn" onClick={onClose}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -111,6 +127,13 @@ export default function CreateQuizModal({ token, courseId, onClose, onCreated })
         </div>
 
         <div className="modal-body">
+          {isEditing && (
+            <p style={{ fontSize: 12, color: "#9ca3af", marginTop: -6, marginBottom: 14 }}>
+              Changing questions or answers here won't recalculate scores for students who already
+              attempted this quiz.
+            </p>
+          )}
+
           <div className="modal-field">
             <label>Quiz Title</label>
             <input
@@ -209,8 +232,8 @@ export default function CreateQuizModal({ token, courseId, onClose, onCreated })
 
         <div className="modal-footer">
           <button className="modal-cancel-btn" onClick={onClose}>Cancel</button>
-          <button className="modal-publish-btn" onClick={handleCreate} disabled={loading}>
-            {loading ? "Creating..." : "Create Quiz"}
+          <button className="modal-publish-btn" onClick={handleSave} disabled={loading}>
+            {loading ? (isEditing ? "Saving..." : "Creating...") : (isEditing ? "Save Changes" : "Create Quiz")}
           </button>
         </div>
       </div>

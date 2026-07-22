@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 const QUIZ_URL = "http://localhost:5000/api/quizzes";
 const ATTEMPT_URL = "http://localhost:5000/api/quiz-attempts";
 
-export default function TakeQuizModal({ token, quizId, onClose, onSubmitted }) {
+export default function TakeQuizModal({ token, quizId, onClose, onSubmitted, previewMode = false }) {
   const [quiz, setQuiz] = useState(null);
   const [answers, setAnswers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -45,6 +45,7 @@ export default function TakeQuizModal({ token, quizId, onClose, onSubmitted }) {
   };
 
   const handleSubmit = async () => {
+    if (previewMode) return;
     setError("");
     if (answers.some((a) => a === -1)) {
       setError("Please answer every question before submitting.");
@@ -83,7 +84,7 @@ export default function TakeQuizModal({ token, quizId, onClose, onSubmitted }) {
     <div className="modal-overlay" onClick={result ? onClose : undefined}>
       <div className="modal-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 600, maxHeight: "85vh", overflowY: "auto" }}>
         <div className="modal-header">
-          <h3>{quiz?.title || "Quiz"}</h3>
+          <h3>{previewMode ? `Preview: ${quiz?.title || "Quiz"}` : quiz?.title || "Quiz"}</h3>
           <button className="modal-close-btn" onClick={onClose}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -109,6 +110,11 @@ export default function TakeQuizModal({ token, quizId, onClose, onSubmitted }) {
             <p style={{ color: "#dc2626" }}>{error}</p>
           ) : (
             <>
+              {previewMode && (
+                <p style={{ fontSize: 12, color: "#9ca3af", marginTop: -6, marginBottom: 14 }}>
+                  Preview mode — this is how students see the quiz. Answers here aren't graded or saved.
+                </p>
+              )}
               {quiz?.questions.map((q, qIndex) => (
                 <div key={qIndex} style={{ marginBottom: 20 }}>
                   <p style={{ fontWeight: 600, fontSize: 14, marginBottom: 8 }}>
@@ -151,6 +157,8 @@ export default function TakeQuizModal({ token, quizId, onClose, onSubmitted }) {
         <div className="modal-footer">
           {result ? (
             <button className="modal-publish-btn" onClick={onClose}>Done</button>
+          ) : previewMode ? (
+            <button className="modal-publish-btn" onClick={onClose}>Close Preview</button>
           ) : (
             <>
               <button className="modal-cancel-btn" onClick={onClose}>Cancel</button>
