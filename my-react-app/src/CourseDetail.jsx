@@ -370,10 +370,15 @@ function QuizzesTab({ course, token, user }) {
   );
 }
 
-function AnnouncementsTab({ course }) {
+function AnnouncementsTab({ course, token, isOwner }) {
   const [announcements, setAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [showForm, setShowForm] = useState(false);
+  const [title, setTitle] = useState("");
+  const [summary, setSummary] = useState("");
+  const [formError, setFormError] = useState("");
+  const [saving, setSaving] = useState(false);
 
   const fetchAnnouncements = async () => {
     setLoading(true);
@@ -399,9 +404,90 @@ function AnnouncementsTab({ course }) {
     if (course?._id) fetchAnnouncements();
   }, [course?._id]);
 
+  const openForm = () => {
+    setTitle("");
+    setSummary("");
+    setFormError("");
+    setShowForm((s) => !s);
+  };
+
+  const handleSubmit = async () => {
+    if (!title.trim()) {
+      setFormError("Please enter an announcement title.");
+      return;
+    }
+    setFormError("");
+    setSaving(true);
+    try {
+      const response = await fetch(ANNOUNCEMENTS_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ course: course._id, title, summary }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        setFormError(data.message || "Could not publish the announcement.");
+        setSaving(false);
+        return;
+      }
+      setAnnouncements((prev) => [data, ...prev]);
+      setShowForm(false);
+      setTitle("");
+      setSummary("");
+    } catch (err) {
+      console.error(err);
+      setFormError("Could not reach the server. Is the backend running?");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <div className="cd-reviews-section">
-      <h3 className="cd-section-heading" style={{ marginBottom: 16 }}>Announcements</h3>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+        <h3 className="cd-section-heading" style={{ margin: 0 }}>Announcements</h3>
+        {token && isOwner && (
+          <button className="db-new-course-btn" onClick={openForm}>
+            + Add Announcement
+          </button>
+        )}
+      </div>
+
+      {showForm && (
+        <div style={{ border: "1px solid #e5e7eb", borderRadius: 10, padding: 16, marginBottom: 20, background: "#f9fafb" }}>
+          <div style={{ marginBottom: 10 }}>
+            <label style={{ fontSize: 13, fontWeight: 600, display: "block", marginBottom: 6 }}>Title</label>
+            <input
+              type="text"
+              placeholder="Announcement title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              style={{ width: "100%", padding: "8px 10px", borderRadius: 6, border: "1px solid #d1d5db" }}
+            />
+          </div>
+          <div style={{ marginBottom: 10 }}>
+            <label style={{ fontSize: 13, fontWeight: 600, display: "block", marginBottom: 6 }}>Summary (optional)</label>
+            <textarea
+              value={summary}
+              onChange={(e) => setSummary(e.target.value)}
+              rows={4}
+              style={{ width: "100%", padding: "8px 10px", borderRadius: 6, border: "1px solid #d1d5db" }}
+            />
+          </div>
+          {formError && <p style={{ color: "#dc2626", fontSize: 13, marginBottom: 10 }}>{formError}</p>}
+          <div style={{ display: "flex", gap: 8 }}>
+            <button className="db-new-course-btn" onClick={handleSubmit} disabled={saving}>
+              {saving ? "Publishing..." : "Publish"}
+            </button>
+            <button className="cd-action-btn" onClick={() => setShowForm(false)} disabled={saving}>
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
 
       {loading ? (
         <p style={{ fontSize: 14, color: "#9ca3af" }}>Loading announcements...</p>
@@ -777,7 +863,7 @@ export default function CourseDetails({ course, token, user, onBack, onAuthorCli
             )}
 
             {activeTab === "announcements" && (
-              <AnnouncementsTab course={course} />
+              <AnnouncementsTab course={course} token={token} isOwner={isOwner} />
             )}
 
             {activeTab === "quizzes" && (
