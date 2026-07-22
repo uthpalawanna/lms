@@ -119,35 +119,6 @@ export default function BrowseCourses({ token }) {
     }
   };
 
-  const handleCheckoutConfirm = async (paymentDetails) => {
-    if (!checkoutCourse) return;
-    setCheckoutSubmitting(true);
-    setCheckoutError("");
-    try {
-      const response = await fetch(CHECKOUT_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ course: checkoutCourse._id, ...paymentDetails }),
-      });
-      const data = await response.json();
-      if (!response.ok) {
-        setCheckoutError(data.message || "Payment failed.");
-        setCheckoutSubmitting(false);
-        return;
-      }
-      setMyEnrollments((prev) => [...prev, data.enrollment]);
-      setMessage("Payment successful, you're enrolled!");
-      setCheckoutCourse(null);
-    } catch (err) {
-      console.error(err);
-      setCheckoutError("Could not reach the server. Is the backend running?");
-    } finally {
-      setCheckoutSubmitting(false);
-    }
-  };
 
   return (
     <div className="ec-container">
@@ -214,9 +185,15 @@ export default function BrowseCourses({ token }) {
       {checkoutCourse && (
         <CheckoutModal
           course={checkoutCourse}
+          token={token}
           onClose={() => { setCheckoutCourse(null); setCheckoutError(""); }}
-          onConfirm={handleCheckoutConfirm}
-          submitting={checkoutSubmitting}
+          onPaid={() => {
+            setMessage("Payment successful, you're enrolled!");
+            setCheckoutCourse(null);
+            setCheckoutError("");
+            fetchData();
+          }}
+          onError={(msg) => setCheckoutError(msg)}
           errorMessage={checkoutError}
         />
       )}

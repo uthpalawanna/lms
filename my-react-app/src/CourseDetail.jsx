@@ -148,7 +148,7 @@ function CourseReviewsTab({ course, token, user }) {
     <div className="cd-reviews-section">
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
         <h3 className="cd-section-heading" style={{ margin: 0 }}>Student Ratings & Reviews</h3>
-        {token && (
+        {token && user?.role !== "instructor" && user?.role !== "admin" && (
           <button className="db-new-course-btn" onClick={openForm}>
             {myExistingReview ? "Edit My Review" : "+ Write a Review"}
           </button>
@@ -458,7 +458,10 @@ function CurriculumTab({ course, token, enrollment, isOwner, onLessonToggled }) 
 
   const embedUrl = (() => {
     const url = selectedLesson?.videoUrl || "";
-    const ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]+)/);
+    if (!url) return null;
+    const ytMatch = url.match(
+      /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/|live\/)|youtu\.be\/)([\w-]{6,})/
+    );
     if (ytMatch) return `https://www.youtube.com/embed/${ytMatch[1]}`;
     return null;
   })();
