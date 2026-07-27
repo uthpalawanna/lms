@@ -415,6 +415,7 @@ export default function Dashboard({ user, token, onLogout }) {
               token={token}
               initialTab={settingsTab}
               onProfileUpdate={setCurrentUser}
+              user={currentUser}
             />
           )}
         </main>

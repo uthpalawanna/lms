@@ -5,7 +5,8 @@ const ME_URL = "http://localhost:5000/api/auth/me";
 const UPLOAD_URL = "http://localhost:5000/api/uploads";
 const CHANGE_PASSWORD_URL = "http://localhost:5000/api/auth/change-password";
 
-const TABS = ["Profile", "Password", "Withdraw", "Social Profile", "Billing"];
+const ALL_TABS = ["Profile", "Password", "Withdraw", "Social Profile", "Billing"];
+const isInstructorRole = (user) => user?.role === "instructor" || user?.role === "admin";
 
 function toAbsoluteUrl(url) {
   if (!url) return "";
@@ -674,6 +675,12 @@ function BillingTab({ token }) {
     fontSize: 14,
   };
 
+  const selectStyle = {
+    ...fieldStyle,
+    backgroundColor: "#fff",
+    cursor: "pointer",
+  };
+
   return (
     <div style={{ maxWidth: 720 }}>
       <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 20 }}>Billing Address</h3>
@@ -699,7 +706,7 @@ function BillingTab({ token }) {
 
       <div className="modal-field" style={{ marginBottom: 16 }}>
         <label>Country</label>
-        <select value={country} onChange={(e) => setCountry(e.target.value)} style={fieldStyle}>
+        <select value={country} onChange={(e) => setCountry(e.target.value)} style={selectStyle}>
           <option value="">Select Country</option>
           {COUNTRIES.map((c) => (
             <option key={c} value={c}>{c}</option>
@@ -710,7 +717,7 @@ function BillingTab({ token }) {
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 16 }}>
         <div className="modal-field">
           <label>State</label>
-          <select value={state} onChange={(e) => setState(e.target.value)} style={fieldStyle}>
+          <select value={state} onChange={(e) => setState(e.target.value)} style={selectStyle}>
             <option value="N/A">N/A</option>
             <option value="Western">Western</option>
             <option value="Central">Central</option>
@@ -749,12 +756,13 @@ function BillingTab({ token }) {
   );
 }
 
-export default function Settings({ token, initialTab = "Profile", onProfileUpdate }) {
-  const [activeTab, setActiveTab] = useState(initialTab);
+export default function Settings({ token, initialTab = "Profile", onProfileUpdate, user }) {
+  const TABS = ALL_TABS.filter((tab) => tab !== "Withdraw" || isInstructorRole(user));
+  const [activeTab, setActiveTab] = useState(TABS.includes(initialTab) ? initialTab : "Profile");
 
   useEffect(() => {
-    setActiveTab(initialTab);
-  }, [initialTab]);
+    setActiveTab(TABS.includes(initialTab) ? initialTab : "Profile");
+  }, [initialTab, user]);
 
   return (
     <div className="ec-container">
