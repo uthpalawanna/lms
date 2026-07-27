@@ -1,14 +1,9 @@
 const express = require("express");
 const router = express.Router();
-const { body, validationResult } = require('express-validator');
+const { body } = require('express-validator');
 const { register, login, getMe, updateMe, changePassword, forgotPassword, resetPassword } = require("../controllers/authController");
 const requireAuth = require("../middleware/auth");
-
-function validate(req, res, next) {
-	const errors = validationResult(req);
-	if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
-	next();
-}
+const validate = require("../middleware/validate");
 
 router.post(
 	"/register",
