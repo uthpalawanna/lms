@@ -707,6 +707,8 @@ function CertificateTab({ course, user, enrollment }) {
   );
 }
 
+const canViewInstructorProfile = (user) => user?.role === "instructor" || user?.role === "admin";
+
 export default function CourseDetails({ course, token, user, onBack, onAuthorClick }) {
   const [activeTab, setActiveTab] = useState("info");
   const [inWishlist, setInWishlist] = useState(false);
@@ -931,13 +933,17 @@ export default function CourseDetails({ course, token, user, onBack, onAuthorCli
             <h3 className="cd-card-title" style={{ fontSize: "14px", marginBottom: "1rem" }}>A course by</h3>
             <div className="cd-instructor">
               <div className="cd-avatar">{instructorName[0] || "D"}</div>
-              <span
-                className="cd-author-name"
-                onClick={() => onAuthorClick && onAuthorClick(course?.instructor?._id || course?.instructor)}
-                style={{ cursor: "pointer" }}
-              >
-                {instructorName}
-              </span>
+              {canViewInstructorProfile(user) ? (
+                <span
+                  className="cd-author-name"
+                  onClick={() => onAuthorClick && onAuthorClick(course?.instructor?._id || course?.instructor)}
+                  style={{ cursor: "pointer" }}
+                >
+                  {instructorName}
+                </span>
+              ) : (
+                <span className="cd-author-name">{instructorName}</span>
+              )}
             </div>
           </div>
         </div>

@@ -10,7 +10,7 @@ function generateToken(userId) {
   });
 }
 
-async function register(req, res) {
+async function register(req, res, next) {
   try {
     const { firstName, lastName, username, email, password } = req.body;
 
@@ -53,11 +53,11 @@ async function register(req, res) {
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Something went wrong during registration." });
+    next(error);
   }
 }
 
-async function login(req, res) {
+async function login(req, res, next) {
   try {
     const { email, password } = req.body;
     const identifier = (email || "").toString().trim();
@@ -91,11 +91,11 @@ async function login(req, res) {
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Something went wrong during login." });
+    next(error);
   }
 }
 
-async function getMe(req, res) {
+async function getMe(req, res, next) {
   try {
     const user = await User.findById(req.userId).select("-password");
     if (!user) {
@@ -104,11 +104,11 @@ async function getMe(req, res) {
     res.json(user);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Could not fetch your profile." });
+    next(error);
   }
 }
 
-async function updateMe(req, res) {
+async function updateMe(req, res, next) {
   try {
     const user = await User.findById(req.userId);
     if (!user) {
@@ -173,11 +173,11 @@ async function updateMe(req, res) {
     res.json(safeUser);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Could not update your profile." });
+    next(error);
   }
 }
 
-async function changePassword(req, res) {
+async function changePassword(req, res, next) {
   try {
     const { currentPassword, newPassword } = req.body;
 
@@ -205,11 +205,11 @@ async function changePassword(req, res) {
     res.json({ message: "Password updated successfully." });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Could not update your password." });
+    next(error);
   }
 }
 
-async function forgotPassword(req, res) {
+async function forgotPassword(req, res, next) {
   try {
     const email = (req.body.email || "").toString().trim().toLowerCase();
     if (!email) {
@@ -240,11 +240,11 @@ async function forgotPassword(req, res) {
     res.json({ message: "If an account with that email exists, a reset link has been sent." });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Something went wrong. Please try again later." });
+    next(error);
   }
 }
 
-async function resetPassword(req, res) {
+async function resetPassword(req, res, next) {
   try {
     const { token } = req.params;
     const { password } = req.body;
@@ -272,7 +272,7 @@ async function resetPassword(req, res) {
     res.json({ message: "Your password has been reset successfully." });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Could not reset your password." });
+    next(error);
   }
 }
 

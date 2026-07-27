@@ -13,6 +13,10 @@ const fs = require("fs");
 
 const express = require("express");
 const cors = require("cors");
+const helmet = require("helmet");
+const rateLimit = require("express-rate-limit");
+const morgan = require("morgan");
+const errorHandler = require("./middleware/errorHandler");
 const connectDB = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
 const courseRoutes = require("./routes/courseRoutes");
@@ -37,6 +41,30 @@ app.use(express.json());
 
 // Middleware: allows your React app (running on a different port) to talk to this server
 app.use(cors());
+
+// Basic security headers. Configure to avoid blocking cross-origin
+// image requests from the frontend dev server.
+app.use(
+  helmet({
+    // Disable CSP here to keep things simple during development —
+    // enable a properly-scoped CSP for production.
+    contentSecurityPolicy: false,
+    // Allow resources (images) to be requested across origins so the Vite
+    // dev server (different port) can embed uploaded thumbnails.
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+  })
+);
+
+// Request logging
+app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
+
+// Simple rate limiter to mitigate brute-force/API abuse
+app.use(
+  rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 200, // limit each IP to 200 requests per windowMs
+  })
+);
 
 // Connect to MongoDB
 connectDB();
@@ -75,3 +103,6 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
 });
+
+// Centralized error handler (must come after routes)
+app.use(errorHandler);

@@ -1,12 +1,40 @@
 const express = require("express");
 const router = express.Router();
+const { body, validationResult } = require('express-validator');
 const { register, login, getMe, updateMe, changePassword, forgotPassword, resetPassword } = require("../controllers/authController");
 const requireAuth = require("../middleware/auth");
 
-router.post("/register", register);
-router.post("/login", login);
-router.post("/forgot-password", forgotPassword);
-router.post("/reset-password/:token", resetPassword);
+function validate(req, res, next) {
+	const errors = validationResult(req);
+	if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+	next();
+}
+
+router.post(
+	"/register",
+	[
+		body('firstName').trim().notEmpty().withMessage('First name is required'),
+		body('lastName').trim().notEmpty().withMessage('Last name is required'),
+		body('username').trim().isLength({ min: 3 }).withMessage('Username must be at least 3 characters'),
+		body('email').isEmail().withMessage('Valid email is required').normalizeEmail(),
+		body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 characters'),
+	],
+	validate,
+	register
+);
+
+router.post(
+	"/login",
+	[
+		body('email').trim().notEmpty().withMessage('Email or username is required'),
+		body('password').notEmpty().withMessage('Password is required'),
+	],
+	validate,
+	login
+);
+
+router.post("/forgot-password", [body('email').isEmail().withMessage('Valid email is required').normalizeEmail()], validate, forgotPassword);
+router.post("/reset-password/:token", [body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 characters')], validate, resetPassword);
 router.get("/me", requireAuth, getMe);
 router.put("/me", requireAuth, updateMe);
 router.put("/change-password", requireAuth, changePassword);
