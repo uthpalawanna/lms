@@ -14,7 +14,6 @@ function Register({ onLoginSuccess }) {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [navOpen, setNavOpen] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -63,21 +62,6 @@ function Register({ onLoginSuccess }) {
 
   return (
     <div className="container">
-      <nav className="public-navbar">
-        <button
-          type="button"
-          className="public-navbar-hamburger"
-          onClick={() => setNavOpen((prev) => !prev)}
-          aria-label={navOpen ? 'Close menu' : 'Open menu'}
-          aria-expanded={navOpen}
-        >
-          {navOpen ? '✕' : '☰'}
-        </button>
-        <div className={`public-navbar-links${navOpen ? ' open' : ''}`}>
-          <Link to="/signin" className="public-navbar-link" onClick={() => setNavOpen(false)}>Sign In</Link>
-          <Link to="/register" className="public-navbar-link solid" onClick={() => setNavOpen(false)}>Register</Link>
-        </div>
-      </nav>
       <div className="login-box">
         <h2>Create Your Account</h2>
 

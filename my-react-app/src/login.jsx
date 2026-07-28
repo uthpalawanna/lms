@@ -50,63 +50,99 @@ const Login = ({ onLoginSuccess }) => {
 
   return (
     <div className="login-page">
-      <div className="login-card">
-        <h1 className="login-title">Hi, Welcome Back!</h1>
-
-        {error && <div className="login-error">{error}</div>}
-
-        <input
-          type="email"
-          className="login-input"
-          placeholder="user@example.com"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          autoComplete="email"
-        />
-
-        <div className="login-password-wrap">
-          <input
-            type={showPassword ? 'text' : 'password'}
-            className="login-input"
-            placeholder="••••••••"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
-            autoComplete="current-password"
-          />
-          <button
-            type="button"
-            className="login-eye-button"
-            onClick={() => setShowPassword((prev) => !prev)}
-            aria-label={showPassword ? 'Hide password' : 'Show password'}
-            title={showPassword ? 'Hide password' : 'Show password'}
-          >
-            {showPassword ? <EyeOffIcon /> : <EyeIcon />}
-          </button>
+      <div className="login-split">
+        <div className="login-illustration-panel">
+          <svg className="login-illustration-svg" viewBox="0 0 400 500" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="loginIllusBg" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stopColor="var(--navy)" />
+                <stop offset="100%" stopColor="var(--navy-light)" />
+              </linearGradient>
+            </defs>
+            <rect width="400" height="500" fill="url(#loginIllusBg)" />
+            <circle cx="330" cy="70" r="46" fill="rgba(255,255,255,0.06)" />
+            <circle cx="60" cy="430" r="70" fill="rgba(255,255,255,0.05)" />
+            <rect x="90" y="330" width="220" height="14" rx="7" fill="rgba(255,255,255,0.12)" />
+            <rect x="120" y="356" width="160" height="10" rx="5" fill="rgba(255,255,255,0.08)" />
+            <circle cx="200" cy="220" r="70" fill="var(--primary)" opacity="0.9" />
+            <path d="M170 230 l20 20 l45 -50" stroke="#fff" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+            <rect x="130" y="120" width="34" height="34" rx="8" fill="var(--primary-light)" opacity="0.8" />
+            <rect x="250" y="150" width="24" height="24" rx="6" fill="var(--accent)" opacity="0.85" />
+          </svg>
+          <div className="login-illustration-caption">
+            <h3>Learning made simple</h3>
+            <p>Pick up right where you left off.</p>
+          </div>
         </div>
 
-        <a href="#" className="login-bluehost-link">Login with Bluehost</a>
+        <div className="login-form-panel">
+          <div className="login-form-inner">
+            <div className="login-pill-toggle">
+              <Link to="/signin" className="login-pill-tab active">Login</Link>
+              <Link to="/register" className="login-pill-tab">Register</Link>
+            </div>
 
-        <div className="login-row">
-          <label className="login-checkbox-label">
+            <h1 className="login-title">Hi, Welcome Back!</h1>
+            <p className="login-tagline">Sign in to continue your learning journey.</p>
+
+            {error && <div className="login-error">{error}</div>}
+
+            <label className="login-field-label">Email Address</label>
             <input
-              type="checkbox"
-              checked={keepSignedIn}
-              onChange={(e) => setKeepSignedIn(e.target.checked)}
+              type="email"
+              className="login-input"
+              placeholder="Enter your email address"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              autoComplete="email"
             />
-            Keep me signed in
-          </label>
-          <Link to="/forgot-password" className="login-forgot-link">Forgot Password?</Link>
+
+            <label className="login-field-label">Password</label>
+            <div className="login-password-wrap">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                className="login-input"
+                placeholder="Enter your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
+                autoComplete="current-password"
+              />
+              <button
+                type="button"
+                className="login-eye-button"
+                onClick={() => setShowPassword((prev) => !prev)}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                title={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? <EyeOffIcon /> : <EyeIcon />}
+              </button>
+            </div>
+
+            <a href="#" className="login-bluehost-link">Login with Bluehost</a>
+
+            <div className="login-row">
+              <label className="login-checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={keepSignedIn}
+                  onChange={(e) => setKeepSignedIn(e.target.checked)}
+                />
+                Keep me signed in
+              </label>
+              <Link to="/forgot-password" className="login-forgot-link">Forgot Password?</Link>
+            </div>
+
+            <button onClick={handleSubmit} disabled={loading} className="login-signin-btn">
+              {loading ? 'Signing in...' : 'Sign In'}
+            </button>
+
+            <p className="login-register-text">
+              Don't have an account?{' '}
+              <Link to="/register" className="login-register-link">Register Now</Link>
+            </p>
+          </div>
         </div>
-
-        <button onClick={handleSubmit} disabled={loading} className="login-signin-btn">
-          {loading ? 'Signing in...' : 'Sign In'}
-        </button>
-
-        <p className="login-register-text">
-          Don't have an account?{' '}
-          <Link to="/register" className="login-register-link">Register Now</Link>
-        </p>
       </div>
     </div>
   );

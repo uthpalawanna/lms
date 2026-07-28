@@ -12,7 +12,6 @@
     radial-gradient(480px 320px at -8% 108%, var(--accent-tint, #fbf0d9) 0%, transparent 55%),
     var(--surface, #f4faf9);
   padding: 1rem;
-  padding-top: 84px;
   font-family: var(--font-body, 'Plus Jakarta Sans', sans-serif);
 }
 
