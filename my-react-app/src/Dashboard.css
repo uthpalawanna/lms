@@ -743,21 +743,29 @@ body {
 }
 
 .oh-filter-btn {
-  padding: 8px 20px;
-  border: 1px solid var(--border);
-  background: transparent;
+  padding: 9px 22px;
+  border: 1.5px solid var(--border);
+  background: var(--surface-card);
   color: var(--text-soft);
-  border-radius: 6px;
+  border-radius: 999px;
   font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s var(--ease, ease);
   font-family: inherit;
 }
 
-.oh-filter-btn.active, .oh-filter-btn:hover {
+.oh-filter-btn:hover {
+  border-color: var(--primary-light);
+  color: var(--primary-dark);
+  background: var(--primary-tint);
+}
+
+.oh-filter-btn.active {
   border-color: var(--primary);
-  color: var(--primary);
-  background: rgba(74, 96, 200, 0.05);
+  color: #fff;
+  background: var(--primary);
+  box-shadow: var(--shadow-sm);
 }
 
 .oh-date-wrapper {
@@ -771,9 +779,16 @@ body {
   width: 260px;
   padding: 10px 14px;
   background: #ffffff;
-  border: 1px solid var(--border);
-  border-radius: 6px;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
   cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: border-color 0.15s var(--ease, ease), box-shadow 0.15s var(--ease, ease);
+}
+
+.oh-date-input:hover {
+  border-color: var(--primary-light);
+  box-shadow: var(--shadow-md);
 }
 
 .oh-date-placeholder {
@@ -788,9 +803,9 @@ body {
   right: 0;
   width: 320px;
   background: #ffffff;
-  border-radius: 8px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border-light);
   padding: 1.5rem;
   font-size: 14px;
 }
@@ -817,10 +832,25 @@ body {
 
 .oh-cal-arrows {
   display: flex;
-  gap: 12px;
-  color: var(--border);
+  gap: 4px;
+  color: var(--text-muted);
   font-weight: bold;
+}
+
+.oh-cal-arrows span {
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
   cursor: pointer;
+  transition: background 0.15s var(--ease, ease), color 0.15s var(--ease, ease);
+}
+
+.oh-cal-arrows span:hover {
+  background: var(--primary-tint);
+  color: var(--primary);
 }
 
 .oh-cal-weekdays {
@@ -846,22 +876,113 @@ body {
   align-items: center;
   justify-content: center;
   margin: 0 auto;
-  border-radius: 4px;
+  border-radius: 8px;
   color: var(--text-strong);
   cursor: pointer;
+  font-weight: 500;
+  transition: background 0.15s var(--ease, ease), color 0.15s var(--ease, ease);
 }
 
 .oh-cal-day:hover {
-  background: var(--surface);
+  background: var(--primary-tint);
+  color: var(--primary-dark);
 }
 
 .oh-cal-day.active {
   background: var(--primary);
   color: #ffffff;
+  font-weight: 700;
 }
 
 .oh-cal-day.faded {
   color: var(--border);
+}
+
+.oh-container .ec-tab-content {
+  box-shadow: var(--shadow-sm);
+}
+
+.oh-order-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 1.5rem;
+}
+
+.oh-order-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--surface-card);
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.15s var(--ease, ease), transform 0.15s var(--ease, ease);
+}
+
+.oh-order-row:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+.oh-order-main {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.oh-order-course {
+  font-weight: 700;
+  color: var(--text-strong);
+  font-size: 15px;
+}
+
+.oh-order-date {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.oh-order-side {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.oh-order-amount {
+  font-weight: 800;
+  color: var(--text-strong);
+  font-size: 15px;
+}
+
+.oh-order-status {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 4px 12px;
+  border-radius: 999px;
+}
+
+.oh-order-status.paid {
+  background: var(--success-tint);
+  color: var(--success);
+}
+
+.oh-order-status.pending {
+  background: var(--accent-tint);
+  color: var(--accent);
+}
+
+.oh-order-status.cancelled,
+.oh-order-status.failed {
+  background: var(--danger-tint);
+  color: var(--danger-text);
+}
+
+
+.oh-container .ec-empty-icon rect {
+  fill: var(--primary);
 }
 
 .oh-cal-footer {
@@ -879,13 +1000,19 @@ body {
 }
 
 .oh-cal-apply-btn {
-  padding: 6px 16px;
-  background: transparent;
+  padding: 7px 20px;
+  background: var(--primary);
   border: 1px solid var(--primary);
-  color: var(--primary);
-  border-radius: 4px;
+  color: #fff;
+  font-weight: 600;
+  border-radius: 999px;
   cursor: pointer;
   font-size: 13px;
+  transition: background 0.15s var(--ease, ease);
+}
+
+.oh-cal-apply-btn:hover {
+  background: var(--primary-dark);
 }
 
 
@@ -3902,6 +4029,7 @@ body {
   cursor: not-allowed;
 }
 
+/* --- Checkout modal --- */
 .checkout-modal-overlay {
   position: fixed;
   inset: 0;
@@ -4043,7 +4171,6 @@ body {
   opacity: 0.6;
   cursor: not-allowed;
 }
-
 
 :root {
   --ease: cubic-bezier(0.4, 0, 0.2, 1);
@@ -4325,6 +4452,7 @@ select:focus,
   color: var(--navy);
   background: var(--primary-light);
 }
+
 
 .public-navbar-hamburger {
   display: none;

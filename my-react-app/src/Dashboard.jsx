@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import "./Dashboard.css";
-import MyProfile from "./myprofile";
 import EnrolledCourses from "./EnrolledCourses";
 import Reviews from "./reviews";
 import Wishlist from "./wishlist";
@@ -24,7 +23,6 @@ const isInstructorRole = (user) => user?.role === "instructor" || user?.role ===
 const SIDEBAR_MAIN = [
   { id: "dashboard", icon: "📊", label: "Dashboard" },
   { id: "enrolled-courses", icon: "🎓", label: "Enrolled Courses" },
-  { id: "reviews", icon: "⭐", label: "Reviews" },
   { id: "quiz-attempts", icon: "🧩", label: "My Quiz Attempts" },
   { id: "wishlist", icon: "🔖", label: "Wishlist" },
   { id: "order-history", icon: "🛒", label: "Order History" },
@@ -158,6 +156,12 @@ export default function Dashboard({ user, token, onLogout }) {
       onLogout?.();
       return;
     }
+    if (id === "my-profile") {
+      setActive("settings");
+      setSettingsTab("Profile");
+      setDrawerOpen(false);
+      return;
+    }
     setActive(id);
     if (id === "settings") setSettingsTab("Profile");
     setDrawerOpen(false);
@@ -200,7 +204,7 @@ export default function Dashboard({ user, token, onLogout }) {
   const SidebarContent = () => (
     <>
       {(isInstructorRole(currentUser)
-        ? SIDEBAR_MAIN.filter((item) => ["dashboard", "reviews", "question-answer"].includes(item.id))
+        ? SIDEBAR_MAIN.filter((item) => ["dashboard", "question-answer"].includes(item.id))
         : SIDEBAR_MAIN
       ).map(({ id, icon, label }) => (
         <button
@@ -379,9 +383,6 @@ export default function Dashboard({ user, token, onLogout }) {
               )}
             </>
           )}
-          {active === "my-profile" && (
-            <MyProfile token={token} onProfileUpdate={setCurrentUser} />
-          )}
           {active === "enrolled-courses" && (
             <EnrolledCourses token={token} user={currentUser} onCourseClick={handleCourseClick} />
           )}
@@ -419,7 +420,7 @@ export default function Dashboard({ user, token, onLogout }) {
               currentUser={currentUser}
               token={token}
               onNewCourse={handleNewCourseClick}
-              onEditProfile={() => setActive("my-profile")}
+              onEditProfile={() => { setActive("settings"); setSettingsTab("Profile"); }}
             />
           )}
           {active === "announcements" && <Announcements token={token} />}

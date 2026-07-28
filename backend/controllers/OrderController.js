@@ -2,11 +2,7 @@ const Order = require("../models/order");
 const Course = require("../models/Course");
 const Enrollment = require("../models/Enrollment");
 
-// NOTE: this project has no real payment processor integration (Stripe,
-// PayPal, etc). What follows is a *simulated* checkout: it validates that
-// plausible payment details were provided and only stores the non-sensitive
-// parts of them, but no money actually moves. Swap this for a real gateway
-// (e.g. Stripe PaymentIntents) before accepting real payments.
+
 function validatePayment(body) {
   const { paymentMethod, cardNumber, cardholderName, expiry, cvv, paypalEmail } = body;
 
@@ -18,7 +14,6 @@ function validatePayment(body) {
     return { paymentMethod: "PayPal", paypalEmail };
   }
 
-  // Default / "Credit Card"
   const digitsOnly = (cardNumber || "").replace(/\s+/g, "");
   if (!/^\d{13,19}$/.test(digitsOnly)) {
     return { error: "Enter a valid card number." };
@@ -30,7 +25,7 @@ function validatePayment(body) {
     return { error: "Enter a valid expiry date (MM/YY)." };
   }
   const [mm, yy] = (expiry || "").split("/").map(Number);
-  const expiryDate = new Date(2000 + yy, mm); // first day of the month after expiry
+  const expiryDate = new Date(2000 + yy, mm); 
   if (expiryDate < new Date()) {
     return { error: "This card has expired." };
   }
@@ -87,8 +82,29 @@ exports.checkout = async (req, res) => {
 
 exports.getMyOrders = async (req, res) => {
   try {
-    const { filterDate } = req.query; 
-    const orders = await Order.find({ student: req.userId })
+    const { range, date } = req.query;
+    const query = { student: req.userId };
+
+    
+    const refDate = date ? new Date(date) : new Date();
+    if (!isNaN(refDate.getTime()) && range) {
+      let start, end;
+      if (range === "today") {
+        start = new Date(refDate.getFullYear(), refDate.getMonth(), refDate.getDate());
+        end = new Date(refDate.getFullYear(), refDate.getMonth(), refDate.getDate() + 1);
+      } else if (range === "monthly") {
+        start = new Date(refDate.getFullYear(), refDate.getMonth(), 1);
+        end = new Date(refDate.getFullYear(), refDate.getMonth() + 1, 1);
+      } else if (range === "yearly") {
+        start = new Date(refDate.getFullYear(), 0, 1);
+        end = new Date(refDate.getFullYear() + 1, 0, 1);
+      }
+      if (start && end) {
+        query.createdAt = { $gte: start, $lt: end };
+      }
+    }
+
+    const orders = await Order.find(query)
       .populate("course", "title")
       .sort({ createdAt: -1 });
     res.json(orders);
