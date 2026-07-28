@@ -19,7 +19,14 @@ function Register({ onLoginSuccess }) {
     e.preventDefault();
     setError("");
 
-    if (!firstName || !lastName || !username || !email || !password || !confirmPassword) {
+    if (
+      !firstName ||
+      !lastName ||
+      !username ||
+      !email ||
+      !password ||
+      !confirmPassword
+    ) {
       setError("Please fill all fields");
       return;
     }
@@ -39,7 +46,13 @@ function Register({ onLoginSuccess }) {
       const response = await fetch(API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ firstName, lastName, username, email, password }),
+        body: JSON.stringify({
+          firstName,
+          lastName,
+          username,
+          email,
+          password,
+        }),
       });
 
       const data = await response.json();
@@ -62,84 +75,92 @@ function Register({ onLoginSuccess }) {
 
   return (
     <div className="container">
-      <div className="login-box">
-        <h2>Create Your Account</h2>
+      <div className="login-card">
+        <div className="login-pill-toggle">
+          <Link to="/signin" className="login-pill-tab">
+            Login
+          </Link>
+          <Link to="/register" className="login-pill-tab active">
+            Register
+          </Link>
+        </div>
+
+        <h1 className="login-title">Create Your Account</h1>
+        <p className="login-tagline">Sign up to start your learning journey.</p>
+
+        {error && <div className="login-error">{error}</div>}
 
         <form onSubmit={handleSubmit}>
-          <div className="input-group">
-            <input
-              type="text"
-              placeholder="First Name"
-              value={firstName}
-              onChange={(e) => setFirstName(e.target.value)}
-              autoComplete="given-name"
-            />
-          </div>
+          <label className="login-field-label">First Name</label>
+          <input
+            type="text"
+            className="login-input"
+            placeholder="Enter your first name"
+            value={firstName}
+            onChange={(e) => setFirstName(e.target.value)}
+            autoComplete="given-name"
+          />
 
-          <div className="input-group">
-            <input
-              type="text"
-              placeholder="Last Name"
-              value={lastName}
-              onChange={(e) => setLastName(e.target.value)}
-              autoComplete="family-name"
-            />
-          </div>
+          <label className="login-field-label">Last Name</label>
+          <input
+            type="text"
+            className="login-input"
+            placeholder="Enter your last name"
+            value={lastName}
+            onChange={(e) => setLastName(e.target.value)}
+            autoComplete="family-name"
+          />
 
-          <div className="input-group">
-            <input
-              type="text"
-              placeholder="Username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              autoComplete="username"
-            />
-          </div>
+          <label className="login-field-label">Username</label>
+          <input
+            type="text"
+            className="login-input"
+            placeholder="Choose a username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            autoComplete="username"
+          />
 
-          <div className="input-group">
-            <input
-              type="email"
-              placeholder="Email Address"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              autoComplete="email"
-            />
-          </div>
+          <label className="login-field-label">Email Address</label>
+          <input
+            type="email"
+            className="login-input"
+            placeholder="Enter your email address"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            autoComplete="email"
+          />
 
-          <div className="input-group">
-            <input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              autoComplete="new-password"
-            />
-          </div>
+          <label className="login-field-label">Password</label>
+          <input
+            type="password"
+            className="login-input"
+            placeholder="Enter your password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            autoComplete="new-password"
+          />
 
-          <div className="input-group">
-            <input
-              type="password"
-              placeholder="Confirm Password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              autoComplete="new-password"
-            />
-          </div>
+          <label className="login-field-label">Confirm Password</label>
+          <input
+            type="password"
+            className="login-input"
+            placeholder="Re-enter your password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            autoComplete="new-password"
+          />
 
-          {error && (
-            <p style={{ color: "#dc2626", fontSize: 13, marginBottom: "0.85rem" }}>
-              {error}
-            </p>
-          )}
-
-          <button type="submit" className="signin-btn" disabled={loading}>
+          <button type="submit" className="login-signin-btn" disabled={loading}>
             {loading ? "Creating account..." : "Register"}
           </button>
 
-          <div className="register-section">
-            <span>Already have an account?</span>
-            <Link to="/signin">Sign In</Link>
-          </div>
+          <p className="login-register-text">
+            Already have an account?{" "}
+            <Link to="/signin" className="login-register-link">
+              Sign In
+            </Link>
+          </p>
         </form>
       </div>
     </div>
