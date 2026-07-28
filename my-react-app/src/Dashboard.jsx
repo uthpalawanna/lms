@@ -18,6 +18,7 @@ import Settings from "./Settings";
 const ENROLLMENTS_URL = "http://localhost:5000/api/enrollments";
 const INSTRUCTOR_STATS_URL = "http://localhost:5000/api/courses/mine/stats";
 
+// Instructors and admins both get access to the instructor-side tools.
 const isInstructorRole = (user) => user?.role === "instructor" || user?.role === "admin";
 
 const SIDEBAR_MAIN = [
@@ -41,7 +42,9 @@ const SIDEBAR_BOTTOM = [
   { id: "logout", icon: "🚪", label: "Logout" },
 ];
 
-
+// Every id that's a valid destination for handleNav / the ?view= deep link —
+// used to validate the query param below so a bad/unknown value can't leave
+// the dashboard on a blank screen.
 const VALID_VIEWS = new Set([
   ...SIDEBAR_MAIN.map((i) => i.id),
   ...SIDEBAR_INSTRUCTOR.map((i) => i.id),
@@ -278,7 +281,10 @@ export default function Dashboard({ user, token, onLogout }) {
         {!isMobile && (
           <div className="db-navbar-tabs">
             {(isInstructorRole(currentUser)
-              ? SIDEBAR_MAIN.filter((item) => ["dashboard", "question-answer"].includes(item.id))
+              ? [
+                  ...SIDEBAR_MAIN.filter((item) => ["dashboard", "question-answer"].includes(item.id)),
+                  ...SIDEBAR_INSTRUCTOR,
+                ]
               : SIDEBAR_MAIN
             ).map(({ id, icon, label }) => (
               <button
