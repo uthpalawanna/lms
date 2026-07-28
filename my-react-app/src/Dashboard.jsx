@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import "./Dashboard.css";
 import EnrolledCourses from "./EnrolledCourses";
 import Reviews from "./reviews";
@@ -17,7 +18,6 @@ import Settings from "./Settings";
 const ENROLLMENTS_URL = "http://localhost:5000/api/enrollments";
 const INSTRUCTOR_STATS_URL = "http://localhost:5000/api/courses/mine/stats";
 
-// Instructors and admins both get access to the instructor-side tools.
 const isInstructorRole = (user) => user?.role === "instructor" || user?.role === "admin";
 
 const SIDEBAR_MAIN = [
@@ -41,9 +41,20 @@ const SIDEBAR_BOTTOM = [
   { id: "logout", icon: "🚪", label: "Logout" },
 ];
 
+
+const VALID_VIEWS = new Set([
+  ...SIDEBAR_MAIN.map((i) => i.id),
+  ...SIDEBAR_INSTRUCTOR.map((i) => i.id),
+  "settings",
+]);
+
 export default function Dashboard({ user, token, onLogout }) {
+  const [searchParams] = useSearchParams();
+  const requestedView = searchParams.get("view");
   const [currentUser, setCurrentUser] = useState(user);
-  const [active, setActive] = useState("dashboard");
+  const [active, setActive] = useState(
+    VALID_VIEWS.has(requestedView) ? requestedView : "dashboard"
+  );
   const [settingsTab, setSettingsTab] = useState("Profile");
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -65,10 +76,6 @@ export default function Dashboard({ user, token, onLogout }) {
     window.addEventListener("resize", fn);
     return () => window.removeEventListener("resize", fn);
   }, []);
-
-  useEffect(() => {
-    if (!isMobile) setDrawerOpen(false);
-  }, [isMobile]);
 
   const fetchDashboardStats = async () => {
     if (!token) return;
@@ -255,11 +262,9 @@ export default function Dashboard({ user, token, onLogout }) {
 
       <div className="db-profile-bar">
         <div className="db-profile-left">
-          {isMobile && (
-            <button className="db-hamburger" onClick={() => setDrawerOpen(true)}>
-              ☰
-            </button>
-          )}
+          <button className="db-hamburger" onClick={() => setDrawerOpen(true)} aria-label="Open menu">
+            ☰
+          </button>
           <div className="db-avatar">{avatarLetter}</div>
           <div>
             <div className="db-username">{displayName}</div>
@@ -270,6 +275,24 @@ export default function Dashboard({ user, token, onLogout }) {
             </div>
           </div>
         </div>
+        {!isMobile && (
+          <div className="db-navbar-tabs">
+            {(isInstructorRole(currentUser)
+              ? SIDEBAR_MAIN.filter((item) => ["dashboard", "question-answer"].includes(item.id))
+              : SIDEBAR_MAIN
+            ).map(({ id, icon, label }) => (
+              <button
+                key={id}
+                className={`db-navbar-tab${active === id ? " active" : ""}`}
+                onClick={() => handleNav(id)}
+                title={label}
+              >
+                <span>{icon}</span>
+                {label}
+              </button>
+            ))}
+          </div>
+        )}
         <div className="db-profile-right">
           {isInstructorRole(currentUser) && (
             <button className="db-new-course-btn" onClick={handleNewCourseClick}>＋ New Course</button>
@@ -295,32 +318,22 @@ export default function Dashboard({ user, token, onLogout }) {
 
       <hr className="db-divider" />
 
-      {isMobile && (
-        <>
-          <div
-            className={`db-drawer-overlay${drawerOpen ? " open" : ""}`}
-            onClick={() => setDrawerOpen(false)}
-          />
-          <aside className={`db-drawer${drawerOpen ? " open" : ""}`}>
-            <div className="db-drawer-header">
-              <div className="db-avatar" style={{ width: 36, height: 36, fontSize: 16 }}>{avatarLetter}</div>
-              <span style={{ fontWeight: 600, fontSize: 14, marginLeft: 10 }}>{displayName}</span>
-              <button className="db-drawer-close" onClick={() => setDrawerOpen(false)}>✕</button>
-            </div>
-            <div className="db-drawer-body">
-              <SidebarContent />
-            </div>
-          </aside>
-        </>
-      )}
+      <div
+        className={`db-drawer-overlay${drawerOpen ? " open" : ""}`}
+        onClick={() => setDrawerOpen(false)}
+      />
+      <aside className={`db-drawer${drawerOpen ? " open" : ""}`}>
+        <div className="db-drawer-header">
+          <div className="db-avatar" style={{ width: 36, height: 36, fontSize: 16 }}>{avatarLetter}</div>
+          <span style={{ fontWeight: 600, fontSize: 14, marginLeft: 10 }}>{displayName}</span>
+          <button className="db-drawer-close" onClick={() => setDrawerOpen(false)}>✕</button>
+        </div>
+        <div className="db-drawer-body">
+          <SidebarContent />
+        </div>
+      </aside>
 
       <div className="db-body">
-        {!isMobile && (
-          <aside className="db-sidebar">
-            <SidebarContent />
-          </aside>
-        )}
-
         <main className="db-main">
           {active === "dashboard" && (
             <>
