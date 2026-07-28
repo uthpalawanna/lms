@@ -98,6 +98,33 @@ function ProfileTab({ token, onProfileUpdate }) {
     if (token) fetchProfile();
   }, [token]);
 
+  
+  const savePhoto = async (field, url) => {
+    setError("");
+    try {
+      const response = await fetch(ME_URL, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ [field]: url }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        setError(data.message || "Could not save the photo.");
+        return;
+      }
+      setUser(data);
+      onProfileUpdate?.(data);
+      const label = field === "avatarUrl" ? "Profile photo" : "Cover photo";
+      setMessage(url ? `${label} updated!` : `${label} removed.`);
+    } catch (err) {
+      console.error(err);
+      setError("Could not reach the server. Is the backend running?");
+    }
+  };
+
   const handleUpdate = async () => {
     setError("");
     setMessage("");
@@ -139,7 +166,7 @@ function ProfileTab({ token, onProfileUpdate }) {
     }
   };
 
-  if (loading) return <p style={{ padding: "2rem" }}>Loading your profile...</p>;
+  if (loading) return <p style={{ padding: "2rem" }}><span className="db-spinner" />Loading your profile...</p>;
   if (error && !user) return <p style={{ padding: "2rem", color: "#dc2626" }}>{error}</p>;
 
   const initial = (firstName || username || "?").charAt(0).toUpperCase();
@@ -159,11 +186,11 @@ function ProfileTab({ token, onProfileUpdate }) {
       >
         <PhotoUploadButton
           token={token}
-          onUploaded={setCoverPhotoUrl}
+          onUploaded={(url) => { setCoverPhotoUrl(url); savePhoto("coverPhotoUrl", url); }}
           style={{
             position: "absolute",
             bottom: 16,
-            right: 16,
+            right: coverPhotoUrl ? 168 : 16,
             background: "#4a60c8",
             color: "#fff",
             padding: "10px 16px",
@@ -177,6 +204,31 @@ function ProfileTab({ token, onProfileUpdate }) {
         >
           📷 Upload Cover Photo
         </PhotoUploadButton>
+
+        {coverPhotoUrl && (
+          <button
+            type="button"
+            onClick={() => { setCoverPhotoUrl(""); savePhoto("coverPhotoUrl", ""); }}
+            style={{
+              position: "absolute",
+              bottom: 16,
+              right: 16,
+              background: "rgba(220, 38, 38, 0.9)",
+              color: "#fff",
+              padding: "10px 16px",
+              borderRadius: 8,
+              fontSize: 13,
+              fontWeight: 600,
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              border: "none",
+              cursor: "pointer",
+            }}
+          >
+            🗑️ Remove
+          </button>
+        )}
 
         <div style={{ position: "absolute", bottom: -50, left: 32, width: 110, height: 110 }}>
           <div
@@ -200,7 +252,7 @@ function ProfileTab({ token, onProfileUpdate }) {
           </div>
           <PhotoUploadButton
             token={token}
-            onUploaded={setAvatarUrl}
+            onUploaded={(url) => { setAvatarUrl(url); savePhoto("avatarUrl", url); }}
             style={{
               position: "absolute",
               bottom: 4,
@@ -219,6 +271,31 @@ function ProfileTab({ token, onProfileUpdate }) {
           >
             +
           </PhotoUploadButton>
+          {avatarUrl && (
+            <button
+              type="button"
+              onClick={() => { setAvatarUrl(""); savePhoto("avatarUrl", ""); }}
+              title="Remove profile photo"
+              style={{
+                position: "absolute",
+                bottom: 4,
+                left: 4,
+                background: "rgba(220, 38, 38, 0.9)",
+                color: "#fff",
+                width: 30,
+                height: 30,
+                borderRadius: "50%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: 14,
+                border: "2px solid #eef0f8",
+                cursor: "pointer",
+              }}
+            >
+              🗑️
+            </button>
+          )}
         </div>
       </div>
 

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import CheckoutModal from "./CheckoutModal";
 
 const COURSES_URL = "http://localhost:5000/api/courses";
@@ -37,6 +38,7 @@ function CourseThumbnail({ thumbnail, title }) {
 }
 
 export default function BrowseCourses({ token }) {
+  const navigate = useNavigate();
   const [courses, setCourses] = useState([]);
   const [myEnrollments, setMyEnrollments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -51,12 +53,12 @@ export default function BrowseCourses({ token }) {
     setLoading(true);
     setError("");
     try {
-      const [coursesRes, enrollmentsRes] = await Promise.all([
-        fetch(COURSES_URL),
-        fetch(ENROLLMENTS_URL, { headers: { Authorization: `Bearer ${token}` } }),
-      ]);
+      const requests = [fetch(COURSES_URL)];
+      if (token) {
+        requests.push(fetch(ENROLLMENTS_URL, { headers: { Authorization: `Bearer ${token}` } }));
+      }
+      const [coursesRes, enrollmentsRes] = await Promise.all(requests);
       const coursesData = await coursesRes.json();
-      const enrollmentsData = await enrollmentsRes.json();
 
       if (!coursesRes.ok) {
         setError(coursesData.message || "Could not load courses.");
@@ -64,7 +66,10 @@ export default function BrowseCourses({ token }) {
         return;
       }
       setCourses(coursesData);
-      if (enrollmentsRes.ok) setMyEnrollments(enrollmentsData);
+      if (enrollmentsRes?.ok) {
+        const enrollmentsData = await enrollmentsRes.json();
+        setMyEnrollments(enrollmentsData);
+      }
     } catch (err) {
       console.error(err);
       setError("Could not reach the server. Is the backend running?");
@@ -74,19 +79,22 @@ export default function BrowseCourses({ token }) {
   };
 
   useEffect(() => {
-    if (token) fetchData();
+    fetchData();
   }, [token]);
 
   const isEnrolled = (courseId) =>
     myEnrollments.some((e) => e.course?._id === courseId || e.course === courseId);
 
   const handleEnroll = async (courseId) => {
+    if (!token) {
+      navigate("/signin");
+      return;
+    }
     const course = courses.find((c) => c._id === courseId);
     const isPaid = course && course.price > 0;
 
     if (isPaid) {
-      // Paid courses go through the checkout modal so real payment details
-      // are actually collected, instead of enrolling for free.
+      
       setCheckoutError("");
       setCheckoutCourse(course);
       return;
@@ -133,7 +141,7 @@ export default function BrowseCourses({ token }) {
       <div className="ec-tab-content">
         {loading ? (
           <div className="ec-empty-state">
-            <p className="ec-empty-text">Loading courses...</p>
+            <p className="ec-empty-text"><span className="db-spinner" />Loading courses...</p>
           </div>
         ) : error ? (
           <div className="ec-empty-state">

@@ -21,6 +21,53 @@ const INSTRUCTOR_STATS_URL = "http://localhost:5000/api/courses/mine/stats";
 // Instructors and admins both get access to the instructor-side tools.
 const isInstructorRole = (user) => user?.role === "instructor" || user?.role === "admin";
 
+// Animates a number counting up from 0 to `value` once, when it first
+// becomes available (e.g. once stats finish loading). Respects
+// prefers-reduced-motion by jumping straight to the final value.
+function CountUp({ value, duration = 700 }) {
+  const [display, setDisplay] = useState(0);
+
+  useEffect(() => {
+    if (value == null) return;
+    const prefersReducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    if (prefersReducedMotion) {
+      setDisplay(value);
+      return;
+    }
+    let raf;
+    const start = performance.now();
+    const tick = (now) => {
+      const progress = Math.min((now - start) / duration, 1);
+      // ease-out cubic — fast start, gentle settle
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setDisplay(Math.round(eased * value));
+      if (progress < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [value, duration]);
+
+  if (value == null) return "…";
+  return display;
+}
+
+// A progress bar that fills from 0 to its target width just after mount,
+// instead of appearing already-filled.
+function AnimatedProgressBar({ percent }) {
+  const [width, setWidth] = useState(0);
+
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setWidth(percent));
+    return () => cancelAnimationFrame(id);
+  }, [percent]);
+
+  return (
+    <div className="db-progress-track">
+      <div className="db-progress-fill" style={{ width: `${width}%` }} />
+    </div>
+  );
+}
+
 const SIDEBAR_MAIN = [
   { id: "dashboard", icon: "📊", label: "Dashboard" },
   { id: "enrolled-courses", icon: "🎓", label: "Enrolled Courses" },
@@ -120,18 +167,21 @@ export default function Dashboard({ user, token, onLogout }) {
       icon: "📖",
       label: "Enrolled Courses",
       value: statsLoading ? "…" : String(enrolledCount),
+      raw: statsLoading ? null : enrolledCount,
       accent: false,
     },
     {
       icon: "🎓",
       label: "Active Courses",
       value: statsLoading ? "…" : String(activeCount),
+      raw: statsLoading ? null : activeCount,
       accent: false,
     },
     {
       icon: "🏆",
       label: "Completed Courses",
       value: statsLoading ? "…" : String(completedCount),
+      raw: statsLoading ? null : completedCount,
       accent: false,
     },
   ];
@@ -141,12 +191,14 @@ export default function Dashboard({ user, token, onLogout }) {
       icon: "👥",
       label: "Total Students",
       value: statsLoading ? "…" : String(totalStudents),
+      raw: statsLoading ? null : totalStudents,
       accent: true,
     },
     {
       icon: "📚",
       label: "Total Courses",
       value: statsLoading ? "…" : String(totalCourses),
+      raw: statsLoading ? null : totalCourses,
       accent: true,
     },
     {
@@ -340,15 +392,17 @@ export default function Dashboard({ user, token, onLogout }) {
       </aside>
 
       <div className="db-body">
-        <main className="db-main">
+        <main className="db-main" key={active}>
           {active === "dashboard" && (
             <>
               <h2 className="db-section-title">Dashboard</h2>
               <div className="db-stats-grid">
-                {STATS.map(({ icon, label, value, accent }) => (
+                {STATS.map(({ icon, label, value, raw, accent }) => (
                   <div key={label} className="db-stat-card">
                     <div className="db-stat-icon-wrap">{icon}</div>
-                    <div className={`db-stat-value${accent ? " accent" : ""}`}>{value}</div>
+                    <div className={`db-stat-value${accent ? " accent" : ""}`}>
+                      {raw !== undefined ? <CountUp value={raw} /> : value}
+                    </div>
                     <div className={`db-stat-label${accent ? " accent" : ""}`}>{label}</div>
                   </div>
                 ))}
@@ -385,16 +439,7 @@ export default function Dashboard({ user, token, onLogout }) {
                             {enrollment.progress}% complete · {enrollment.status}
                           </p>
                         </div>
-                        <div style={{ width: 70, height: 5, background: "#e2e5ef", borderRadius: 4 }}>
-                          <div
-                            style={{
-                              width: `${enrollment.progress}%`,
-                              height: 5,
-                              background: "#3d56c8",
-                              borderRadius: 4,
-                            }}
-                          />
-                        </div>
+                        <AnimatedProgressBar percent={enrollment.progress} />
                       </div>
                     ))}
                   </div>

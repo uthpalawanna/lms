@@ -166,6 +166,7 @@ export default function OrderHistory({ token }) {
       {loading ? (
         <div className="ec-tab-content">
           <p style={{ padding: "2rem", textAlign: "center", color: "var(--text-muted)" }}>
+            <span className="db-spinner" />
             Loading your orders...
           </p>
         </div>
