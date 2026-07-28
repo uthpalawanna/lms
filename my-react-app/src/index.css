@@ -1,31 +1,29 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
-/* ------------------------------------------------------------
-   Register page (kept as its own small system — same tokens as
-   Dashboard.css since both stylesheets load globally).
-   ------------------------------------------------------------ */
+
 .container {
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
   background:
-    radial-gradient(560px 360px at 88% -8%, var(--primary-tint, #efe7fd) 0%, transparent 60%),
+    radial-gradient(560px 360px at 88% -8%, var(--primary-tint, #ccfbf1) 0%, transparent 60%),
     radial-gradient(480px 320px at -8% 108%, var(--accent-tint, #fbf0d9) 0%, transparent 55%),
-    var(--surface, #f7f7f9);
+    var(--surface, #f4faf9);
   padding: 1rem;
+  padding-top: 84px;
   font-family: var(--font-body, 'Plus Jakarta Sans', sans-serif);
 }
 
 .login-box {
   background: var(--surface-card, #ffffff);
-  border: 1px solid var(--border-light, #ececef);
+  border: 1px solid var(--border-light, #e9f2f1);
   border-radius: 22px;
   padding: 2.5rem 2.25rem;
   width: 100%;
   max-width: 440px;
-  box-shadow: var(--shadow-lg, 0 16px 48px rgba(20, 21, 26, 0.14));
+  box-shadow: var(--shadow-lg, 0 16px 48px rgba(22, 33, 62, 0.14));
   animation: login-box-in 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -43,7 +41,7 @@
   font-size: 26px;
   font-weight: 600;
   letter-spacing: -0.01em;
-  color: var(--text-strong, #14151a);
+  color: var(--text-strong, #16213e);
   text-align: center;
   margin: 0 0 1.75rem;
 }
@@ -56,30 +54,30 @@
   width: 100%;
   padding: 12px 14px;
   font-size: 14px;
-  background: var(--input-bg, #f7f7f9);
-  border: 1.5px solid var(--border, #e2e2e7);
+  background: var(--input-bg, #f4faf9);
+  border: 1.5px solid var(--border, #dde9e7);
   border-radius: 10px;
   outline: none;
-  color: var(--text, #3a3b45);
+  color: var(--text, #3a4356);
   font-family: inherit;
   transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
   box-sizing: border-box;
 }
 
 .input-group input:hover {
-  border-color: var(--primary-light, #8b5cf6);
+  border-color: var(--primary-light, #5eead4);
 }
 
 .input-group input:focus {
   background: var(--surface-card, #fff);
-  border-color: var(--primary, #6d28d9);
-  box-shadow: 0 0 0 4px var(--primary-tint, rgba(109, 40, 217, 0.12));
+  border-color: var(--primary, #14b8a6);
+  box-shadow: 0 0 0 4px var(--primary-tint, rgba(20, 184, 166, 0.14));
 }
 
 .provider-link {
   display: block;
   font-size: 13px;
-  color: var(--primary, #6d28d9);
+  color: var(--primary, #14b8a6);
   text-decoration: underline;
   margin-bottom: 0.85rem;
   cursor: pointer;
@@ -98,21 +96,21 @@
   align-items: center;
   gap: 7px;
   font-size: 13px;
-  color: var(--text-soft, #5c5d6a);
+  color: var(--text-soft, #5c6478);
   cursor: pointer;
 }
 
 .remember-me input[type="checkbox"] {
   width: 15px;
   height: 15px;
-  accent-color: var(--primary, #6d28d9);
+  accent-color: var(--primary, #14b8a6);
   flex-shrink: 0;
   margin: 0;
 }
 
 .forgot-link {
   font-size: 13px;
-  color: var(--primary, #6d28d9);
+  color: var(--primary, #14b8a6);
   text-decoration: underline;
   white-space: nowrap;
 }
@@ -120,7 +118,7 @@
 .signin-btn {
   width: 100%;
   padding: 12px;
-  background: var(--primary, #6d28d9);
+  background: var(--primary, #14b8a6);
   color: #fff;
   border: none;
   border-radius: 10px;
@@ -129,13 +127,13 @@
   cursor: pointer;
   font-family: inherit;
   margin-bottom: 1rem;
-  box-shadow: var(--shadow-sm, 0 1px 2px rgba(20, 21, 26, 0.06));
+  box-shadow: var(--shadow-sm, 0 1px 2px rgba(22, 33, 62, 0.06));
   transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
 }
 
 .signin-btn:hover {
-  background: var(--primary-dark, #560bad);
-  box-shadow: var(--shadow-md, 0 6px 20px rgba(20, 21, 26, 0.08));
+  background: var(--primary-dark, #0f766e);
+  box-shadow: var(--shadow-md, 0 6px 20px rgba(22, 33, 62, 0.08));
   transform: translateY(-1px);
 }
 
@@ -149,11 +147,11 @@
   align-items: center;
   gap: 4px;
   font-size: 13px;
-  color: var(--text-soft, #5c5d6a);
+  color: var(--text-soft, #5c6478);
 }
 
 .register-section a {
-  color: var(--primary, #6d28d9);
+  color: var(--primary, #14b8a6);
   font-weight: 600;
   text-decoration: none;
 }

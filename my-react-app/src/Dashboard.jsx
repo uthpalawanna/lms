@@ -23,7 +23,6 @@ const isInstructorRole = (user) => user?.role === "instructor" || user?.role ===
 
 const SIDEBAR_MAIN = [
   { id: "dashboard", icon: "📊", label: "Dashboard" },
-  { id: "my-profile", icon: "👤", label: "My Profile" },
   { id: "enrolled-courses", icon: "🎓", label: "Enrolled Courses" },
   { id: "reviews", icon: "⭐", label: "Reviews" },
   { id: "quiz-attempts", icon: "🧩", label: "My Quiz Attempts" },
@@ -267,9 +266,27 @@ export default function Dashboard({ user, token, onLogout }) {
             </div>
           </div>
         </div>
-        {isInstructorRole(currentUser) && (
-          <button className="db-new-course-btn" onClick={handleNewCourseClick}>＋ New Course</button>
-        )}
+        <div className="db-profile-right">
+          {isInstructorRole(currentUser) && (
+            <button className="db-new-course-btn" onClick={handleNewCourseClick}>＋ New Course</button>
+          )}
+          <button
+            className="db-navbar-icon-btn"
+            onClick={() => handleNav("my-profile")}
+            aria-label="My profile"
+            title="My profile"
+          >
+            👤
+          </button>
+          <button
+            className="db-navbar-icon-btn logout"
+            onClick={() => handleNav("logout")}
+            aria-label="Log out"
+            title="Log out"
+          >
+            🚪
+          </button>
+        </div>
       </div>
 
       <hr className="db-divider" />
