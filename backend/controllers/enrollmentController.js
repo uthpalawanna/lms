@@ -59,13 +59,6 @@ async function updateEnrollment(req, res) {
     }
 
     
-    const { progress } = req.body;
-    if (progress !== undefined) {
-      enrollment.progress = Math.max(0, Math.min(100, progress));
-      enrollment.status = enrollment.progress >= 100 ? "completed" : "active";
-    }
-
-    await enrollment.save();
     res.json(enrollment);
   } catch (error) {
     console.error(error);
