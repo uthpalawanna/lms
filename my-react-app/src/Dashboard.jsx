@@ -64,6 +64,7 @@ export default function Dashboard({ user, token, onLogout }) {
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [selectedInstructorId, setSelectedInstructorId] = useState(null);
 
+  
   const [notifications, setNotifications] = useState([]);
   const [notifOpen, setNotifOpen] = useState(false);
   const notifRef = useRef(null);
@@ -107,6 +108,8 @@ export default function Dashboard({ user, token, onLogout }) {
           title: n.title,
           body: n.body,
           read: n.read,
+          type: n.type,
+          courseId: n.course?._id || n.course || null,
         }))
       );
     } catch (err) {
@@ -257,6 +260,21 @@ export default function Dashboard({ user, token, onLogout }) {
     }
   };
 
+  const handleNotifClick = (n) => {
+    setNotifOpen(false);
+    if (n.type === "quiz_graded") {
+      setActive("quiz-attempts");
+      return;
+    }
+    if (n.type === "withdrawal") {
+      handleNavigateToWithdraw();
+      return;
+    }
+    if (n.courseId) {
+      handleOpenFromDashboard(n.courseId);
+    }
+  };
+
   const displayName =
     (currentUser?.firstName ? currentUser.firstName.toUpperCase() : null) ||
     (currentUser?.username ? currentUser.username.toUpperCase() : null) ||
@@ -373,7 +391,11 @@ export default function Dashboard({ user, token, onLogout }) {
                 ) : (
                   <div className="db-notif-list">
                     {notifications.map((n) => (
-                      <div key={n.id} className={`db-notif-item${n.read ? "" : " unread"}`}>
+                      <div
+                        key={n.id}
+                        className={`db-notif-item${n.read ? "" : " unread"}`}
+                        onClick={() => handleNotifClick(n)}
+                      >
                         <div className="db-notif-item-title">{n.title}</div>
                         <div className="db-notif-item-body">{n.body}</div>
                       </div>
