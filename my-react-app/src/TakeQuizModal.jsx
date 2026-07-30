@@ -100,7 +100,10 @@ export default function TakeQuizModal({ token, quizId, onClose, onSubmitted, pre
             <div style={{ textAlign: "center", padding: "20px 0" }}>
               <p style={{ fontSize: 14, color: "#6b7280", marginBottom: 6 }}>Your Score</p>
               <p style={{ fontSize: 36, fontWeight: 700, color: "#3d56c8", margin: 0 }}>
-                {result.score} / {result.totalQuestions}
+                {result.attempt?.score} / {result.attempt?.totalQuestions}
+              </p>
+              <p style={{ fontSize: 14, color: "#6b7280", marginTop: 8 }}>
+                {result.attempt?.percentage}%
               </p>
               <p style={{ fontSize: 13, color: "#9ca3af", marginTop: 10 }}>
                 This attempt has been saved to your quiz history.

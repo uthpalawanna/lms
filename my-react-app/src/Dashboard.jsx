@@ -244,7 +244,10 @@ export default function Dashboard({ user, token, onLogout }) {
     setDrawerOpen(false);
   };
 
+  const [returnView, setReturnView] = useState("dashboard");
+
   const handleCourseClick = (course) => {
+    setReturnView(active);
     setSelectedCourse(course);
     setActive("course-details");
   };
@@ -528,7 +531,7 @@ export default function Dashboard({ user, token, onLogout }) {
               course={selectedCourse}
               token={token}
               user={currentUser}
-              onBack={() => setActive("my-courses")}
+              onBack={() => setActive(returnView)}
               onAuthorClick={(instructorId) => {
                 setSelectedInstructorId(instructorId);
                 setActive("instructor-profile");
