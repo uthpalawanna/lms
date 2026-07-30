@@ -7,6 +7,7 @@ const Wishlist = require("../models/Wishlist");
 const QuizAttempt = require("../models/QuizAttempt");
 const Question = require("../models/Question");
 const { cascadeDeleteCourse } = require("./courseController");
+const { notifyUser } = require("../utils/notify");
 
 async function getAllUsers(req, res) {
   try {
@@ -134,6 +135,14 @@ async function updateWithdrawalStatus(req, res) {
     if (!withdrawal) return res.status(404).json({ message: "Withdrawal not found." });
     withdrawal.status = status;
     await withdrawal.save();
+
+    await notifyUser({
+      recipient: withdrawal.instructor,
+      type: "withdrawal",
+      title: "Withdrawal update",
+      body: `Your withdrawal request for ${withdrawal.amount} was marked as ${status}.`,
+    });
+
     res.json(withdrawal);
   } catch (error) {
     console.error(error);

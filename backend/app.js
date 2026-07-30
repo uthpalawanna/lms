@@ -1,6 +1,3 @@
-// Express app definition, separated from server.js so tests can import
-// `app` and drive it with supertest without also opening a real port or
-// making a real MongoDB connection.
 const path = require("path");
 const fs = require("fs");
 
@@ -25,6 +22,7 @@ const paymentRoutes = require("./routes/paymentRoutes");
 const questionRoutes = require("./routes/questionRoutes");
 const uploadRoutes = require("./routes/uploadRoutes");
 const adminRoutes = require("./routes/adminRoutes");
+const notificationRoutes = require("./routes/notificationRoutes");
 
 const app = express();
 
@@ -114,12 +112,12 @@ app.use("/api/payments", paymentRoutes);
 app.use("/api/questions", questionRoutes);
 app.use("/api/uploads", uploadRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 app.get("/", (req, res) => {
   res.send("SHRI LMS backend is running.");
 });
 
-// Centralized error handler (must come after routes)
 app.use(errorHandler);
 
 module.exports = app;

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import "./Dashboard.css";
 import EnrolledCourses from "./EnrolledCourses";
@@ -17,51 +17,10 @@ import Settings from "./Settings";
 
 const ENROLLMENTS_URL = "http://localhost:5000/api/enrollments";
 const INSTRUCTOR_STATS_URL = "http://localhost:5000/api/courses/mine/stats";
+const MY_NOTIFICATIONS_URL = "http://localhost:5000/api/notifications/mine";
+const NOTIFICATIONS_READ_ALL_URL = "http://localhost:5000/api/notifications/read-all";
 
 const isInstructorRole = (user) => user?.role === "instructor" || user?.role === "admin";
-
-
-function CountUp({ value, duration = 700 }) {
-  const [display, setDisplay] = useState(0);
-
-  useEffect(() => {
-    if (value == null) return;
-    const prefersReducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
-    if (prefersReducedMotion) {
-      setDisplay(value);
-      return;
-    }
-    let raf;
-    const start = performance.now();
-    const tick = (now) => {
-      const progress = Math.min((now - start) / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      setDisplay(Math.round(eased * value));
-      if (progress < 1) raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [value, duration]);
-
-  if (value == null) return "…";
-  return display;
-}
-
-
-function AnimatedProgressBar({ percent }) {
-  const [width, setWidth] = useState(0);
-
-  useEffect(() => {
-    const id = requestAnimationFrame(() => setWidth(percent));
-    return () => cancelAnimationFrame(id);
-  }, [percent]);
-
-  return (
-    <div className="db-progress-track">
-      <div className="db-progress-fill" style={{ width: `${width}%` }} />
-    </div>
-  );
-}
 
 const SIDEBAR_MAIN = [
   { id: "dashboard", icon: "📊", label: "Dashboard" },
@@ -105,6 +64,11 @@ export default function Dashboard({ user, token, onLogout }) {
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [selectedInstructorId, setSelectedInstructorId] = useState(null);
 
+  const [notifications, setNotifications] = useState([]);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const notifRef = useRef(null);
+  const unreadCount = notifications.filter((n) => !n.read).length;
+
   const [statsLoading, setStatsLoading] = useState(true);
   const [enrolledCount, setEnrolledCount] = useState(0);
   const [enrolledCourses, setEnrolledCourses] = useState([]);
@@ -115,10 +79,58 @@ export default function Dashboard({ user, token, onLogout }) {
   const [totalEarnings, setTotalEarnings] = useState(0);
 
   useEffect(() => {
+    if (!notifOpen) return;
+    const closeOnOutsideClick = (e) => {
+      if (notifRef.current && !notifRef.current.contains(e.target)) {
+        setNotifOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", closeOnOutsideClick);
+    return () => document.removeEventListener("mousedown", closeOnOutsideClick);
+  }, [notifOpen]);
+
+  useEffect(() => {
     const fn = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener("resize", fn);
     return () => window.removeEventListener("resize", fn);
   }, []);
+
+  const fetchNotifications = async () => {
+    if (!token) return;
+    try {
+      const res = await fetch(MY_NOTIFICATIONS_URL, { headers: { Authorization: `Bearer ${token}` } });
+      if (!res.ok) return;
+      const items = await res.json();
+      setNotifications(
+        items.map((n) => ({
+          id: n._id,
+          title: n.title,
+          body: n.body,
+          read: n.read,
+        }))
+      );
+    } catch (err) {
+      console.error("Could not load notifications:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchNotifications();
+  }, [token, currentUser]);
+
+  const handleNotifToggle = () => {
+    setNotifOpen((open) => {
+      const next = !open;
+      if (next && unreadCount > 0) {
+        setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+        fetch(NOTIFICATIONS_READ_ALL_URL, {
+          method: "PATCH",
+          headers: { Authorization: `Bearer ${token}` },
+        }).catch((err) => console.error("Could not mark notifications read:", err));
+      }
+      return next;
+    });
+  };
 
   const fetchDashboardStats = async () => {
     if (!token) return;
@@ -160,21 +172,18 @@ export default function Dashboard({ user, token, onLogout }) {
       icon: "📖",
       label: "Enrolled Courses",
       value: statsLoading ? "…" : String(enrolledCount),
-      raw: statsLoading ? null : enrolledCount,
       accent: false,
     },
     {
       icon: "🎓",
       label: "Active Courses",
       value: statsLoading ? "…" : String(activeCount),
-      raw: statsLoading ? null : activeCount,
       accent: false,
     },
     {
       icon: "🏆",
       label: "Completed Courses",
       value: statsLoading ? "…" : String(completedCount),
-      raw: statsLoading ? null : completedCount,
       accent: false,
     },
   ];
@@ -184,14 +193,12 @@ export default function Dashboard({ user, token, onLogout }) {
       icon: "👥",
       label: "Total Students",
       value: statsLoading ? "…" : String(totalStudents),
-      raw: statsLoading ? null : totalStudents,
       accent: true,
     },
     {
       icon: "📚",
       label: "Total Courses",
       value: statsLoading ? "…" : String(totalCourses),
-      raw: statsLoading ? null : totalCourses,
       accent: true,
     },
     {
@@ -348,6 +355,34 @@ export default function Dashboard({ user, token, onLogout }) {
           {isInstructorRole(currentUser) && (
             <button className="db-new-course-btn" onClick={handleNewCourseClick}>＋ New Course</button>
           )}
+          <div className="db-notif-wrap" ref={notifRef}>
+            <button
+              className="db-navbar-icon-btn"
+              onClick={handleNotifToggle}
+              aria-label="Notifications"
+              title="Notifications"
+            >
+              🔔
+              {unreadCount > 0 && <span className="db-notif-badge">{unreadCount}</span>}
+            </button>
+            {notifOpen && (
+              <div className="db-notif-panel">
+                <div className="db-notif-panel-header">Notifications</div>
+                {notifications.length === 0 ? (
+                  <div className="db-notif-empty">You're all caught up — no notifications yet.</div>
+                ) : (
+                  <div className="db-notif-list">
+                    {notifications.map((n) => (
+                      <div key={n.id} className={`db-notif-item${n.read ? "" : " unread"}`}>
+                        <div className="db-notif-item-title">{n.title}</div>
+                        <div className="db-notif-item-body">{n.body}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
           <button
             className="db-navbar-icon-btn"
             onClick={() => handleNav("my-profile")}
@@ -385,17 +420,15 @@ export default function Dashboard({ user, token, onLogout }) {
       </aside>
 
       <div className="db-body">
-        <main className="db-main" key={active}>
+        <main className="db-main">
           {active === "dashboard" && (
             <>
               <h2 className="db-section-title">Dashboard</h2>
               <div className="db-stats-grid">
-                {STATS.map(({ icon, label, value, raw, accent }) => (
+                {STATS.map(({ icon, label, value, accent }) => (
                   <div key={label} className="db-stat-card">
                     <div className="db-stat-icon-wrap">{icon}</div>
-                    <div className={`db-stat-value${accent ? " accent" : ""}`}>
-                      {raw !== undefined ? <CountUp value={raw} /> : value}
-                    </div>
+                    <div className={`db-stat-value${accent ? " accent" : ""}`}>{value}</div>
                     <div className={`db-stat-label${accent ? " accent" : ""}`}>{label}</div>
                   </div>
                 ))}
@@ -432,7 +465,16 @@ export default function Dashboard({ user, token, onLogout }) {
                             {enrollment.progress}% complete · {enrollment.status}
                           </p>
                         </div>
-                        <AnimatedProgressBar percent={enrollment.progress} />
+                        <div style={{ width: 70, height: 5, background: "#e2e5ef", borderRadius: 4 }}>
+                          <div
+                            style={{
+                              width: `${enrollment.progress}%`,
+                              height: 5,
+                              background: "#3d56c8",
+                              borderRadius: 4,
+                            }}
+                          />
+                        </div>
                       </div>
                     ))}
                   </div>

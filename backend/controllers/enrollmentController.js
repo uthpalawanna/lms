@@ -1,5 +1,6 @@
 const Enrollment = require("../models/Enrollment");
 const Course = require("../models/Course");
+const { notifyUser } = require("../utils/notify");
 
 async function enroll(req, res) {
   try {
@@ -17,6 +18,13 @@ async function enroll(req, res) {
     if (existing) return res.status(409).json({ message: "Already enrolled in this course." });
 
     const enrollment = await Enrollment.create({ student: req.userId, course, pricePaid: 0 });
+    await notifyUser({
+      recipient: req.userId,
+      type: "enrollment",
+      title: "Enrollment confirmed",
+      body: `You're now enrolled in ${courseDoc.title}.`,
+      course,
+    });
     const populated = await enrollment.populate("course", "title thumbnail category price");
     res.status(201).json(populated);
   } catch (error) {
@@ -50,10 +58,7 @@ async function updateEnrollment(req, res) {
       return res.status(403).json({ message: "This isn't your enrollment." });
     }
 
-    // `status` is intentionally never taken from the client here — it's a
-    // side effect of `progress`, computed the same way toggleLessonComplete
-    // computes it, so a student can't just POST { status: "completed" }
-    // without actually finishing the lessons.
+    
     const { progress } = req.body;
     if (progress !== undefined) {
       enrollment.progress = Math.max(0, Math.min(100, progress));

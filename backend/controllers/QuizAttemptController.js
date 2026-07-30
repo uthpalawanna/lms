@@ -2,6 +2,7 @@ const Quiz = require("../models/Quiz");
 const QuizAttempt = require("../models/QuizAttempt");
 const Course = require("../models/Course");
 const Enrollment = require("../models/Enrollment");
+const { notifyUser } = require("../utils/notify");
 
 const MAX_ATTEMPTS = 3;
 
@@ -45,6 +46,14 @@ async function submitAttempt(req, res) {
       score,
       totalQuestions,
       percentage,
+    });
+
+    await notifyUser({
+      recipient: req.userId,
+      type: "quiz_graded",
+      title: quiz.title || "Quiz result",
+      body: `You scored ${percentage}% (${score}/${totalQuestions}).`,
+      course: quiz.course,
     });
 
     res.status(201).json({

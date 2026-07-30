@@ -3,11 +3,10 @@ const Order = require("../models/order");
 const Course = require("../models/Course");
 const Enrollment = require("../models/Enrollment");
 const User = require("../models/User");
+const { notifyUser } = require("../utils/notify");
 
 const MERCHANT_ID = process.env.PAYHERE_MERCHANT_ID;
 const MERCHANT_SECRET = process.env.PAYHERE_MERCHANT_SECRET;
-// Public URL PayHere can reach from the internet to POST the notify webhook.
-// On localhost this must be an ngrok/tunnel URL, not http://localhost:5000.
 const APP_BASE_URL = process.env.APP_BASE_URL;
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
 
@@ -22,15 +21,11 @@ function formatAmount(amount) {
   });
 }
 
-// PayHere's required hash so their popup can be trusted without ever
-// exposing MERCHANT_SECRET to the browser.
 function generateHash(orderId, amount) {
   const secretHash = md5(MERCHANT_SECRET).toUpperCase();
   return md5(`${MERCHANT_ID}${orderId}${formatAmount(amount)}LKR${secretHash}`).toUpperCase();
 }
 
-// Called by the browser (authenticated) to start a PayHere checkout.
-// Creates a "pending" order and hands back everything payhere.startPayment() needs.
 exports.initPayHere = async (req, res) => {
   try {
     if (!MERCHANT_ID || !MERCHANT_SECRET) {
@@ -91,9 +86,7 @@ exports.initPayHere = async (req, res) => {
   }
 };
 
-// Called SERVER-TO-SERVER by PayHere, not by the browser. This is the only
-// place an order/enrollment should ever be marked paid — the browser-side
-// onCompleted callback is for UX only and must never grant access by itself.
+
 exports.payHereNotify = async (req, res) => {
   try {
     const {
@@ -120,7 +113,6 @@ exports.payHereNotify = async (req, res) => {
     if (!order) return res.status(404).send("Order not found");
 
     const code = String(status_code);
-    // 2 = success, 0 = pending, -1 = cancelled, -2 = failed, -3 = chargedback
     if (code === "2") {
       order.status = "paid";
       order.payherePaymentId = payment_id || "";
@@ -133,12 +125,20 @@ exports.payHereNotify = async (req, res) => {
           course: order.course,
           pricePaid: order.amount,
         });
+
+        const courseDoc = await Course.findById(order.course).select("title");
+        await notifyUser({
+          recipient: order.student,
+          type: "payment",
+          title: "Enrollment confirmed",
+          body: `You're now enrolled in ${courseDoc?.title || "the course"}.`,
+          course: order.course,
+        });
       }
     } else if (code === "-1") {
       order.status = "cancelled";
       await order.save();
     } else if (code === "0") {
-      // still pending, nothing to do yet
     } else {
       order.status = "failed";
       await order.save();
@@ -151,8 +151,6 @@ exports.payHereNotify = async (req, res) => {
   }
 };
 
-// Polled by the frontend after payhere.onCompleted fires, to confirm the
-// notify webhook has actually landed before unlocking the course in the UI.
 exports.getOrderStatus = async (req, res) => {
   try {
     const order = await Order.findOne({ orderId: req.params.orderId, student: req.userId });
