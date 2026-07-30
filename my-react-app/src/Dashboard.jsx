@@ -18,12 +18,9 @@ import Settings from "./Settings";
 const ENROLLMENTS_URL = "http://localhost:5000/api/enrollments";
 const INSTRUCTOR_STATS_URL = "http://localhost:5000/api/courses/mine/stats";
 
-// Instructors and admins both get access to the instructor-side tools.
 const isInstructorRole = (user) => user?.role === "instructor" || user?.role === "admin";
 
-// Animates a number counting up from 0 to `value` once, when it first
-// becomes available (e.g. once stats finish loading). Respects
-// prefers-reduced-motion by jumping straight to the final value.
+
 function CountUp({ value, duration = 700 }) {
   const [display, setDisplay] = useState(0);
 
@@ -38,7 +35,6 @@ function CountUp({ value, duration = 700 }) {
     const start = performance.now();
     const tick = (now) => {
       const progress = Math.min((now - start) / duration, 1);
-      // ease-out cubic — fast start, gentle settle
       const eased = 1 - Math.pow(1 - progress, 3);
       setDisplay(Math.round(eased * value));
       if (progress < 1) raf = requestAnimationFrame(tick);
@@ -51,8 +47,7 @@ function CountUp({ value, duration = 700 }) {
   return display;
 }
 
-// A progress bar that fills from 0 to its target width just after mount,
-// instead of appearing already-filled.
+
 function AnimatedProgressBar({ percent }) {
   const [width, setWidth] = useState(0);
 
@@ -89,9 +84,7 @@ const SIDEBAR_BOTTOM = [
   { id: "logout", icon: "🚪", label: "Logout" },
 ];
 
-// Every id that's a valid destination for handleNav / the ?view= deep link —
-// used to validate the query param below so a bad/unknown value can't leave
-// the dashboard on a blank screen.
+
 const VALID_VIEWS = new Set([
   ...SIDEBAR_MAIN.map((i) => i.id),
   ...SIDEBAR_INSTRUCTOR.map((i) => i.id),

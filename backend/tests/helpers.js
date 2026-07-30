@@ -1,8 +1,7 @@
-// Shared helpers for spinning up test users/tokens without going through
-// the HTTP registration flow every time.
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const User = require("../models/User");
+const Course = require("../models/Course");
 
 async function createUser({ role = "student", email, username } = {}) {
   const suffix = Math.random().toString(36).slice(2, 8);
@@ -19,4 +18,16 @@ async function createUser({ role = "student", email, username } = {}) {
   return { user, token };
 }
 
-module.exports = { createUser };
+async function createCourse({ instructor, price = 1000, title } = {}) {
+  const owner = instructor || (await createUser({ role: "instructor" })).user._id;
+  const suffix = Math.random().toString(36).slice(2, 8);
+  const course = await Course.create({
+    title: title || `Test Course ${suffix}`,
+    instructor: owner,
+    price,
+    status: "publish",
+  });
+  return course;
+}
+
+module.exports = { createUser, createCourse };
