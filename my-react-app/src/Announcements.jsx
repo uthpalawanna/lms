@@ -311,6 +311,21 @@ export default function Announcements({ token }) {
     setShowModal(false);
   };
 
+  const handleDelete = async (id) => {
+    if (!window.confirm("Delete this announcement? This cannot be undone.")) return;
+    try {
+      const response = await fetch(`${ANNOUNCEMENTS_URL}/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (response.ok) {
+        setAnnouncements((prev) => prev.filter((a) => a._id !== id));
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   let visible = [...announcements];
   if (date) {
     visible = visible.filter(
@@ -405,9 +420,18 @@ export default function Announcements({ token }) {
               >
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: "0.5rem" }}>
                   <h4 style={{ margin: 0 }}>{a.title}</h4>
-                  <span style={{ fontSize: 12, color: "#5c6b8a" }}>
-                    {a.course?.title || "Unknown course"} · {new Date(a.createdAt).toLocaleDateString()}
-                  </span>
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                    <span style={{ fontSize: 12, color: "#5c6b8a" }}>
+                      {a.course?.title || "Unknown course"} · {new Date(a.createdAt).toLocaleDateString()}
+                    </span>
+                    <button
+                      onClick={() => handleDelete(a._id)}
+                      title="Delete announcement"
+                      style={{ background: "none", border: "none", cursor: "pointer", color: "#dc2626", display: "flex", padding: 4 }}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                    </button>
+                  </div>
                 </div>
                 {a.summary && (
                   <p style={{ marginTop: "0.5rem", marginBottom: 0, color: "#374151" }}>{a.summary}</p>

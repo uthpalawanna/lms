@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import CreateQuizModal from "./CreateQuizModal";
 import TakeQuizModal from "./TakeQuizModal";
+import CourseBuilderModal from "./CourseBuilderModal";
 
 const QUIZ_URL = "http://localhost:5000/api/quizzes";
 const REVIEWS_URL = "http://localhost:5000/api/reviews";
@@ -445,6 +446,21 @@ function AnnouncementsTab({ course, token, isOwner }) {
     }
   };
 
+  const handleDelete = async (id) => {
+    if (!window.confirm("Delete this announcement? This cannot be undone.")) return;
+    try {
+      const response = await fetch(`${ANNOUNCEMENTS_URL}/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (response.ok) {
+        setAnnouncements((prev) => prev.filter((a) => a._id !== id));
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   return (
     <div className="cd-reviews-section">
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
@@ -511,7 +527,18 @@ function AnnouncementsTab({ course, token, isOwner }) {
             <div key={a._id} style={{ border: "1px solid #e5e7eb", borderRadius: 10, padding: "12px 16px" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: 6 }}>
                 <span style={{ fontWeight: 600, fontSize: 14 }}>{a.title}</span>
-                <span style={{ fontSize: 12, color: "#9ca3af" }}>{new Date(a.createdAt).toLocaleDateString()}</span>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <span style={{ fontSize: 12, color: "#9ca3af" }}>{new Date(a.createdAt).toLocaleDateString()}</span>
+                  {isOwner && (
+                    <button
+                      onClick={() => handleDelete(a._id)}
+                      title="Delete announcement"
+                      style={{ background: "none", border: "none", cursor: "pointer", color: "#dc2626", display: "flex", padding: 4 }}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                    </button>
+                  )}
+                </div>
               </div>
               {a.summary && (
                 <p style={{ marginTop: 6, marginBottom: 0, fontSize: 14, color: "#374151" }}>{a.summary}</p>
@@ -709,7 +736,10 @@ function CertificateTab({ course, user, enrollment }) {
 
 const canViewInstructorProfile = (user) => user?.role === "instructor" || user?.role === "admin";
 
-export default function CourseDetails({ course, token, user, onBack, onAuthorClick }) {
+export default function CourseDetails({ course: courseProp, token, user, onBack, onAuthorClick }) {
+  const [course, setCourse] = useState(courseProp);
+  const [showEditModal, setShowEditModal] = useState(false);
+  useEffect(() => setCourse(courseProp), [courseProp]);
   const [activeTab, setActiveTab] = useState("info");
   const [inWishlist, setInWishlist] = useState(false);
   const [wishlistBusy, setWishlistBusy] = useState(false);
@@ -786,7 +816,6 @@ export default function CourseDetails({ course, token, user, onBack, onAuthorCli
   const courseInstructorId = course?.instructor?._id || course?.instructor;
   const currentUserId = user?._id || user?.id;
   const isOwner = !!courseInstructorId && !!currentUserId && String(courseInstructorId) === String(currentUserId);
-  console.log("[CourseDetail owner check]", { courseInstructorId, currentUserId, isOwner });
 
   return (
     <div className="cd-container">
@@ -799,7 +828,31 @@ export default function CourseDetails({ course, token, user, onBack, onAuthorCli
             <span className="db-star">☆</span>
             <span className="db-star">☆</span>
           </div>
-          <h1 className="cd-title">{title}</h1>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            {onBack && (
+              <button
+                className="cd-back-btn"
+                onClick={onBack}
+                aria-label="Back"
+                title="Back"
+                style={{
+                  padding: 4,
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  color: "var(--text-strong)",
+                  display: "flex",
+                  alignItems: "center",
+                }}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="19" y1="12" x2="5" y2="12"></line>
+                  <polyline points="12 19 5 12 12 5"></polyline>
+                </svg>
+              </button>
+            )}
+            <h1 className="cd-title" style={{ margin: 0 }}>{title}</h1>
+          </div>
           <p className="cd-category">{category}</p>
         </div>
 
@@ -909,6 +962,19 @@ export default function CourseDetails({ course, token, user, onBack, onAuthorCli
                         Continue Learning
                       </button>
                     )
+                  ) : isOwner ? (
+                    <>
+                      <button className="cd-complete-btn" onClick={() => setActiveTab("curriculum")}>
+                        View as Instructor
+                      </button>
+                      <button
+                        className="cd-complete-btn"
+                        style={{ marginTop: 8, background: "#fff", color: "#4a60c8", border: "1px solid #4a60c8" }}
+                        onClick={() => setShowEditModal(true)}
+                      >
+                        ✏️ Edit Course
+                      </button>
+                    </>
                   ) : (
                     <button className="cd-complete-btn" disabled>
                       Enroll to Start
@@ -920,7 +986,7 @@ export default function CourseDetails({ course, token, user, onBack, onAuthorCli
             <div className="cd-meta-list">
               <div className="cd-meta-item">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg>
-                0 Total Enrolled
+                {course?.enrolledCount ?? 0} Total Enrolled
               </div>
               <div className="cd-meta-item">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.59-10.43l5.25 5.25"></path></svg>
@@ -948,6 +1014,19 @@ export default function CourseDetails({ course, token, user, onBack, onAuthorCli
           </div>
         </div>
       </div>
+
+      {showEditModal && (
+        <CourseBuilderModal
+          token={token}
+          user={user}
+          existingCourse={course}
+          onClose={() => setShowEditModal(false)}
+          onSaved={(updatedCourse) => {
+            setCourse(updatedCourse);
+            setShowEditModal(false);
+          }}
+        />
+      )}
     </div>
   );
 }

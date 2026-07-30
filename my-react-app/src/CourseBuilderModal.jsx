@@ -215,33 +215,69 @@ const emptyLesson = () => ({ title: "", content: "", videoUrl: "" });
 const emptyTopic = () => ({ title: "", lessons: [emptyLesson()] });
 const emptyFaq = () => ({ question: "", answer: "" });
 
-export default function CourseBuilderModal({ token, user, onClose, onSaved }) {
+export default function CourseBuilderModal({ token, user, onClose, onSaved, existingCourse }) {
+  const isEditMode = !!existingCourse;
   const [step, setStep] = useState("basics");
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
-  const [slugEdited, setSlugEdited] = useState(false);
+  const [slugEdited, setSlugEdited] = useState(isEditMode);
 
-  const [form, setForm] = useState({
-    title: "",
-    slug: "",
-    description: "",
-    difficultyLevel: "beginner",
-    isPublicPreview: false,
-    enableQA: true,
-    visibility: "public",
-    scheduleEnabled: false,
-    scheduledAt: "",
-    thumbnail: "",
-    introVideoUrl: "",
-    pricingModel: "free",
-    price: "",
-    categories: [],
-    tags: [],
-    curriculum: [emptyTopic()],
-    requirements: [],
-    targetAudience: [],
-    materials: [],
-    faqs: [],
+  const [form, setForm] = useState(() => {
+    if (!existingCourse) {
+      return {
+        title: "",
+        slug: "",
+        description: "",
+        difficultyLevel: "beginner",
+        isPublicPreview: false,
+        enableQA: true,
+        visibility: "public",
+        scheduleEnabled: false,
+        scheduledAt: "",
+        thumbnail: "",
+        introVideoUrl: "",
+        pricingModel: "free",
+        price: "",
+        categories: [],
+        tags: [],
+        curriculum: [emptyTopic()],
+        requirements: [],
+        targetAudience: [],
+        materials: [],
+        faqs: [],
+      };
+    }
+    const c = existingCourse;
+    return {
+      title: c.title || "",
+      slug: c.slug || "",
+      description: c.description || "",
+      difficultyLevel: c.difficultyLevel || "beginner",
+      isPublicPreview: !!c.isPublicPreview,
+      enableQA: c.enableQA !== false,
+      visibility: c.visibility || "public",
+      scheduleEnabled: !!c.scheduledAt,
+      scheduledAt: c.scheduledAt ? String(c.scheduledAt).slice(0, 16) : "",
+      thumbnail: c.thumbnail || "",
+      introVideoUrl: c.introVideoUrl || "",
+      pricingModel: c.price > 0 ? "paid" : "free",
+      price: c.price > 0 ? String(c.price) : "",
+      categories: c.categories && c.categories.length ? c.categories : (c.category ? [c.category] : []),
+      tags: c.tags || [],
+      curriculum:
+        c.curriculum && c.curriculum.length
+          ? c.curriculum.map((t) => ({
+              title: t.title || "",
+              lessons: t.lessons && t.lessons.length
+                ? t.lessons.map((l) => ({ title: l.title || "", content: l.content || "", videoUrl: l.videoUrl || "" }))
+                : [emptyLesson()],
+            }))
+          : [emptyTopic()],
+      requirements: c.requirements || [],
+      targetAudience: c.targetAudience || [],
+      materials: c.materials || [],
+      faqs: c.faqs && c.faqs.length ? c.faqs.map((f) => ({ question: f.question || "", answer: f.answer || "" })) : [],
+    };
   });
 
   const update = (field, value) => setForm((prev) => ({ ...prev, [field]: value }));
@@ -320,8 +356,9 @@ export default function CourseBuilderModal({ token, user, onClose, onSaved }) {
     setError("");
     setSaving(true);
     try {
-      const response = await fetch(API_URL, {
-        method: "POST",
+      const url = isEditMode ? `${API_URL}/${existingCourse._id}` : API_URL;
+      const response = await fetch(url, {
+        method: isEditMode ? "PUT" : "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
@@ -355,7 +392,7 @@ export default function CourseBuilderModal({ token, user, onClose, onSaved }) {
       >
         <div className="modal-header" style={{ alignItems: "center" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-            <h3 style={{ margin: 0 }}>Course Builder</h3>
+            <h3 style={{ margin: 0 }}>{isEditMode ? "Edit Course" : "Course Builder"}</h3>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginLeft: 12 }}>
               {STEPS.map((s, i) => (
                 <React.Fragment key={s.id}>
