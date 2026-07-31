@@ -24,7 +24,7 @@ const Login = ({ onLoginSuccess }) => {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false); 
+  const [showPassword, setShowPassword] = useState(false);
   const [keepSignedIn, setKeepSignedIn] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -53,7 +53,7 @@ const Login = ({ onLoginSuccess }) => {
     <div className="login-page">
       <div className="login-split">
         <div className="login-illustration-panel">
-          <svg className="login-illustration-svg" viewBox="0 0 400 500" xmlns="http://www.w3.org/2000/svg">
+          <svg className="login-illustration-svg" viewBox="0 0 400 500" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
             <defs>
               <linearGradient id="loginIllusBg" x1="0" y1="0" x2="1" y2="1">
                 <stop offset="0%" stopColor="var(--navy)" />
@@ -61,14 +61,14 @@ const Login = ({ onLoginSuccess }) => {
               </linearGradient>
             </defs>
             <rect width="400" height="500" fill="url(#loginIllusBg)" />
-            <circle cx="330" cy="70" r="46" fill="rgba(255,255,255,0.06)" />
-            <circle cx="60" cy="430" r="70" fill="rgba(255,255,255,0.05)" />
+            <circle className="login-illus-float-slow" cx="330" cy="70" r="46" fill="rgba(255,255,255,0.06)" />
+            <circle className="login-illus-float-slow login-illus-delay-2" cx="60" cy="430" r="70" fill="rgba(255,255,255,0.05)" />
             <rect x="90" y="330" width="220" height="14" rx="7" fill="rgba(255,255,255,0.12)" />
             <rect x="120" y="356" width="160" height="10" rx="5" fill="rgba(255,255,255,0.08)" />
-            <circle cx="200" cy="220" r="70" fill="var(--primary)" opacity="0.9" />
-            <path d="M170 230 l20 20 l45 -50" stroke="#fff" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-            <rect x="130" y="120" width="34" height="34" rx="8" fill="var(--primary-light)" opacity="0.8" />
-            <rect x="250" y="150" width="24" height="24" rx="6" fill="var(--accent)" opacity="0.85" />
+            <circle className="login-illus-pop" cx="200" cy="220" r="70" fill="var(--primary)" opacity="0.9" />
+            <path className="login-illus-check" d="M170 230 l20 20 l45 -50" stroke="#fff" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+            <rect className="login-illus-float login-illus-delay-1" x="130" y="120" width="34" height="34" rx="8" fill="var(--primary-light)" opacity="0.8" />
+            <rect className="login-illus-float login-illus-delay-3" x="250" y="150" width="24" height="24" rx="6" fill="var(--accent)" opacity="0.85" />
           </svg>
           <div className="login-illustration-caption">
             <h3>Learning made simple</h3>
@@ -78,28 +78,30 @@ const Login = ({ onLoginSuccess }) => {
 
         <div className="login-form-panel">
           <div className="login-form-inner">
-            <div className="login-pill-toggle">
+            <div className="login-pill-toggle login-anim login-anim-1">
               <Link to="/signin" className="login-pill-tab active">Login</Link>
               <Link to="/register" className="login-pill-tab">Register</Link>
             </div>
 
-            <h1 className="login-title">Hi, Welcome Back!</h1>
-            <p className="login-tagline">Sign in to continue your learning journey.</p>
+            <h1 className="login-title login-anim login-anim-2">Hi, Welcome Back!</h1>
+            <p className="login-tagline login-anim login-anim-2">Sign in to continue your learning journey.</p>
 
             {error && <div className="login-error">{error}</div>}
 
-            <label className="login-field-label">Email Address</label>
-            <input
-              type="email"
-              className="login-input"
-              placeholder="Enter your email address"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              autoComplete="email"
-            />
+            <label className="login-field-label login-anim login-anim-3">Email Address</label>
+            <div className="login-anim login-anim-3">
+              <input
+                type="email"
+                className="login-input"
+                placeholder="Enter your email address"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                autoComplete="email"
+              />
+            </div>
 
-            <label className="login-field-label">Password</label>
-            <div className="login-password-wrap">
+            <label className="login-field-label login-anim login-anim-4">Password</label>
+            <div className="login-password-wrap login-anim login-anim-4">
               <input
                 type={showPassword ? 'text' : 'password'}
                 className="login-input"
@@ -120,9 +122,9 @@ const Login = ({ onLoginSuccess }) => {
               </button>
             </div>
 
-            <a href="#" className="login-bluehost-link">Login with Bluehost</a>
+            <a href="#" className="login-bluehost-link login-anim login-anim-5">Login with Bluehost</a>
 
-            <div className="login-row">
+            <div className="login-row login-anim login-anim-5">
               <label className="login-checkbox-label">
                 <input
                   type="checkbox"
@@ -134,11 +136,11 @@ const Login = ({ onLoginSuccess }) => {
               <Link to="/forgot-password" className="login-forgot-link">Forgot Password?</Link>
             </div>
 
-            <button onClick={handleSubmit} disabled={loading} className="login-signin-btn">
+            <button onClick={handleSubmit} disabled={loading} className="login-signin-btn login-anim login-anim-6">
               {loading ? 'Signing in...' : 'Sign In'}
             </button>
 
-            <p className="login-register-text">
+            <p className="login-register-text login-anim login-anim-6">
               Don't have an account?{' '}
               <Link to="/register" className="login-register-link">Register Now</Link>
             </p>

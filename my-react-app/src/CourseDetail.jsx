@@ -822,13 +822,6 @@ export default function CourseDetails({ course: courseProp, token, user, onBack,
     <div className="cd-container">
       <div className="cd-header">
         <div className="cd-header-left">
-          <div className="cd-stars">
-            <span className="db-star">☆</span>
-            <span className="db-star">☆</span>
-            <span className="db-star">☆</span>
-            <span className="db-star">☆</span>
-            <span className="db-star">☆</span>
-          </div>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             {onBack && (
               <button

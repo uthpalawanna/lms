@@ -6,30 +6,27 @@ const WITHDRAWALS_URL = `${API_URL}/api/withdrawals`;
 
 function MailboxIcon() {
   return (
-    <svg width="220" height="160" viewBox="0 0 220 160" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <ellipse cx="110" cy="148" rx="100" ry="10" fill="#eef0f8" />
-      <rect x="55" y="95" width="14" height="50" rx="2" fill="#dfe3ee" />
-      <rect x="148" y="95" width="14" height="50" rx="2" fill="#dfe3ee" />
-      <rect x="90" y="100" width="14" height="45" rx="2" fill="#dfe3ee" />
-      <rect x="120" y="100" width="10" height="45" rx="2" fill="#dfe3ee" />
+    <svg width="200" height="150" viewBox="0 0 220 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="110" cy="148" rx="100" ry="10" fill="var(--surface-alt)" />
+      <rect x="55" y="95" width="14" height="50" rx="2" fill="var(--border)" />
+      <rect x="148" y="95" width="14" height="50" rx="2" fill="var(--border)" />
+      <rect x="90" y="100" width="14" height="45" rx="2" fill="var(--border)" />
+      <rect x="120" y="100" width="10" height="45" rx="2" fill="var(--border)" />
 
       <g>
-        <path
-          d="M60 95C60 75 75 60 100 60H140C155 60 165 70 165 85V95H60Z"
-          fill="#e2e5ef"
-        />
-        <rect x="60" y="95" width="105" height="14" rx="3" fill="#d3d8e6" />
-        <circle cx="150" cy="102" r="3" fill="#9aa3bd" />
+        <path d="M60 95C60 75 75 60 100 60H140C155 60 165 70 165 85V95H60Z" fill="var(--navy-light)" opacity="0.18" />
+        <rect x="60" y="95" width="105" height="14" rx="3" fill="var(--navy-light)" opacity="0.28" />
+        <circle cx="150" cy="102" r="3" fill="var(--navy-light)" />
       </g>
 
-      <g>
-        <line x1="40" y1="45" x2="60" y2="60" stroke="#c8cdd8" strokeWidth="2" strokeLinecap="round" />
-        <circle cx="38" cy="42" r="3" fill="#c8cdd8" />
+      <g className="withdraw-empty-flag">
+        <line x1="40" y1="45" x2="60" y2="60" stroke="var(--border)" strokeWidth="2" strokeLinecap="round" />
+        <circle cx="38" cy="42" r="3" fill="var(--border)" />
       </g>
 
-      <g transform="rotate(18 175 70)">
-        <rect x="160" y="40" width="32" height="40" rx="3" fill="#fff" stroke="#dfe3ee" strokeWidth="2" />
-        <polygon points="175,38 160,52 192,52" fill="#4A60C8" />
+      <g className="withdraw-empty-envelope" transform="rotate(18 175 70)">
+        <rect x="160" y="40" width="32" height="40" rx="3" fill="#fff" stroke="var(--border)" strokeWidth="2" />
+        <polygon points="175,38 160,52 192,52" fill="var(--primary)" />
       </g>
     </svg>
   );
@@ -39,11 +36,11 @@ function statusColor(status) {
   switch (status) {
     case "approved":
     case "paid":
-      return "#16a34a";
+      return "success";
     case "rejected":
-      return "#dc2626";
+      return "danger";
     default:
-      return "#d97706"; 
+      return "pending";
   }
 }
 
@@ -136,96 +133,97 @@ export default function Withdrawals({ token, onNavigateToWithdraw }) {
   const hasBalance = !loading && available > 0;
 
   return (
-    <div className="ec-container">
+    <div className="ec-container withdraw-page">
       <h2 className="db-section-title">Withdrawals</h2>
+      <p className="withdraw-subtitle">Track what you've earned and request a payout whenever you're ready.</p>
 
-      <div className="withdraw-balance-card">
-        <div className="withdraw-wallet-icon">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4a60c8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"></path>
-            <path d="M3 5v14a2 2 0 0 0 2 2h16v-5"></path>
-            <path d="M18 12a2 2 0 0 0 0 4h4v-4Z"></path>
-          </svg>
+      <div className="withdraw-metrics-row">
+        <div className="withdraw-metric-card withdraw-metric-primary">
+          <div className="withdraw-wallet-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"></path>
+              <path d="M3 5v14a2 2 0 0 0 2 2h16v-5"></path>
+              <path d="M18 12a2 2 0 0 0 0 4h4v-4Z"></path>
+            </svg>
+          </div>
+          <div>
+            <p className="withdraw-metric-label">Available balance</p>
+            <p className="withdraw-metric-value">{formattedBalance}</p>
+          </div>
         </div>
-        <div>
-          <p className="withdraw-balance-label">Current Balance is {formattedBalance}</p>
-          <p className="withdraw-balance-main">
-            You have <strong>{formattedBalance}</strong>
-            {hasBalance ? " available to withdraw" : " and this is insufficient balance to withdraw"}
-          </p>
-          {!loading && (
-            <p style={{ fontSize: 12, color: "#9ca3af", marginTop: 4 }}>
-              Total earned: Rs{totalRevenue.toFixed(2)} · Already withdrawn: Rs{totalWithdrawn.toFixed(2)}
-            </p>
-          )}
+
+        <div className="withdraw-metric-card">
+          <p className="withdraw-metric-label">Total earned</p>
+          <p className="withdraw-metric-value withdraw-metric-value-sm">{loading ? "…" : `Rs${totalRevenue.toFixed(2)}`}</p>
+        </div>
+
+        <div className="withdraw-metric-card">
+          <p className="withdraw-metric-label">Already withdrawn</p>
+          <p className="withdraw-metric-value withdraw-metric-value-sm">{loading ? "…" : `Rs${totalWithdrawn.toFixed(2)}`}</p>
         </div>
       </div>
 
+      {!hasBalance && !loading && (
+        <p className="withdraw-balance-note">
+          You have {formattedBalance} — that's not enough available balance to request a withdrawal yet.
+        </p>
+      )}
+
       {!loading && (
-        <form
-          onSubmit={handleRequestWithdrawal}
-          style={{
-            background: "#fff",
-            border: "1px solid #e2e5ef",
-            borderRadius: 10,
-            padding: "1rem 1.25rem",
-            marginTop: "1rem",
-            display: "flex",
-            flexDirection: "column",
-            gap: "0.75rem",
-          }}
-        >
-          <h3 style={{ margin: 0, fontSize: 14, fontWeight: 600 }}>Request a withdrawal</h3>
-          <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
-            <input
-              type="number"
-              min="0"
-              step="0.01"
-              placeholder="Amount"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              disabled={!hasBalance || submitting}
-              style={{ flex: "1 1 140px", padding: "8px 10px", border: "1px solid #dfe2ec", borderRadius: 6, fontSize: 13 }}
-            />
+        <form onSubmit={handleRequestWithdrawal} className="withdraw-form">
+          <h3 className="withdraw-form-title">Request a withdrawal</h3>
+
+          <div className="withdraw-field-row">
+            <div className="withdraw-amount-wrap">
+              <span className="withdraw-amount-prefix">Rs</span>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="0.00"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                disabled={!hasBalance || submitting}
+                className="withdraw-input withdraw-amount-input"
+              />
+            </div>
             <select
               value={method}
               onChange={(e) => setMethod(e.target.value)}
               disabled={!hasBalance || submitting}
-              style={{ padding: "8px 10px", border: "1px solid #dfe2ec", borderRadius: 6, fontSize: 13 }}
+              className="withdraw-select"
             >
               <option value="bank">Bank</option>
               <option value="paypal">PayPal</option>
               <option value="other">Other</option>
             </select>
           </div>
+
           <input
             type="text"
             placeholder="Notes (optional)"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             disabled={!hasBalance || submitting}
-            style={{ padding: "8px 10px", border: "1px solid #dfe2ec", borderRadius: 6, fontSize: 13 }}
+            className="withdraw-input"
           />
-          {formError && <p style={{ margin: 0, fontSize: 12, color: "#dc2626" }}>{formError}</p>}
-          {formMessage && <p style={{ margin: 0, fontSize: 12, color: "#16a34a" }}>{formMessage}</p>}
-          <button
-            type="submit"
-            disabled={!hasBalance || submitting}
-            className="db-new-course-btn"
-            style={{ alignSelf: "flex-start", opacity: !hasBalance || submitting ? 0.6 : 1 }}
-          >
+
+          {formError && <div className="withdraw-form-banner withdraw-form-banner-error">{formError}</div>}
+          {formMessage && <div className="withdraw-form-banner withdraw-form-banner-success">{formMessage}</div>}
+
+          <button type="submit" disabled={!hasBalance || submitting} className="withdraw-submit-btn">
+            {submitting && <span className="withdraw-btn-spinner" aria-hidden="true" />}
             {submitting ? "Submitting..." : "Request withdrawal"}
           </button>
+
           {!hasBalance && (
-            <p style={{ margin: 0, fontSize: 12, color: "#9ca3af" }}>
-              You need an available balance before you can request a withdrawal.
-            </p>
+            <p className="withdraw-form-hint">You need an available balance before you can request a withdrawal.</p>
           )}
         </form>
       )}
 
       <div className="withdraw-info-row">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <circle cx="12" cy="12" r="10"></circle>
           <line x1="12" y1="16" x2="12" y2="12"></line>
           <line x1="12" y1="8" x2="12.01" y2="8"></line>
@@ -240,7 +238,6 @@ export default function Withdrawals({ token, onNavigateToWithdraw }) {
             onKeyDown={(e) => {
               if (e.key === "Enter" || e.key === " ") onNavigateToWithdraw?.();
             }}
-            style={{ cursor: "pointer" }}
           >
             Withdraw Preference
           </span>
@@ -254,42 +251,20 @@ export default function Withdrawals({ token, onNavigateToWithdraw }) {
       ) : withdrawals.length === 0 ? (
         <div className="withdraw-empty-state">
           <MailboxIcon />
-          <p className="withdraw-empty-text">No Data Available in this Section</p>
+          <p className="withdraw-empty-text">No withdrawal requests yet</p>
         </div>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", marginTop: "1rem" }}>
+        <div className="withdraw-history-list">
           {withdrawals.map((w) => (
-            <div
-              key={w._id}
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                background: "#fff",
-                border: "1px solid #e2e5ef",
-                borderRadius: 10,
-                padding: "1rem 1.25rem",
-              }}
-            >
+            <div key={w._id} className="withdraw-history-item">
               <div>
-                <p style={{ margin: 0, fontWeight: 600 }}>Rs{w.amount.toFixed(2)}</p>
-                <p style={{ margin: "4px 0 0", fontSize: 12, color: "#5c6b8a", textTransform: "capitalize" }}>
+                <p className="withdraw-history-amount">Rs{w.amount.toFixed(2)}</p>
+                <p className="withdraw-history-meta">
                   {w.method} · {new Date(w.createdAt).toLocaleDateString()}
                 </p>
-                {w.notes && (
-                  <p style={{ margin: "4px 0 0", fontSize: 12, color: "#9ca3af" }}>{w.notes}</p>
-                )}
+                {w.notes && <p className="withdraw-history-notes">{w.notes}</p>}
               </div>
-              <span
-                style={{
-                  fontWeight: 700,
-                  fontSize: 12,
-                  textTransform: "uppercase",
-                  color: statusColor(w.status),
-                }}
-              >
-                {w.status}
-              </span>
+              <span className={`withdraw-status-pill withdraw-status-${statusColor(w.status)}`}>{w.status}</span>
             </div>
           ))}
         </div>
