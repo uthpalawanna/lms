@@ -223,6 +223,7 @@ function QuizzesTab({ course, token, user }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [editingQuiz, setEditingQuiz] = useState(null);
   const [takingQuizId, setTakingQuizId] = useState(null);
   const [deletingQuizId, setDeletingQuizId] = useState(null);
 
@@ -322,23 +323,41 @@ function QuizzesTab({ course, token, user }) {
                 </p>
               </div>
               {isOwner ? (
-                <button
-                  onClick={() => handleDeleteQuiz(q._id, q.title)}
-                  disabled={deletingQuizId === q._id}
-                  title="Delete this quiz"
-                  style={{
-                    background: "none",
-                    border: "1px solid #fca5a5",
-                    color: "#dc2626",
-                    borderRadius: 6,
-                    padding: "6px 12px",
-                    fontSize: 13,
-                    fontWeight: 600,
-                    cursor: "pointer",
-                  }}
-                >
-                  {deletingQuizId === q._id ? "Deleting..." : "Delete"}
-                </button>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button
+                    onClick={() => setEditingQuiz(q)}
+                    title="Edit this quiz"
+                    style={{
+                      background: "none",
+                      border: "1px solid #c7d2fe",
+                      color: "#3d56c8",
+                      borderRadius: 6,
+                      padding: "6px 12px",
+                      fontSize: 13,
+                      fontWeight: 600,
+                      cursor: "pointer",
+                    }}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDeleteQuiz(q._id, q.title)}
+                    disabled={deletingQuizId === q._id}
+                    title="Delete this quiz"
+                    style={{
+                      background: "none",
+                      border: "1px solid #fca5a5",
+                      color: "#dc2626",
+                      borderRadius: 6,
+                      padding: "6px 12px",
+                      fontSize: 13,
+                      fontWeight: 600,
+                      cursor: "pointer",
+                    }}
+                  >
+                    {deletingQuizId === q._id ? "Deleting..." : "Delete"}
+                  </button>
+                </div>
               ) : (
                 <button className="modal-publish-btn" onClick={() => setTakingQuizId(q._id)}>
                   Take Quiz
@@ -357,6 +376,19 @@ function QuizzesTab({ course, token, user }) {
           onCreated={() => {
             setShowCreateModal(false);
             fetchQuizzes();
+          }}
+        />
+      )}
+
+      {editingQuiz && (
+        <CreateQuizModal
+          token={token}
+          courseId={course._id}
+          quiz={editingQuiz}
+          onClose={() => setEditingQuiz(null)}
+          onUpdated={(updatedQuiz) => {
+            setEditingQuiz(null);
+            setQuizzes((prev) => prev.map((q) => (q._id === updatedQuiz._id ? updatedQuiz : q)));
           }}
         />
       )}
