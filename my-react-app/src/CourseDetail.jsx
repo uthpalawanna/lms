@@ -912,7 +912,7 @@ export default function CourseDetails({ course: courseProp, token, user, onBack,
               { id: "reviews", label: "Reviews" },
               { id: "announcements", label: "Announcements" },
               { id: "quizzes", label: "Quizzes" },
-              { id: "certificate", label: "Certificate" },
+              ...(isOwner ? [] : [{ id: "certificate", label: "Certificate" }]),
             ].map(tab => (
               <button
                 key={tab.id}
