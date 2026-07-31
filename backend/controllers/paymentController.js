@@ -3,6 +3,7 @@ const Order = require("../models/order");
 const Course = require("../models/Course");
 const Enrollment = require("../models/Enrollment");
 const User = require("../models/User");
+const Cart = require("../models/Cart");
 const { notifyUser } = require("../utils/notify");
 
 const MERCHANT_ID = process.env.PAYHERE_MERCHANT_ID;
@@ -87,6 +88,75 @@ exports.initPayHere = async (req, res) => {
 };
 
 
+exports.initCartCheckout = async (req, res) => {
+  try {
+    if (!MERCHANT_ID || !MERCHANT_SECRET) {
+      return res.status(500).json({ message: "Payment gateway isn't configured yet." });
+    }
+
+    const cart = await Cart.findOne({ student: req.userId }).populate("items.course", "title price");
+    if (!cart || cart.items.length === 0) {
+      return res.status(400).json({ message: "Your cart is empty." });
+    }
+
+    const alreadyEnrolled = await Enrollment.find({ student: req.userId }).select("course");
+    const enrolledIds = new Set(alreadyEnrolled.map((e) => e.course.toString()));
+
+    const payableItems = cart.items.filter(
+      (item) => item.course && item.course.price > 0 && !enrolledIds.has(item.course._id.toString())
+    );
+
+    if (payableItems.length === 0) {
+      return res.status(400).json({ message: "Nothing left in your cart to check out — you may already be enrolled in these." });
+    }
+
+    const courses = payableItems.map((item) => ({
+      course: item.course._id,
+      price: Number(item.course.price),
+    }));
+    const amount = courses.reduce((sum, c) => sum + c.price, 0);
+    const titles = payableItems.map((item) => item.course.title).join(", ");
+
+    const user = await User.findById(req.userId);
+    const orderId = `SHRI-CART-${Date.now()}-${req.userId.toString().slice(-6)}`;
+
+    await Order.create({
+      orderId,
+      student: req.userId,
+      courses,
+      amount,
+      gateway: "payhere",
+      paymentMethod: "PayHere",
+      status: "pending",
+    });
+
+    const [firstName, ...rest] = (user?.username || "Student").split(" ");
+
+    res.json({
+      sandbox: process.env.PAYHERE_MODE !== "live",
+      merchant_id: MERCHANT_ID,
+      return_url: `${FRONTEND_URL}/payment/success`,
+      cancel_url: `${FRONTEND_URL}/payment/cancelled`,
+      notify_url: `${APP_BASE_URL}/api/payments/payhere/notify`,
+      order_id: orderId,
+      items: titles,
+      amount: amount.toFixed(2),
+      currency: "LKR",
+      hash: generateHash(orderId, amount),
+      first_name: firstName || "Student",
+      last_name: rest.join(" ") || "-",
+      email: user?.email || "",
+      phone: user?.phone || "0770000000",
+      address: "N/A",
+      city: "N/A",
+      country: "Sri Lanka",
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Could not start checkout." });
+  }
+};
+
 exports.payHereNotify = async (req, res) => {
   try {
     const {
@@ -118,22 +188,51 @@ exports.payHereNotify = async (req, res) => {
       order.payherePaymentId = payment_id || "";
       await order.save();
 
-      const already = await Enrollment.findOne({ student: order.student, course: order.course });
-      if (!already) {
-        await Enrollment.create({
-          student: order.student,
-          course: order.course,
-          pricePaid: order.amount,
-        });
+      if (order.courses && order.courses.length > 0) {
+        // Cart checkout — enroll into every course on this order.
+        for (const item of order.courses) {
+          const already = await Enrollment.findOne({ student: order.student, course: item.course });
+          if (!already) {
+            await Enrollment.create({
+              student: order.student,
+              course: item.course,
+              pricePaid: item.price,
+            });
 
-        const courseDoc = await Course.findById(order.course).select("title");
-        await notifyUser({
-          recipient: order.student,
-          type: "payment",
-          title: "Enrollment confirmed",
-          body: `You're now enrolled in ${courseDoc?.title || "the course"}.`,
-          course: order.course,
-        });
+            const courseDoc = await Course.findById(item.course).select("title");
+            await notifyUser({
+              recipient: order.student,
+              type: "payment",
+              title: "Enrollment confirmed",
+              body: `You're now enrolled in ${courseDoc?.title || "the course"}.`,
+              course: item.course,
+            });
+          }
+        }
+
+        const paidIds = order.courses.map((item) => item.course.toString());
+        await Cart.updateOne(
+          { student: order.student },
+          { $pull: { items: { course: { $in: paidIds } } } }
+        );
+      } else if (order.course) {
+        const already = await Enrollment.findOne({ student: order.student, course: order.course });
+        if (!already) {
+          await Enrollment.create({
+            student: order.student,
+            course: order.course,
+            pricePaid: order.amount,
+          });
+
+          const courseDoc = await Course.findById(order.course).select("title");
+          await notifyUser({
+            recipient: order.student,
+            type: "payment",
+            title: "Enrollment confirmed",
+            body: `You're now enrolled in ${courseDoc?.title || "the course"}.`,
+            course: order.course,
+          });
+        }
       }
     } else if (code === "-1") {
       order.status = "cancelled";

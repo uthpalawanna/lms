@@ -5,6 +5,7 @@ import { API_URL } from "./api/config";
 
 const COURSES_URL = `${API_URL}/api/courses`;
 const ENROLLMENTS_URL = `${API_URL}/api/enrollments`;
+const CART_URL = `${API_URL}/api/cart`;
 
 const TABS = [
   { id: "browse", label: "Browse Courses" },
@@ -74,14 +75,17 @@ export default function EnrolledCourses({ token, user, onCourseClick }) {
   const [checkoutCourse, setCheckoutCourse] = useState(null);
   const [checkoutSubmitting, setCheckoutSubmitting] = useState(false);
   const [checkoutError, setCheckoutError] = useState("");
+  const [cartItems, setCartItems] = useState([]);
+  const [addingToCartId, setAddingToCartId] = useState(null);
 
   const fetchAll = async () => {
     setLoading(true);
     setError("");
     try {
-      const [coursesRes, enrollmentsRes] = await Promise.all([
+      const [coursesRes, enrollmentsRes, cartRes] = await Promise.all([
         fetch(COURSES_URL),
         fetch(ENROLLMENTS_URL, { headers: { Authorization: `Bearer ${token}` } }),
+        fetch(`${CART_URL}/mine`, { headers: { Authorization: `Bearer ${token}` } }),
       ]);
       const coursesData = await coursesRes.json();
       const enrollmentsData = await enrollmentsRes.json();
@@ -93,6 +97,7 @@ export default function EnrolledCourses({ token, user, onCourseClick }) {
       }
       setCourses(coursesData);
       if (enrollmentsRes.ok) setEnrollments(enrollmentsData);
+      if (cartRes.ok) setCartItems(await cartRes.json());
     } catch (err) {
       console.error(err);
       setError("Could not reach the server. Is the backend running?");
@@ -107,6 +112,36 @@ export default function EnrolledCourses({ token, user, onCourseClick }) {
 
   const isEnrolled = (courseId) =>
     enrollments.some((e) => e.course?._id === courseId || e.course === courseId);
+
+  const isInCart = (courseId) =>
+    cartItems.some((item) => item.course?._id === courseId || item.course === courseId);
+
+  const handleAddToCart = async (courseId) => {
+    setAddingToCartId(courseId);
+    setMessage("");
+    try {
+      const response = await fetch(CART_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ course: courseId }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        setMessage(data.message || "Could not add this course to your cart.");
+        return;
+      }
+      setCartItems(data);
+      setMessage("Added to cart! Check out from Order History.");
+    } catch (err) {
+      console.error(err);
+      setMessage("Could not reach the server. Is the backend running?");
+    } finally {
+      setAddingToCartId(null);
+    }
+  };
 
   const handleEnroll = async (courseId) => {
     const course = courses.find((c) => c._id === courseId);
@@ -258,14 +293,35 @@ export default function EnrolledCourses({ token, user, onCourseClick }) {
                         {course.price > 0 ? `Rs${course.price}` : "Free"}
                       </span>
 
-                      <button
-                        className="db-new-course-btn"
-                        style={{ padding: "6px 14px", fontSize: 13 }}
-                        disabled={enrolled || enrollingId === course._id}
-                        onClick={() => handleEnroll(course._id)}
-                      >
-                        {enrolled ? "Enrolled" : enrollingId === course._id ? "Enrolling..." : "Enroll"}
-                      </button>
+                      <div style={{ display: "flex", gap: 8 }}>
+                        {course.price > 0 && !enrolled && (
+                          <button
+                            className="db-navbar-icon-btn"
+                            style={{
+                              width: 34,
+                              height: 34,
+                              fontSize: 16,
+                              border: "1px solid #14b8a6",
+                              color: isInCart(course._id) ? "#14b8a6" : undefined,
+                              background: isInCart(course._id) ? "rgba(20,184,166,0.1)" : "transparent",
+                            }}
+                            disabled={isInCart(course._id) || addingToCartId === course._id}
+                            onClick={() => handleAddToCart(course._id)}
+                            aria-label={isInCart(course._id) ? "Already in cart" : "Add to cart"}
+                            title={isInCart(course._id) ? "Already in cart" : "Add to cart"}
+                          >
+                            {addingToCartId === course._id ? "…" : "🛒"}
+                          </button>
+                        )}
+                        <button
+                          className="db-new-course-btn"
+                          style={{ padding: "6px 14px", fontSize: 13 }}
+                          disabled={enrolled || enrollingId === course._id}
+                          onClick={() => handleEnroll(course._id)}
+                        >
+                          {enrolled ? "Enrolled" : enrollingId === course._id ? "Enrolling..." : "Enroll"}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 );

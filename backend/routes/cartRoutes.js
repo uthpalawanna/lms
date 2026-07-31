@@ -3,17 +3,24 @@ const router = express.Router();
 const { body, param } = require("express-validator");
 const requireAuth = require("../middleware/auth");
 const validate = require("../middleware/validate");
-const { initPayHere, initCartCheckout, payHereNotify, getOrderStatus } = require("../controllers/paymentController");
+const { getMyCart, addToCart, removeFromCart } = require("../controllers/cartController");
+
+router.get("/mine", requireAuth, getMyCart);
 
 router.post(
-  "/payhere/init",
+  "/",
   requireAuth,
   [body("course").isMongoId().withMessage("A valid course id is required.")],
   validate,
-  initPayHere
+  addToCart
 );
-router.post("/payhere/init-cart", requireAuth, initCartCheckout);
-router.post("/payhere/notify", payHereNotify);
-router.get("/payhere/status/:orderId", requireAuth, param("orderId").notEmpty(), validate, getOrderStatus);
+
+router.delete(
+  "/:courseId",
+  requireAuth,
+  [param("courseId").isMongoId().withMessage("A valid course id is required.")],
+  validate,
+  removeFromCart
+);
 
 module.exports = router;

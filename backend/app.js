@@ -23,21 +23,25 @@ const questionRoutes = require("./routes/questionRoutes");
 const uploadRoutes = require("./routes/uploadRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
+const cartRoutes = require("./routes/cartRoutes");
 
 const app = express();
 
 app.use(express.json());
 
-const allowedOrigins = [
-  process.env.FRONTEND_URL,
-  "http://localhost:5173",
-  "http://127.0.0.1:5173",
-].filter(Boolean);
+const allowedOrigins = [process.env.FRONTEND_URL].filter(Boolean);
+// Vite picks a different port (5174, 5175, ...) whenever the default 5173
+// is already taken by another running dev server, so a fixed-port allowlist
+// breaks every time that happens. In development, accept any localhost /
+// 127.0.0.1 origin regardless of port; in production, only FRONTEND_URL
+// (set in .env) is trusted.
+const isLocalDevOrigin = (origin) =>
+  process.env.NODE_ENV !== "production" && /^https?:\/\/(localhost|127\.0\.0\.1):\d+$/.test(origin);
 
 app.use(
   cors({
     origin(origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
+      if (!origin || allowedOrigins.includes(origin) || isLocalDevOrigin(origin)) {
         return callback(null, true);
       }
       return callback(new Error("Not allowed by CORS"));
@@ -113,6 +117,7 @@ app.use("/api/questions", questionRoutes);
 app.use("/api/uploads", uploadRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/cart", cartRoutes);
 
 app.get("/", (req, res) => {
   res.send("SHRI LMS backend is running.");

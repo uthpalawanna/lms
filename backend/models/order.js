@@ -5,7 +5,17 @@ const orderSchema = new mongoose.Schema({
   // simulated orders (which never had one) don't collide on null.
   orderId: { type: String, unique: true, sparse: true },
   student: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-  course: { type: mongoose.Schema.Types.ObjectId, ref: "Course", required: true },
+  // Single-course direct purchase (existing "Enroll" flow on Browse Courses / Course Detail).
+  course: { type: mongoose.Schema.Types.ObjectId, ref: "Course" },
+  // Multi-course cart checkout. Each course's price is snapshotted at
+  // checkout time so later price changes don't affect what was actually
+  // paid, and so per-course pricePaid on Enrollment stays accurate.
+  courses: [
+    {
+      course: { type: mongoose.Schema.Types.ObjectId, ref: "Course" },
+      price: { type: Number },
+    },
+  ],
   amount: { type: Number, required: true },
   gateway: { type: String, enum: ["payhere", "simulated"], default: "simulated" },
   payherePaymentId: { type: String, default: "" },

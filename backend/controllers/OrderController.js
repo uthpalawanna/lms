@@ -29,6 +29,7 @@ exports.getMyOrders = async (req, res) => {
 
     const orders = await Order.find(query)
       .populate("course", "title")
+      .populate("courses.course", "title")
       .sort({ createdAt: -1 });
     res.json(orders);
   } catch (error) {

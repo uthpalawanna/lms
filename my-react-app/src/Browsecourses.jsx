@@ -5,6 +5,7 @@ import { API_URL } from "./api/config";
 
 const COURSES_URL = `${API_URL}/api/courses`;
 const ENROLLMENTS_URL = `${API_URL}/api/enrollments`;
+const CART_URL = `${API_URL}/api/cart`;
 
 function resolveThumbnailUrl(thumbnail) {
   if (!thumbnail) return null;
@@ -48,6 +49,8 @@ export default function BrowseCourses({ token }) {
   const [checkoutCourse, setCheckoutCourse] = useState(null);
   const [checkoutSubmitting, setCheckoutSubmitting] = useState(false);
   const [checkoutError, setCheckoutError] = useState("");
+  const [cartItems, setCartItems] = useState([]);
+  const [addingToCartId, setAddingToCartId] = useState(null);
 
   const fetchData = async () => {
     setLoading(true);
@@ -56,8 +59,9 @@ export default function BrowseCourses({ token }) {
       const requests = [fetch(COURSES_URL)];
       if (token) {
         requests.push(fetch(ENROLLMENTS_URL, { headers: { Authorization: `Bearer ${token}` } }));
+        requests.push(fetch(`${CART_URL}/mine`, { headers: { Authorization: `Bearer ${token}` } }));
       }
-      const [coursesRes, enrollmentsRes] = await Promise.all(requests);
+      const [coursesRes, enrollmentsRes, cartRes] = await Promise.all(requests);
       const coursesData = await coursesRes.json();
 
       if (!coursesRes.ok) {
@@ -69,6 +73,10 @@ export default function BrowseCourses({ token }) {
       if (enrollmentsRes?.ok) {
         const enrollmentsData = await enrollmentsRes.json();
         setMyEnrollments(enrollmentsData);
+      }
+      if (cartRes?.ok) {
+        const cartData = await cartRes.json();
+        setCartItems(cartData);
       }
     } catch (err) {
       console.error(err);
@@ -84,6 +92,40 @@ export default function BrowseCourses({ token }) {
 
   const isEnrolled = (courseId) =>
     myEnrollments.some((e) => e.course?._id === courseId || e.course === courseId);
+
+  const isInCart = (courseId) =>
+    cartItems.some((item) => item.course?._id === courseId || item.course === courseId);
+
+  const handleAddToCart = async (courseId) => {
+    if (!token) {
+      navigate("/signin");
+      return;
+    }
+    setAddingToCartId(courseId);
+    setMessage("");
+    try {
+      const response = await fetch(CART_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ course: courseId }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        setMessage(data.message || "Could not add this course to your cart.");
+        return;
+      }
+      setCartItems(data);
+      setMessage("Added to cart! Check out from Order History.");
+    } catch (err) {
+      console.error(err);
+      setMessage("Could not reach the server. Is the backend running?");
+    } finally {
+      setAddingToCartId(null);
+    }
+  };
 
   const handleEnroll = async (courseId) => {
     if (!token) {
@@ -174,14 +216,36 @@ export default function BrowseCourses({ token }) {
                       {course.price > 0 ? `Rs${course.price}` : "Free"}
                     </span>
 
-                    <button
-                      className="db-new-course-btn"
-                      style={{ padding: "6px 14px", fontSize: 13 }}
-                      disabled={enrolled || enrollingId === course._id}
-                      onClick={() => handleEnroll(course._id)}
-                    >
-                      {enrolled ? "Enrolled" : enrollingId === course._id ? "Enrolling..." : "Enroll"}
-                    </button>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      {course.price > 0 && !enrolled && (
+                        <button
+                          className="db-new-course-btn"
+                          style={{
+                            padding: "6px 14px",
+                            fontSize: 13,
+                            background: "transparent",
+                            color: "#14b8a6",
+                            border: "1px solid #14b8a6",
+                          }}
+                          disabled={isInCart(course._id) || addingToCartId === course._id}
+                          onClick={() => handleAddToCart(course._id)}
+                        >
+                          {isInCart(course._id)
+                            ? "In Cart"
+                            : addingToCartId === course._id
+                            ? "Adding…"
+                            : "Add to Cart"}
+                        </button>
+                      )}
+                      <button
+                        className="db-new-course-btn"
+                        style={{ padding: "6px 14px", fontSize: 13 }}
+                        disabled={enrolled || enrollingId === course._id}
+                        onClick={() => handleEnroll(course._id)}
+                      >
+                        {enrolled ? "Enrolled" : enrollingId === course._id ? "Enrolling..." : "Enroll"}
+                      </button>
+                    </div>
                   </div>
                 </div>
               );

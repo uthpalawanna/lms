@@ -349,11 +349,6 @@ export default function Dashboard({ user, token, onLogout }) {
           <div className="db-avatar">{avatarLetter}</div>
           <div>
             <div className="db-username">{displayName}</div>
-            <div className="db-stars">
-              {[1,2,3,4,5].map((i) => (
-                <span key={i} className="db-star">☆</span>
-              ))}
-            </div>
           </div>
         </div>
         {!isMobile && (
