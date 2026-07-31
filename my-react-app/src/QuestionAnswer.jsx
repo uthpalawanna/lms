@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useCallback } from "react";
 import "./Dashboard.css";
+import { API_URL } from "./api/config";
 
-const QUESTIONS_URL = "http://localhost:5000/api/questions";
-const ENROLLMENTS_URL = "http://localhost:5000/api/enrollments";
-const COURSES_MINE_URL = "http://localhost:5000/api/courses/mine";
+const QUESTIONS_URL = `${API_URL}/api/questions`;
+const ENROLLMENTS_URL = `${API_URL}/api/enrollments`;
+const COURSES_MINE_URL = `${API_URL}/api/courses/mine`;
 
 function EmptyIcon() {
   return (

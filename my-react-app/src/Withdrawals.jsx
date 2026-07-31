@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
+import { API_URL } from "./api/config";
 
-const BALANCE_URL = "http://localhost:5000/api/withdrawals/balance";
-const WITHDRAWALS_URL = "http://localhost:5000/api/withdrawals";
+const BALANCE_URL = `${API_URL}/api/withdrawals/balance`;
+const WITHDRAWALS_URL = `${API_URL}/api/withdrawals`;
 
 function MailboxIcon() {
   return (

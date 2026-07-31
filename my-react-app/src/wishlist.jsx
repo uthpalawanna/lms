@@ -1,12 +1,13 @@
+﻿import { API_URL } from "./api/config";
 ﻿import React, { useState, useEffect } from "react";
 
-const WISHLIST_URL = "http://localhost:5000/api/wishlist";
+const WISHLIST_URL = `${API_URL}/api/wishlist`;
 
 function resolveThumbnailUrl(thumbnail) {
   if (!thumbnail) return null;
   if (thumbnail.startsWith("http://") || thumbnail.startsWith("https://")) return thumbnail;
-  if (thumbnail.startsWith("/uploads")) return `http://localhost:5000${thumbnail}`;
-  return `http://localhost:5000/uploads/${thumbnail}`;
+  if (thumbnail.startsWith("/uploads")) return `${API_URL}${thumbnail}`;
+  return `${API_URL}/uploads/${thumbnail}`;
 }
 
 function CourseThumbnail({ thumbnail, title }) {

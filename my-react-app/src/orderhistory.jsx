@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
+import { API_URL } from "./api/config";
 
-const ORDERS_URL = "http://localhost:5000/api/orders/mine";
+const ORDERS_URL = `${API_URL}/api/orders/mine`;
 
 const MONTHS = [
   "January", "February", "March", "April", "May", "June", 

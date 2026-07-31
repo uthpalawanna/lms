@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { API_URL } from "./api/config";
 
-const ADMIN_URL = "http://localhost:5000/api/admin";
+const ADMIN_URL = `${API_URL}/api/admin`;
 
 const ROLE_STYLES = {
   admin: "bg-purple-100 text-purple-700",

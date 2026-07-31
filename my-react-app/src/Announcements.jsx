@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from "react";
+import { API_URL } from "./api/config";
 
-const COURSES_URL = "http://localhost:5000/api/courses/mine";
-const ANNOUNCEMENTS_URL = "http://localhost:5000/api/announcements";
+const COURSES_URL = `${API_URL}/api/courses/mine`;
+const ANNOUNCEMENTS_URL = `${API_URL}/api/announcements`;
 
 function CourseSelect({ courses, value, onChange, showAllOption = true }) {
   const [open, setOpen] = useState(false);

@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import CheckoutModal from "./CheckoutModal";
+import { API_URL } from "./api/config";
 
-const COURSES_URL = "http://localhost:5000/api/courses";
-const ENROLLMENTS_URL = "http://localhost:5000/api/enrollments";
-const CHECKOUT_URL = "http://localhost:5000/api/orders/checkout";
+const COURSES_URL = `${API_URL}/api/courses`;
+const ENROLLMENTS_URL = `${API_URL}/api/enrollments`;
 
 function resolveThumbnailUrl(thumbnail) {
   if (!thumbnail) return null;
   if (thumbnail.startsWith("http://") || thumbnail.startsWith("https://")) return thumbnail;
-  if (thumbnail.startsWith("/uploads")) return `http://localhost:5000${thumbnail}`;
-  return `http://localhost:5000/uploads/${thumbnail}`;
+  if (thumbnail.startsWith("/uploads")) return `${API_URL}${thumbnail}`;
+  return `${API_URL}/uploads/${thumbnail}`;
 }
 
 function CourseThumbnail({ thumbnail, title }) {

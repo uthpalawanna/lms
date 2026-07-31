@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import CheckoutModal from "./CheckoutModal";
 import "./Dashboard.css";
+import { API_URL } from "./api/config";
 
-const COURSES_URL = "http://localhost:5000/api/courses";
-const ENROLLMENTS_URL = "http://localhost:5000/api/enrollments";
-const CHECKOUT_URL = "http://localhost:5000/api/orders/checkout";
+const COURSES_URL = `${API_URL}/api/courses`;
+const ENROLLMENTS_URL = `${API_URL}/api/enrollments`;
 
 const TABS = [
   { id: "browse", label: "Browse Courses" },
@@ -16,8 +16,8 @@ const TABS = [
 function resolveThumbnailUrl(thumbnail) {
   if (!thumbnail) return null;
   if (thumbnail.startsWith("http://") || thumbnail.startsWith("https://")) return thumbnail;
-  if (thumbnail.startsWith("/uploads")) return `http://localhost:5000${thumbnail}`;
-  return `http://localhost:5000/uploads/${thumbnail}`;
+  if (thumbnail.startsWith("/uploads")) return `${API_URL}${thumbnail}`;
+  return `${API_URL}/uploads/${thumbnail}`;
 }
 
 function CourseThumbnail({ thumbnail, title }) {

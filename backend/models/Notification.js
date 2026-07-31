@@ -6,6 +6,8 @@ const NOTIFICATION_TYPES = [
   "payment",
   "quiz_graded",
   "withdrawal",
+  "question",
+  "answer",
 ];
 
 const notificationSchema = new mongoose.Schema(

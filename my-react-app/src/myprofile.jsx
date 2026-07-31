@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
+import { API_URL as BASE_URL } from "./api/config";
 
-const API_URL = "http://localhost:5000/api/auth/me";
+const API_URL = `${BASE_URL}/api/auth/me`;
 
 export default function MyProfile({ token }) {
   const [user, setUser] = useState(null);
@@ -84,8 +85,8 @@ export default function MyProfile({ token }) {
                   user.avatarUrl.startsWith("http://") || user.avatarUrl.startsWith("https://")
                     ? user.avatarUrl
                     : user.avatarUrl.startsWith("/uploads")
-                    ? `http://localhost:5000${user.avatarUrl}`
-                    : `http://localhost:5000/uploads/${user.avatarUrl}`
+                    ? `${BASE_URL}${user.avatarUrl}`
+                    : `${BASE_URL}/uploads/${user.avatarUrl}`
                 }
                 alt={fullName}
                 style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "50%" }}

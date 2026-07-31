@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { API_URL } from "./api/config";
 
 const S = {
   wrap: 
@@ -235,7 +236,7 @@ function Empty({ icon, text, cta, onClick }) {
   );
 }
 
-const API_BASE = "http://localhost:5000/api";
+const API_BASE = `${API_URL}/api`;
 
 export default function InstructorProfile({ instructorId, currentUser = {}, token, onNewCourse, onEditProfile, onAddBio }) {
   const [profile, setProfile] = useState(null);

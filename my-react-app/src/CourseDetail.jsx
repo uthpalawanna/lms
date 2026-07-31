@@ -2,17 +2,18 @@ import React, { useState, useEffect } from "react";
 import CreateQuizModal from "./CreateQuizModal";
 import TakeQuizModal from "./TakeQuizModal";
 import CourseBuilderModal from "./CourseBuilderModal";
+import { API_URL } from "./api/config";
 
-const QUIZ_URL = "http://localhost:5000/api/quizzes";
-const REVIEWS_URL = "http://localhost:5000/api/reviews";
-const WISHLIST_URL = "http://localhost:5000/api/wishlist";
-const ANNOUNCEMENTS_URL = "http://localhost:5000/api/announcements";
+const QUIZ_URL = `${API_URL}/api/quizzes`;
+const REVIEWS_URL = `${API_URL}/api/reviews`;
+const WISHLIST_URL = `${API_URL}/api/wishlist`;
+const ANNOUNCEMENTS_URL = `${API_URL}/api/announcements`;
 
 function resolveThumbnailUrl(thumbnail) {
   if (!thumbnail) return null;
   if (thumbnail.startsWith("http://") || thumbnail.startsWith("https://")) return thumbnail;
-  if (thumbnail.startsWith("/uploads")) return `http://localhost:5000${thumbnail}`;
-  return `http://localhost:5000/uploads/${thumbnail}`;
+  if (thumbnail.startsWith("/uploads")) return `${API_URL}${thumbnail}`;
+  return `${API_URL}/uploads/${thumbnail}`;
 }
 
 function CourseHeroImage({ thumbnail, title }) {
@@ -583,7 +584,7 @@ function CurriculumTab({ course, token, enrollment, isOwner, onLessonToggled }) 
     const url = selectedLesson?.videoUrl || "";
     if (!url) return "";
     if (url.startsWith("http://") || url.startsWith("https://")) return url;
-    if (url.startsWith("/uploads")) return `http://localhost:5000${url}`;
+    if (url.startsWith("/uploads")) return `${API_URL}${url}`;
     return url;
   })();
 
@@ -591,7 +592,7 @@ function CurriculumTab({ course, token, enrollment, isOwner, onLessonToggled }) 
     if (!enrollment || !selectedKey || busy) return;
     setBusy(true);
     try {
-      const res = await fetch(`http://localhost:5000/api/enrollments/${enrollment._id}/lesson`, {
+      const res = await fetch(`${API_URL}/api/enrollments/${enrollment._id}/lesson`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -747,7 +748,7 @@ export default function CourseDetails({ course: courseProp, token, user, onBack,
 
   const fetchEnrollment = () => {
     if (!token || !course?._id) return;
-    fetch(`http://localhost:5000/api/enrollments?course=${course._id}`, {
+    fetch(`${API_URL}/api/enrollments?course=${course._id}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => (res.ok ? res.json() : []))

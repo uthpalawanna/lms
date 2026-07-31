@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
+import { API_URL } from "./api/config";
 
-const REVIEWS_URL = "http://localhost:5000/api/reviews";
+const REVIEWS_URL = `${API_URL}/api/reviews`;
 
 function Stars({ rating }) {
   return (

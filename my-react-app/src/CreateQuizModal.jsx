@@ -1,6 +1,7 @@
 import { useState } from "react";
+import { API_URL as BASE_URL } from "./api/config";
 
-const API_URL = "http://localhost:5000/api/quizzes";
+const API_URL = `${BASE_URL}/api/quizzes`;
 
 function emptyQuestion() {
   return { questionText: "", options: ["", ""], correctOptionIndex: 0 };

@@ -1,16 +1,17 @@
 ﻿import React, { useState, useEffect } from "react";
 import "./Dashboard.css";
+import { API_URL } from "./api/config";
 
-const ME_URL = "http://localhost:5000/api/auth/me";
-const UPLOAD_URL = "http://localhost:5000/api/uploads";
-const CHANGE_PASSWORD_URL = "http://localhost:5000/api/auth/change-password";
+const ME_URL = `${API_URL}/api/auth/me`;
+const UPLOAD_URL = `${API_URL}/api/uploads`;
+const CHANGE_PASSWORD_URL = `${API_URL}/api/auth/change-password`;
 
 const ALL_TABS = ["Profile", "Password", "Withdraw", "Social Profile", "Billing"];
 const isInstructorRole = (user) => user?.role === "instructor" || user?.role === "admin";
 
 function toAbsoluteUrl(url) {
   if (!url) return "";
-  return url.startsWith("/uploads") ? `http://localhost:5000${url}` : url;
+  return url.startsWith("/uploads") ? `${API_URL}${url}` : url;
 }
 
 function PhotoUploadButton({ token, onUploaded, style, children }) {

@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
+import { API_URL } from "./api/config";
 
-const QUIZ_URL = "http://localhost:5000/api/quizzes";
-const ATTEMPT_URL = "http://localhost:5000/api/quiz-attempts";
+const QUIZ_URL = `${API_URL}/api/quizzes`;
+const ATTEMPT_URL = `${API_URL}/api/quiz-attempts`;
 
 export default function TakeQuizModal({ token, quizId, onClose, onSubmitted, previewMode = false }) {
   const [quiz, setQuiz] = useState(null);

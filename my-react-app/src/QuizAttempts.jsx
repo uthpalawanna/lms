@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
+import { API_URL } from "./api/config";
 
-const COURSES_MINE_URL = "http://localhost:5000/api/courses/mine";
-const RECEIVED_ATTEMPTS_URL = "http://localhost:5000/api/quiz-attempts/received";
-const COURSE_ATTEMPTS_URL = "http://localhost:5000/api/quiz-attempts/course";
+const COURSES_MINE_URL = `${API_URL}/api/courses/mine`;
+const RECEIVED_ATTEMPTS_URL = `${API_URL}/api/quiz-attempts/received`;
+const COURSE_ATTEMPTS_URL = `${API_URL}/api/quiz-attempts/course`;
 
 const AVATAR_COLORS = [
   { bg: "#eef0fb", text: "#3d56c8" },

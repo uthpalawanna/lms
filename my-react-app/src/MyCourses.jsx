@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import CourseBuilderModal from "./CourseBuilderModal";
+import { API_URL as BASE_URL } from "./api/config";
 
-const API_URL = "http://localhost:5000/api/courses";
+const API_URL = `${BASE_URL}/api/courses`;
 
 const TABS = [
   { id: "publish", label: "Publish" },
@@ -28,8 +29,8 @@ function formatPrice(price) {
 function resolveThumbnailUrl(thumbnail) {
   if (!thumbnail) return null;
   if (thumbnail.startsWith("http://") || thumbnail.startsWith("https://")) return thumbnail;
-  if (thumbnail.startsWith("/uploads")) return `http://localhost:5000${thumbnail}`;
-  return `http://localhost:5000/uploads/${thumbnail}`;
+  if (thumbnail.startsWith("/uploads")) return `${BASE_URL}${thumbnail}`;
+  return `${BASE_URL}/uploads/${thumbnail}`;
 }
 
 function CourseThumbnail({ thumbnail, title }) {

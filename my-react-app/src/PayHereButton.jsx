@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { API_URL } from "./api/config";
 
 const PAYHERE_SCRIPT_SRC = "https://www.payhere.lk/lib/payhere.js";
 
@@ -24,7 +25,7 @@ export default function PayHereButton({ course, token, onSuccess, onError }) {
 
   const pollUntilPaid = async (orderId) => {
     for (let i = 0; i < 6; i++) {
-      const res = await fetch(`http://localhost:5000/api/payments/payhere/status/${orderId}`, {
+      const res = await fetch(`${API_URL}/api/payments/payhere/status/${orderId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
@@ -40,7 +41,7 @@ export default function PayHereButton({ course, token, onSuccess, onError }) {
     try {
       await loadPayHereScript();
 
-      const res = await fetch("http://localhost:5000/api/payments/payhere/init", {
+      const res = await fetch(`${API_URL}/api/payments/payhere/init`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -52,8 +53,6 @@ export default function PayHereButton({ course, token, onSuccess, onError }) {
       if (!res.ok) throw new Error(payment.message || "Could not start payment.");
 
       window.payhere.onCompleted = async function (orderId) {
-        // The server-to-server notify webhook is what actually grants the
-        // enrollment. This just waits for that to land before updating the UI.
         const paid = await pollUntilPaid(orderId);
         setLoading(false);
         if (paid) {

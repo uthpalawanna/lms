@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
+import { API_URL } from "./api/config";
 
-const ENROLLMENTS_URL = "http://localhost:5000/api/enrollments";
-const QUIZZES_URL = "http://localhost:5000/api/quizzes";
-const ATTEMPTS_URL = "http://localhost:5000/api/quiz-attempts";
+const ENROLLMENTS_URL = `${API_URL}/api/enrollments`;
+const QUIZZES_URL = `${API_URL}/api/quizzes`;
+const ATTEMPTS_URL = `${API_URL}/api/quiz-attempts`;
 
 function PuzzleIcon() {
   return (

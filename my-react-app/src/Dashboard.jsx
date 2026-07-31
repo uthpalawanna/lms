@@ -14,11 +14,12 @@ import Announcements from "./Announcements";
 import Withdrawals from "./Withdrawals";
 import QuizAttempts from "./QuizAttempts";
 import Settings from "./Settings";
+import { API_URL } from "./api/config";
 
-const ENROLLMENTS_URL = "http://localhost:5000/api/enrollments";
-const INSTRUCTOR_STATS_URL = "http://localhost:5000/api/courses/mine/stats";
-const MY_NOTIFICATIONS_URL = "http://localhost:5000/api/notifications/mine";
-const NOTIFICATIONS_READ_ALL_URL = "http://localhost:5000/api/notifications/read-all";
+const ENROLLMENTS_URL = `${API_URL}/api/enrollments`;
+const INSTRUCTOR_STATS_URL = `${API_URL}/api/courses/mine/stats`;
+const MY_NOTIFICATIONS_URL = `${API_URL}/api/notifications/mine`;
+const NOTIFICATIONS_READ_ALL_URL = `${API_URL}/api/notifications/read-all`;
 
 const isInstructorRole = (user) => user?.role === "instructor" || user?.role === "admin";
 
@@ -255,7 +256,7 @@ export default function Dashboard({ user, token, onLogout }) {
   const handleOpenFromDashboard = async (courseId) => {
     if (!courseId || !token) return;
     try {
-      const response = await fetch(`http://localhost:5000/api/courses/${courseId}`);
+      const response = await fetch(`${API_URL}/api/courses/${courseId}`);
       const data = await response.json();
       if (response.ok) handleCourseClick(data);
     } catch (err) {
@@ -267,6 +268,10 @@ export default function Dashboard({ user, token, onLogout }) {
     setNotifOpen(false);
     if (n.type === "quiz_graded") {
       setActive("quiz-attempts");
+      return;
+    }
+    if (n.type === "question" || n.type === "answer") {
+      setActive("question-answer");
       return;
     }
     if (n.type === "withdrawal") {

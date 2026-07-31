@@ -1,6 +1,7 @@
 ﻿const Question = require("../models/Question");
 const Course = require("../models/Course");
 const Enrollment = require("../models/Enrollment");
+const { notifyUser } = require("../utils/notify");
 
 async function askQuestion(req, res) {
   try {
@@ -24,6 +25,16 @@ async function askQuestion(req, res) {
       title: title.trim(),
       body: body || "",
     });
+
+    if (courseDoc.instructor) {
+      await notifyUser({
+        recipient: courseDoc.instructor,
+        type: "question",
+        title: courseDoc.title,
+        body: `New question: "${title.trim()}"`,
+        course,
+      });
+    }
 
     const populated = await question.populate("course", "title");
     res.status(201).json(populated);
@@ -69,7 +80,7 @@ async function answerQuestion(req, res) {
       return res.status(400).json({ message: "Answer text is required." });
     }
 
-    const question = await Question.findById(req.params.id).populate("course", "instructor");
+    const question = await Question.findById(req.params.id).populate("course", "instructor title");
     if (!question) return res.status(404).json({ message: "Question not found." });
 
     const isCourseInstructor =
@@ -82,6 +93,16 @@ async function answerQuestion(req, res) {
 
     question.answers.push({ responder: req.userId, text: text.trim() });
     await question.save();
+
+    if (question.student.toString() !== req.userId) {
+      await notifyUser({
+        recipient: question.student,
+        type: "answer",
+        title: question.course?.title || "Your question",
+        body: `New answer to: "${question.title}"`,
+        course: question.course?._id,
+      });
+    }
 
     res.status(201).json(question);
   } catch (error) {

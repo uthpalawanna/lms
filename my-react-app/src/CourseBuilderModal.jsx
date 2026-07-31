@@ -1,7 +1,8 @@
 import React, { useState } from "react";
+import { API_URL as BASE_URL } from "./api/config";
 
-const API_URL = "http://localhost:5000/api/courses";
-const UPLOAD_URL = "http://localhost:5000/api/uploads";
+const API_URL = `${BASE_URL}/api/courses`;
+const UPLOAD_URL = `${BASE_URL}/api/uploads`;
 
 const STEPS = [
   { id: "basics", number: 1, label: "Basics" },
@@ -118,7 +119,7 @@ function FileUploadField({ label, hint, token, value, onChange, accept }) {
         {value ? (
           <div>
             {accept.startsWith("image") ? (
-              <img src={`http://localhost:5000${value}`} alt="preview" style={{ maxHeight: 120, borderRadius: 8, marginBottom: 8 }} />
+              <img src={`${BASE_URL}${value}`} alt="preview" style={{ maxHeight: 120, borderRadius: 8, marginBottom: 8 }} />
             ) : (
               <p style={{ fontSize: 13, color: "#16a34a", marginBottom: 8 }}>✓ Uploaded</p>
             )}
