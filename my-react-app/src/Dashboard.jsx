@@ -343,9 +343,11 @@ export default function Dashboard({ user, token, onLogout }) {
 
       <div className="db-profile-bar">
         <div className="db-profile-left">
-          <button className="db-hamburger" onClick={() => setDrawerOpen(true)} aria-label="Open menu">
-            ☰
-          </button>
+          {isMobile && (
+            <button className="db-hamburger" onClick={() => setDrawerOpen(true)} aria-label="Open menu">
+              ☰
+            </button>
+          )}
           <div className="db-avatar">{avatarLetter}</div>
           <div>
             <div className="db-username">{displayName}</div>
