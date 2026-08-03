@@ -1,11 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router";
 import Login from "./login";
 import Register from "./Register";
 import ForgotPassword from "./ForgotPassword";
 import ResetPassword from "./ResetPassword";
 import Dashboard from "./Dashboard";
-import AdminDashboard from "./AdminDashboard";
+
+const AdminDashboard = lazy(() => import("./AdminDashboard"));
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -78,7 +79,9 @@ function App() {
           path="/admin"
           element={
             isLoggedIn && user?.role === "admin" ? (
-              <AdminDashboard token={token} currentUserId={user._id} onLogout={handleLogout} />
+              <Suspense fallback={null}>
+                <AdminDashboard token={token} currentUserId={user._id} onLogout={handleLogout} />
+              </Suspense>
             ) : isLoggedIn ? (
               <Navigate to="/dashboard" replace />
             ) : (

@@ -37,10 +37,36 @@ function pickEditableFields(body) {
 
 async function getPublishedCourses(req, res) {
   try {
-    const courses = await Course.find({ status: "publish" })
-      .populate("instructor", "firstName lastName username")
-      .sort({ createdAt: -1 });
-    res.json(courses);
+    const page = parseInt(req.query.page, 10);
+    const limit = parseInt(req.query.limit, 10);
+
+    
+    if (!page) {
+      const courses = await Course.find({ status: "publish" })
+        .populate("instructor", "firstName lastName username")
+        .sort({ createdAt: -1 })
+        .limit(200);
+      return res.json(courses);
+    }
+
+    const pageSize = Math.min(Math.max(limit || 12, 1), 50);
+    const skip = (Math.max(page, 1) - 1) * pageSize;
+
+    const [courses, total] = await Promise.all([
+      Course.find({ status: "publish" })
+        .populate("instructor", "firstName lastName username")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(pageSize),
+      Course.countDocuments({ status: "publish" }),
+    ]);
+
+    res.json({
+      courses,
+      total,
+      page: Math.max(page, 1),
+      pages: Math.max(Math.ceil(total / pageSize), 1),
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Could not fetch courses." });

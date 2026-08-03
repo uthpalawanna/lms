@@ -51,12 +51,16 @@ export default function BrowseCourses({ token }) {
   const [checkoutError, setCheckoutError] = useState("");
   const [cartItems, setCartItems] = useState([]);
   const [addingToCartId, setAddingToCartId] = useState(null);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const PAGE_SIZE = 12;
 
   const fetchData = async () => {
     setLoading(true);
     setError("");
     try {
-      const requests = [fetch(COURSES_URL)];
+      const requests = [fetch(`${COURSES_URL}?page=1&limit=${PAGE_SIZE}`)];
       if (token) {
         requests.push(fetch(ENROLLMENTS_URL, { headers: { Authorization: `Bearer ${token}` } }));
         requests.push(fetch(`${CART_URL}/mine`, { headers: { Authorization: `Bearer ${token}` } }));
@@ -69,7 +73,9 @@ export default function BrowseCourses({ token }) {
         setLoading(false);
         return;
       }
-      setCourses(coursesData);
+      setCourses(coursesData.courses || []);
+      setTotalPages(coursesData.pages || 1);
+      setPage(1);
       if (enrollmentsRes?.ok) {
         const enrollmentsData = await enrollmentsRes.json();
         setMyEnrollments(enrollmentsData);
@@ -83,6 +89,24 @@ export default function BrowseCourses({ token }) {
       setError("Could not reach the server. Is the backend running?");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadMore = async () => {
+    if (loadingMore || page >= totalPages) return;
+    setLoadingMore(true);
+    try {
+      const nextPage = page + 1;
+      const res = await fetch(`${COURSES_URL}?page=${nextPage}&limit=${PAGE_SIZE}`);
+      const data = await res.json();
+      if (res.ok) {
+        setCourses((prev) => [...prev, ...(data.courses || [])]);
+        setPage(nextPage);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingMore(false);
     }
   };
 
@@ -250,6 +274,18 @@ export default function BrowseCourses({ token }) {
                 </div>
               );
             })}
+          </div>
+        )}
+        {!loading && page < totalPages && (
+          <div style={{ display: "flex", justifyContent: "center", marginTop: "1.5rem" }}>
+            <button
+              className="db-new-course-btn"
+              style={{ padding: "8px 22px" }}
+              onClick={loadMore}
+              disabled={loadingMore}
+            >
+              {loadingMore ? "Loading..." : "Load more"}
+            </button>
           </div>
         )}
       </div>
