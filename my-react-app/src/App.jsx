@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router";
 import Login from "./login";
 import Register from "./Register";
 import ForgotPassword from "./ForgotPassword";
@@ -11,6 +11,24 @@ function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
+  const [isRestoring, setIsRestoring] = useState(true);
+
+  useEffect(() => {
+    const storedToken = localStorage.getItem("token");
+    const storedUser = localStorage.getItem("user");
+
+    if (storedToken && storedUser) {
+      try {
+        setToken(storedToken);
+        setUser(JSON.parse(storedUser));
+        setIsLoggedIn(true);
+      } catch {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+      }
+    }
+    setIsRestoring(false);
+  }, []);
 
   const handleLoginSuccess = ({ token, user }) => {
     setToken(token);
@@ -19,12 +37,19 @@ function App() {
   };
 
   const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
     setToken(null);
     setUser(null);
     setIsLoggedIn(false);
   };
 
   const homeRoute = user?.role === "admin" ? "/admin" : "/dashboard";
+
+ 
+  if (isRestoring) {
+    return null; 
+  }
 
   return (
     <BrowserRouter>

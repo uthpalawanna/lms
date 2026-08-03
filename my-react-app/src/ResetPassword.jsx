@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, useParams, Link } from 'react-router-dom';
+import { useNavigate, useParams, Link } from 'react-router';
 import axios from 'axios';
 import './Dashboard.css';
 import { API_URL as BASE_URL } from "./api/config";

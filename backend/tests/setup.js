@@ -1,7 +1,6 @@
 // Runs once per test file, after Jest's test framework is set up.
 // Spins up an in-memory MongoDB so tests never touch the real database,
 // and points mongoose at it before any test runs.
-const { MongoMemoryServer } = require("mongodb-memory-server");
 const mongoose = require("mongoose");
 
 process.env.NODE_ENV = "test";
@@ -10,8 +9,17 @@ process.env.JWT_SECRET = process.env.JWT_SECRET || "test-secret-do-not-use-in-pr
 let mongod;
 
 beforeAll(async () => {
-  mongod = await MongoMemoryServer.create();
-  await mongoose.connect(mongod.getUri());
+  // If TEST_MONGO_URI is set (e.g. a local `mongod` or a disposable
+  // Atlas/Docker instance), use it directly — no binary download needed.
+  // Otherwise fall back to mongodb-memory-server, which downloads a
+  // mongod binary on first use and requires network access to do so.
+  if (process.env.TEST_MONGO_URI) {
+    await mongoose.connect(process.env.TEST_MONGO_URI);
+  } else {
+    const { MongoMemoryServer } = require("mongodb-memory-server");
+    mongod = await MongoMemoryServer.create();
+    await mongoose.connect(mongod.getUri());
+  }
 });
 
 afterEach(async () => {

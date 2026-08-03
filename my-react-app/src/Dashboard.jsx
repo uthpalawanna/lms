@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router";
 import "./Dashboard.css";
 import EnrolledCourses from "./EnrolledCourses";
 import Reviews from "./reviews";
