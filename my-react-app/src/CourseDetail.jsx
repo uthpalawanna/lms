@@ -562,6 +562,7 @@ function CurriculumTab({ course, token, enrollment, isOwner, onLessonToggled }) 
   const topics = course?.curriculum || [];
   const [selected, setSelected] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [embedBlocked, setEmbedBlocked] = useState(false);
 
   const hasAccess = !!enrollment || !!isOwner;
   const completedLessons = enrollment?.completedLessons || [];
@@ -593,6 +594,23 @@ function CurriculumTab({ course, token, enrollment, isOwner, onLessonToggled }) 
     if (url.startsWith("/uploads")) return `${API_URL}${url}`;
     return url;
   })();
+
+  useEffect(() => {
+    setEmbedBlocked(false);
+    if (!embedUrl) return;
+    let cancelled = false;
+    const videoUrl = selectedLesson?.videoUrl || "";
+    fetch(`https://www.youtube.com/oembed?url=${encodeURIComponent(videoUrl)}&format=json`)
+      .then((res) => {
+        if (!cancelled && !res.ok) setEmbedBlocked(true);
+      })
+      .catch(() => {
+        if (!cancelled) setEmbedBlocked(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [embedUrl, selectedLesson?.videoUrl]);
 
   const handleToggleComplete = async () => {
     if (!enrollment || !selectedKey || busy) return;
@@ -662,7 +680,7 @@ function CurriculumTab({ course, token, enrollment, isOwner, onLessonToggled }) 
         ) : selectedLesson ? (
           <>
             <h3 className="cd-section-heading">{selectedLesson.title}</h3>
-            {embedUrl ? (
+            {embedUrl && !embedBlocked ? (
               <div style={{ marginBottom: 16, position: "relative", paddingTop: "56.25%" }}>
                 <iframe
                   src={embedUrl}
@@ -670,6 +688,30 @@ function CurriculumTab({ course, token, enrollment, isOwner, onLessonToggled }) 
                   allowFullScreen
                   style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", border: 0, borderRadius: 10 }}
                 />
+              </div>
+            ) : embedUrl && embedBlocked ? (
+              <div
+                style={{
+                  marginBottom: 16,
+                  padding: "40px 24px",
+                  borderRadius: 10,
+                  background: "#f4faf9",
+                  border: "1px solid #e5e9ee",
+                  textAlign: "center",
+                }}
+              >
+                <p style={{ margin: "0 0 14px", fontSize: 14, color: "#374151" }}>
+                  This video isn't available to play here. You can still watch it on YouTube.
+                </p>
+                <a
+                  href={selectedLesson.videoUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="cd-complete-btn"
+                  style={{ display: "inline-block", textDecoration: "none" }}
+                >
+                  Watch on YouTube
+                </a>
               </div>
             ) : selectedLesson.videoUrl ? (
               <video controls style={{ width: "100%", borderRadius: 10, background: "#000", marginBottom: 16 }} src={resolvedVideoSrc} />
@@ -694,52 +736,6 @@ function CurriculumTab({ course, token, enrollment, isOwner, onLessonToggled }) 
   );
 }
 
-function CertificateTab({ course, user, enrollment }) {
-  if (!enrollment || enrollment.status !== "completed") {
-    return (
-      <div className="ec-empty-state">
-        <p className="ec-empty-text">Complete every lesson in this course to unlock your certificate.</p>
-      </div>
-    );
-  }
-
-  const studentName = user?.firstName
-    ? `${user.firstName} ${user.lastName || ""}`.trim()
-    : user?.username || "Student";
-  const completedDate = enrollment.updatedAt
-    ? new Date(enrollment.updatedAt).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" })
-    : "";
-  const instructorName = course?.instructor
-    ? `${course.instructor.firstName || ""} ${course.instructor.lastName || ""}`.trim() || "Instructor"
-    : "Instructor";
-
-  return (
-    <div>
-      <div style={{
-        border: "10px solid #4a60c8", borderRadius: 12, padding: "48px 40px",
-        textAlign: "center", background: "#fff", fontFamily: "Georgia, serif",
-      }}>
-        <p style={{ letterSpacing: 4, fontSize: 12, color: "#9ca3af", textTransform: "uppercase", margin: 0 }}>SHRI Learning Management System</p>
-        <h1 style={{ fontSize: 30, margin: "16px 0 4px", color: "#111827" }}>Certificate of Completion</h1>
-        <p style={{ fontSize: 14, color: "#6b7280", margin: "0 0 20px" }}>This certifies that</p>
-        <h2 style={{ fontSize: 26, color: "#4a60c8", margin: "0 0 20px", fontFamily: "system-ui, sans-serif" }}>{studentName}</h2>
-        <p style={{ fontSize: 14, color: "#6b7280", margin: "0 0 8px" }}>has successfully completed the course</p>
-        <h3 style={{ fontSize: 19, color: "#111827", margin: "0 0 32px" }}>{course?.title}</h3>
-        <div style={{ display: "flex", justifyContent: "space-between", marginTop: 40, fontSize: 13, color: "#6b7280" }}>
-          <span>Instructor: {instructorName}</span>
-          <span>Completed: {completedDate}</span>
-        </div>
-      </div>
-      <button
-        className="cd-complete-btn"
-        style={{ marginTop: 16 }}
-        onClick={() => window.print()}
-      >
-        Download / Print Certificate
-      </button>
-    </div>
-  );
-}
 
 const canViewInstructorProfile = (user) => user?.role === "instructor" || user?.role === "admin";
 
@@ -882,7 +878,6 @@ export default function CourseDetails({ course: courseProp, token, user, onBack,
               { id: "reviews", label: "Reviews" },
               { id: "announcements", label: "Announcements" },
               { id: "quizzes", label: "Quizzes" },
-              ...(isOwner ? [] : [{ id: "certificate", label: "Certificate" }]),
             ].map(tab => (
               <button
                 key={tab.id}
@@ -903,10 +898,6 @@ export default function CourseDetails({ course: courseProp, token, user, onBack,
                 isOwner={isOwner}
                 onLessonToggled={(updated) => setEnrollment(updated)}
               />
-            )}
-
-            {activeTab === "certificate" && (
-              <CertificateTab course={course} user={user} enrollment={enrollment} />
             )}
 
             {activeTab === "reviews" && (
@@ -950,8 +941,8 @@ export default function CourseDetails({ course: courseProp, token, user, onBack,
                   </div>
                   {enrollment ? (
                     enrollment.status === "completed" ? (
-                      <button className="cd-complete-btn" onClick={() => setActiveTab("certificate")}>
-                        🎓 View Certificate
+                      <button className="cd-complete-btn" disabled>
+                        ✓ Course Completed
                       </button>
                     ) : (
                       <button className="cd-complete-btn" onClick={() => setActiveTab("curriculum")}>
