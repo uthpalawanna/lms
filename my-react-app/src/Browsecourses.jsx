@@ -3,6 +3,7 @@ import { useNavigate } from "react-router";
 import CheckoutModal from "./CheckoutModal";
 import { API_URL } from "./api/config";
 import CourseThumbnail from "./CourseThumbnail";
+import SkeletonCourseGrid from "./SkeletonCourseGrid";
 
 const COURSES_URL = `${API_URL}/api/courses`;
 const ENROLLMENTS_URL = `${API_URL}/api/enrollments`;
@@ -152,9 +153,7 @@ export default function BrowseCourses({ token }) {
 
       <div className="ec-tab-content">
         {loading ? (
-          <div className="ec-empty-state">
-            <p className="ec-empty-text"><span className="db-spinner" />Loading courses...</p>
-          </div>
+          <SkeletonCourseGrid count={6} />
         ) : error ? (
           <div className="ec-empty-state">
             <p className="ec-empty-text" style={{ color: "#dc2626" }}>{error}</p>

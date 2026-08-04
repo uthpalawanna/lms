@@ -3,6 +3,7 @@ import CheckoutModal from "./CheckoutModal";
 import "./Dashboard.css";
 import { API_URL } from "./api/config";
 import CourseThumbnail from "./CourseThumbnail";
+import SkeletonCourseGrid from "./SkeletonCourseGrid";
 
 const COURSES_URL = `${API_URL}/api/courses`;
 const ENROLLMENTS_URL = `${API_URL}/api/enrollments`;
@@ -226,7 +227,7 @@ export default function EnrolledCourses({ token, user, onCourseClick }) {
 
       <div className="ec-tab-content">
         {loading ? (
-          <EmptyState text="Loading..." />
+          <SkeletonCourseGrid count={6} />
         ) : error ? (
           <EmptyState text={error} color="#dc2626" />
         ) : activeTab === "browse" ? (

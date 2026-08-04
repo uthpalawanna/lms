@@ -633,6 +633,24 @@ function CurriculumTab({ course, token, enrollment, isOwner, onLessonToggled }) 
     }
   };
 
+  const markCompleteAuto = async () => {
+    if (!enrollment || !selectedKey || selectedDone) return;
+    try {
+      const res = await fetch(`${API_URL}/api/enrollments/${enrollment._id}/lesson`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ lessonKey: selectedKey, completed: true }),
+      });
+      const data = await res.json();
+      if (res.ok) onLessonToggled(data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   if (topics.length === 0) {
     return (
       <div className="ec-empty-state">
@@ -714,7 +732,13 @@ function CurriculumTab({ course, token, enrollment, isOwner, onLessonToggled }) 
                 </a>
               </div>
             ) : selectedLesson.videoUrl ? (
-              <video controls style={{ width: "100%", borderRadius: 10, background: "#000", marginBottom: 16 }} src={resolvedVideoSrc} />
+              <VideoPlayer
+                key={selectedKey}
+                src={resolvedVideoSrc}
+                lessonKey={`${course?._id || course?.id || "course"}-${selectedKey}`}
+                alreadyCompleted={selectedDone}
+                onAutoComplete={markCompleteAuto}
+              />
             ) : null}
             {selectedLesson.content && (
               <p style={{ fontSize: 14, lineHeight: 1.7, color: "#374151", whiteSpace: "pre-wrap" }}>{selectedLesson.content}</p>
@@ -889,7 +913,7 @@ export default function CourseDetails({ course: courseProp, token, user, onBack,
             ))}
           </div>
 
-          <div className="cd-tab-content-area">
+          <div className="cd-tab-content-area" key={activeTab}>
             {activeTab === "curriculum" && (
               <CurriculumTab
                 course={course}

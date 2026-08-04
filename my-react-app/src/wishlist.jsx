@@ -1,6 +1,7 @@
 ﻿import { API_URL } from "./api/config";
 ﻿import React, { useState, useEffect } from "react";
 import CourseThumbnail from "./CourseThumbnail";
+import SkeletonCourseGrid from "./SkeletonCourseGrid";
 
 const WISHLIST_URL = `${API_URL}/api/wishlist`;
 
@@ -77,7 +78,7 @@ export default function Wishlist({ token, onCourseClick }) {
 
       <div className="ec-tab-content">
         {loading ? (
-          <EmptyState text="Loading..." />
+          <SkeletonCourseGrid count={6} />
         ) : error ? (
           <EmptyState text={error} color="#dc2626" />
         ) : items.length === 0 ? (

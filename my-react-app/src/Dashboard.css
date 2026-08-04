@@ -5480,3 +5480,89 @@ select:focus,
 @media (prefers-reduced-motion: reduce) {
   .db-spinner { animation-duration: 1.4s; }
 }
+
+
+.skeleton-card {
+  cursor: default;
+  pointer-events: none;
+}
+.skeleton-card:hover {
+  box-shadow: none;
+  transform: none;
+}
+.skeleton-block {
+  position: relative;
+  overflow: hidden;
+  background: var(--surface-alt, #eef6f5);
+  border-radius: 6px;
+}
+.skeleton-block::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.55) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  animation: shri-shimmer 1.4s ease-in-out infinite;
+}
+@keyframes shri-shimmer {
+  100% { transform: translateX(100%); }
+}
+.skeleton-thumb {
+  width: 100%;
+  height: 180px;
+  border-radius: 0;
+}
+.skeleton-line {
+  height: 12px;
+  margin: 8px 0;
+}
+.skeleton-line-sm { width: 40%; height: 10px; }
+.skeleton-line-md { width: 60%; }
+.skeleton-line-lg { width: 85%; height: 16px; }
+.skeleton-line-xs { width: 30%; height: 14px; }
+.skeleton-pill {
+  width: 72px;
+  height: 30px;
+  border-radius: 999px;
+}
+
+.course-grid > *,
+.db-stats-grid > * {
+  animation: shri-grid-in 0.35s var(--ease, ease) both;
+}
+.course-grid > *:nth-child(1), .db-stats-grid > *:nth-child(1) { animation-delay: 0.02s; }
+.course-grid > *:nth-child(2), .db-stats-grid > *:nth-child(2) { animation-delay: 0.06s; }
+.course-grid > *:nth-child(3), .db-stats-grid > *:nth-child(3) { animation-delay: 0.10s; }
+.course-grid > *:nth-child(4), .db-stats-grid > *:nth-child(4) { animation-delay: 0.14s; }
+.course-grid > *:nth-child(5) { animation-delay: 0.18s; }
+.course-grid > *:nth-child(6) { animation-delay: 0.22s; }
+.course-grid > *:nth-child(n+7) { animation-delay: 0.24s; }
+@keyframes shri-grid-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.skeleton-card {
+  animation: none;
+}
+
+.db-stat-value-loading {
+  animation: shri-pulse 1.3s ease-in-out infinite;
+}
+@keyframes shri-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-block::after,
+  .course-grid > *,
+  .db-stats-grid > *,
+  .db-stat-value-loading {
+    animation: none;
+  }
+}

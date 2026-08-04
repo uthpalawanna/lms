@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, lazy, Suspense } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "react-router";
 import "./Dashboard.css";
 import EnrolledCourses from "./EnrolledCourses";
@@ -7,15 +7,14 @@ import Wishlist from "./wishlist";
 import MyQuizAttempts from "./myquizattempts";
 import OrderHistory from "./orderhistory";
 import QuestionAnswer from "./QuestionAnswer";
+import MyCourses from "./MyCourses";
 import CourseDetails from "./CourseDetail";
 import InstructorProfile from "./InstructorProfile";
+import Announcements from "./Announcements";
+import Withdrawals from "./Withdrawals";
+import QuizAttempts from "./QuizAttempts";
 import Settings from "./Settings";
 import { API_URL } from "./api/config";
-
-const MyCourses = lazy(() => import("./MyCourses"));
-const Announcements = lazy(() => import("./Announcements"));
-const Withdrawals = lazy(() => import("./Withdrawals"));
-const QuizAttempts = lazy(() => import("./QuizAttempts"));
 
 const ENROLLMENTS_URL = `${API_URL}/api/enrollments`;
 const INSTRUCTOR_STATS_URL = `${API_URL}/api/courses/mine/stats`;
@@ -448,8 +447,7 @@ export default function Dashboard({ user, token, onLogout }) {
       </aside>
 
       <div className="db-body">
-        <main className="db-main">
-        <Suspense fallback={<div style={{ padding: "2rem", textAlign: "center", color: "#8a90a3" }}>Loading...</div>}>
+        <main className="db-main" key={active}>
           {active === "dashboard" && (
             <>
               <h2 className="db-section-title">Dashboard</h2>
@@ -457,7 +455,7 @@ export default function Dashboard({ user, token, onLogout }) {
                 {STATS.map(({ icon, label, value, accent }) => (
                   <div key={label} className="db-stat-card">
                     <div className="db-stat-icon-wrap">{icon}</div>
-                    <div className={`db-stat-value${accent ? " accent" : ""}`}>{value}</div>
+                    <div className={`db-stat-value${accent ? " accent" : ""}${statsLoading ? " db-stat-value-loading" : ""}`}>{value}</div>
                     <div className={`db-stat-label${accent ? " accent" : ""}`}>{label}</div>
                   </div>
                 ))}
@@ -564,7 +562,6 @@ export default function Dashboard({ user, token, onLogout }) {
               user={currentUser}
             />
           )}
-        </Suspense>
         </main>
       </div>
     </div>

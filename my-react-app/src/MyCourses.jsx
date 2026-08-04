@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import CourseBuilderModal from "./CourseBuilderModal";
 import { API_URL as BASE_URL } from "./api/config";
 import CourseThumbnail from "./CourseThumbnail";
+import SkeletonCourseGrid from "./SkeletonCourseGrid";
 
 const API_URL = `${BASE_URL}/api/courses`;
 
@@ -119,9 +120,7 @@ export default function MyCourses({
 
       <div className="ec-tab-content">
         {loading ? (
-          <div className="ec-empty-state">
-            <p className="ec-empty-text">Loading...</p>
-          </div>
+          <SkeletonCourseGrid count={3} />
         ) : error ? (
           <div className="ec-empty-state">
             <p className="ec-empty-text" style={{ color: "#dc2626" }}>{error}</p>
