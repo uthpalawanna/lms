@@ -2,41 +2,11 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import CheckoutModal from "./CheckoutModal";
 import { API_URL } from "./api/config";
+import CourseThumbnail from "./CourseThumbnail";
 
 const COURSES_URL = `${API_URL}/api/courses`;
 const ENROLLMENTS_URL = `${API_URL}/api/enrollments`;
 const CART_URL = `${API_URL}/api/cart`;
-
-function resolveThumbnailUrl(thumbnail) {
-  if (!thumbnail) return null;
-  if (thumbnail.startsWith("http://") || thumbnail.startsWith("https://")) return thumbnail;
-  if (thumbnail.startsWith("/uploads")) return `${API_URL}${thumbnail}`;
-  return `${API_URL}/uploads/${thumbnail}`;
-}
-
-function CourseThumbnail({ thumbnail, title }) {
-  const [failed, setFailed] = useState(false);
-  const resolvedUrl = resolveThumbnailUrl(thumbnail);
-  return (
-    <div className="course-img-placeholder">
-      {resolvedUrl && !failed ? (
-        <img
-          src={resolvedUrl}
-          alt={title}
-          style={{ width: "100%", height: "100%", objectFit: "cover" }}
-          onError={() => setFailed(true)}
-        />
-      ) : (
-        <svg width="100%" height="100%" viewBox="0 0 400 200" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect width="400" height="200" fill="#f0f2f8"/>
-          <circle cx="100" cy="60" r="20" fill="#dce1f0"/>
-          <path d="M150 200 L250 80 L350 200 Z" fill="#e2e5ef"/>
-          <path d="M250 200 L320 120 L400 200 Z" fill="#dce1f0"/>
-        </svg>
-      )}
-    </div>
-  );
-}
 
 export default function BrowseCourses({ token }) {
   const navigate = useNavigate();
@@ -51,16 +21,12 @@ export default function BrowseCourses({ token }) {
   const [checkoutError, setCheckoutError] = useState("");
   const [cartItems, setCartItems] = useState([]);
   const [addingToCartId, setAddingToCartId] = useState(null);
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const PAGE_SIZE = 12;
 
   const fetchData = async () => {
     setLoading(true);
     setError("");
     try {
-      const requests = [fetch(`${COURSES_URL}?page=1&limit=${PAGE_SIZE}`)];
+      const requests = [fetch(COURSES_URL)];
       if (token) {
         requests.push(fetch(ENROLLMENTS_URL, { headers: { Authorization: `Bearer ${token}` } }));
         requests.push(fetch(`${CART_URL}/mine`, { headers: { Authorization: `Bearer ${token}` } }));
@@ -73,9 +39,7 @@ export default function BrowseCourses({ token }) {
         setLoading(false);
         return;
       }
-      setCourses(coursesData.courses || []);
-      setTotalPages(coursesData.pages || 1);
-      setPage(1);
+      setCourses(coursesData);
       if (enrollmentsRes?.ok) {
         const enrollmentsData = await enrollmentsRes.json();
         setMyEnrollments(enrollmentsData);
@@ -89,24 +53,6 @@ export default function BrowseCourses({ token }) {
       setError("Could not reach the server. Is the backend running?");
     } finally {
       setLoading(false);
-    }
-  };
-
-  const loadMore = async () => {
-    if (loadingMore || page >= totalPages) return;
-    setLoadingMore(true);
-    try {
-      const nextPage = page + 1;
-      const res = await fetch(`${COURSES_URL}?page=${nextPage}&limit=${PAGE_SIZE}`);
-      const data = await res.json();
-      if (res.ok) {
-        setCourses((prev) => [...prev, ...(data.courses || [])]);
-        setPage(nextPage);
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoadingMore(false);
     }
   };
 
@@ -274,18 +220,6 @@ export default function BrowseCourses({ token }) {
                 </div>
               );
             })}
-          </div>
-        )}
-        {!loading && page < totalPages && (
-          <div style={{ display: "flex", justifyContent: "center", marginTop: "1.5rem" }}>
-            <button
-              className="db-new-course-btn"
-              style={{ padding: "8px 22px" }}
-              onClick={loadMore}
-              disabled={loadingMore}
-            >
-              {loadingMore ? "Loading..." : "Load more"}
-            </button>
           </div>
         )}
       </div>

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import CheckoutModal from "./CheckoutModal";
 import "./Dashboard.css";
 import { API_URL } from "./api/config";
+import CourseThumbnail from "./CourseThumbnail";
 
 const COURSES_URL = `${API_URL}/api/courses`;
 const ENROLLMENTS_URL = `${API_URL}/api/enrollments`;
@@ -13,37 +14,6 @@ const TABS = [
   { id: "active", label: "Active Courses" },
   { id: "completed", label: "Completed Courses" },
 ];
-
-function resolveThumbnailUrl(thumbnail) {
-  if (!thumbnail) return null;
-  if (thumbnail.startsWith("http://") || thumbnail.startsWith("https://")) return thumbnail;
-  if (thumbnail.startsWith("/uploads")) return `${API_URL}${thumbnail}`;
-  return `${API_URL}/uploads/${thumbnail}`;
-}
-
-function CourseThumbnail({ thumbnail, title }) {
-  const [failed, setFailed] = useState(false);
-  const resolvedUrl = resolveThumbnailUrl(thumbnail);
-  return (
-    <div className="course-img-placeholder">
-      {resolvedUrl && !failed ? (
-        <img
-          src={resolvedUrl}
-          alt={title}
-          style={{ width: "100%", height: "100%", objectFit: "cover" }}
-          onError={() => setFailed(true)}
-        />
-      ) : (
-        <svg width="100%" height="100%" viewBox="0 0 400 200" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect width="400" height="200" fill="#f0f2f8"/>
-          <circle cx="100" cy="60" r="20" fill="#dce1f0"/>
-          <path d="M150 200 L250 80 L350 200 Z" fill="#e2e5ef"/>
-          <path d="M250 200 L320 120 L400 200 Z" fill="#dce1f0"/>
-        </svg>
-      )}
-    </div>
-  );
-}
 
 function EmptyState({ text, color }) {
   return (

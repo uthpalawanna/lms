@@ -27,6 +27,21 @@ function generateHash(orderId, amount) {
   return md5(`${MERCHANT_ID}${orderId}${formatAmount(amount)}LKR${secretHash}`).toUpperCase();
 }
 
+function buildPayHereCustomerFields(user) {
+  const billing = user?.billingAddress || {};
+  const [profileFirst, ...profileRest] = (user?.username || "Student").split(" ");
+
+  return {
+    first_name: billing.firstName || user?.firstName || profileFirst || "Student",
+    last_name: billing.lastName || user?.lastName || profileRest.join(" ") || "-",
+    email: billing.email || user?.email || "",
+    phone: billing.phone || user?.phone || "0770000000",
+    address: billing.address || "N/A",
+    city: billing.city || "N/A",
+    country: billing.country || "Sri Lanka",
+  };
+}
+
 exports.initPayHere = async (req, res) => {
   try {
     if (!MERCHANT_ID || !MERCHANT_SECRET) {
@@ -60,7 +75,7 @@ exports.initPayHere = async (req, res) => {
       status: "pending",
     });
 
-    const [firstName, ...rest] = (user?.username || "Student").split(" ");
+    const customer = buildPayHereCustomerFields(user);
 
     res.json({
       sandbox: process.env.PAYHERE_MODE !== "live",
@@ -73,13 +88,7 @@ exports.initPayHere = async (req, res) => {
       amount: amount.toFixed(2),
       currency: "LKR",
       hash: generateHash(orderId, amount),
-      first_name: firstName || "Student",
-      last_name: rest.join(" ") || "-",
-      email: user?.email || "",
-      phone: user?.phone || "0770000000",
-      address: "N/A",
-      city: "N/A",
-      country: "Sri Lanka",
+      ...customer,
     });
   } catch (error) {
     console.error(error);
@@ -130,7 +139,7 @@ exports.initCartCheckout = async (req, res) => {
       status: "pending",
     });
 
-    const [firstName, ...rest] = (user?.username || "Student").split(" ");
+    const customer = buildPayHereCustomerFields(user);
 
     res.json({
       sandbox: process.env.PAYHERE_MODE !== "live",
@@ -143,13 +152,7 @@ exports.initCartCheckout = async (req, res) => {
       amount: amount.toFixed(2),
       currency: "LKR",
       hash: generateHash(orderId, amount),
-      first_name: firstName || "Student",
-      last_name: rest.join(" ") || "-",
-      email: user?.email || "",
-      phone: user?.phone || "0770000000",
-      address: "N/A",
-      city: "N/A",
-      country: "Sri Lanka",
+      ...customer,
     });
   } catch (error) {
     console.error(error);
@@ -189,7 +192,6 @@ exports.payHereNotify = async (req, res) => {
       await order.save();
 
       if (order.courses && order.courses.length > 0) {
-        // Cart checkout — enroll into every course on this order.
         for (const item of order.courses) {
           const already = await Enrollment.findOne({ student: order.student, course: item.course });
           if (!already) {

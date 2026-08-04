@@ -672,8 +672,18 @@ function SocialProfileTab({ token }) {
 }
 
 const COUNTRIES = [
-  "Sri Lanka", "India", "United States", "United Kingdom", "Canada",
-  "Australia", "Germany", "France", "Singapore", "United Arab Emirates",
+  "Sri Lanka", "India", "Pakistan", "Bangladesh", "Nepal", "Maldives",
+  "United States", "United Kingdom", "Canada", "Australia", "New Zealand",
+  "Germany", "France", "Italy", "Spain", "Netherlands", "Sweden", "Norway",
+  "Singapore", "Malaysia", "Indonesia", "Thailand", "Philippines", "Japan",
+  "South Korea", "China", "United Arab Emirates", "Saudi Arabia", "Qatar",
+  "South Africa", "Nigeria", "Kenya", "Brazil", "Mexico", "Other",
+];
+
+
+const SRI_LANKA_PROVINCES = [
+  "Western", "Central", "Southern", "Northern", "Eastern",
+  "North Western", "North Central", "Uva", "Sabaragamuwa",
 ];
 
 function BillingTab({ token }) {
@@ -715,6 +725,15 @@ function BillingTab({ token }) {
   const handleSave = async () => {
     setError("");
     setMessage("");
+
+    if (phone && !/^[0-9+\-\s()]{7,20}$/.test(phone)) {
+      setError("Please enter a valid phone number.");
+      return;
+    }
+    if (postcode && !/^[a-zA-Z0-9\-\s]{2,12}$/.test(postcode)) {
+      setError("Please enter a valid postcode/ZIP.");
+      return;
+    }
     setSaving(true);
     try {
       const response = await fetch(ME_URL, {
@@ -784,7 +803,16 @@ function BillingTab({ token }) {
 
       <div className="modal-field" style={{ marginBottom: 16 }}>
         <label>Country</label>
-        <select value={country} onChange={(e) => setCountry(e.target.value)} style={selectStyle}>
+        <select
+          value={country}
+          onChange={(e) => {
+            const newCountry = e.target.value;
+            setCountry(newCountry);
+            
+            setState(newCountry === "Sri Lanka" ? "N/A" : "");
+          }}
+          style={selectStyle}
+        >
           <option value="">Select Country</option>
           {COUNTRIES.map((c) => (
             <option key={c} value={c}>{c}</option>
@@ -794,16 +822,23 @@ function BillingTab({ token }) {
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 16 }}>
         <div className="modal-field">
-          <label>State</label>
-          <select value={state} onChange={(e) => setState(e.target.value)} style={selectStyle}>
-            <option value="N/A">N/A</option>
-            <option value="Western">Western</option>
-            <option value="Central">Central</option>
-            <option value="Southern">Southern</option>
-            <option value="Northern">Northern</option>
-            <option value="Eastern">Eastern</option>
-            <option value="Other">Other</option>
-          </select>
+          <label>State / Province</label>
+          {country === "Sri Lanka" ? (
+            <select value={state} onChange={(e) => setState(e.target.value)} style={selectStyle}>
+              <option value="N/A">N/A</option>
+              {SRI_LANKA_PROVINCES.map((p) => (
+                <option key={p} value={p}>{p}</option>
+              ))}
+            </select>
+          ) : (
+            <input
+              type="text"
+              placeholder="State / Province"
+              value={state === "N/A" ? "" : state}
+              onChange={(e) => setState(e.target.value)}
+              style={fieldStyle}
+            />
+          )}
         </div>
         <div className="modal-field">
           <label>City</label>

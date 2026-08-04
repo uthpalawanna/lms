@@ -3,38 +3,12 @@ import CreateQuizModal from "./CreateQuizModal";
 import TakeQuizModal from "./TakeQuizModal";
 import CourseBuilderModal from "./CourseBuilderModal";
 import { API_URL } from "./api/config";
+import CourseThumbnail from "./CourseThumbnail";
 
 const QUIZ_URL = `${API_URL}/api/quizzes`;
 const REVIEWS_URL = `${API_URL}/api/reviews`;
 const WISHLIST_URL = `${API_URL}/api/wishlist`;
 const ANNOUNCEMENTS_URL = `${API_URL}/api/announcements`;
-
-function resolveThumbnailUrl(thumbnail) {
-  if (!thumbnail) return null;
-  if (thumbnail.startsWith("http://") || thumbnail.startsWith("https://")) return thumbnail;
-  if (thumbnail.startsWith("/uploads")) return `${API_URL}${thumbnail}`;
-  return `${API_URL}/uploads/${thumbnail}`;
-}
-
-function CourseHeroImage({ thumbnail, title }) {
-  const [failed, setFailed] = useState(false);
-  const resolvedUrl = resolveThumbnailUrl(thumbnail);
-  return resolvedUrl && !failed ? (
-    <img
-      src={resolvedUrl}
-      alt={title}
-      style={{ width: "100%", height: "100%", objectFit: "cover" }}
-      onError={() => setFailed(true)}
-    />
-  ) : (
-    <svg width="100%" height="100%" viewBox="0 0 800 400" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect width="800" height="400" fill="#eef0f8"/>
-      <circle cx="200" cy="120" r="40" fill="#dce1f0"/>
-      <path d="M300 400 L500 160 L700 400 Z" fill="#e2e5ef"/>
-      <path d="M500 400 L640 240 L800 400 Z" fill="#dce1f0"/>
-    </svg>
-  );
-}
 
 function Stars({ rating }) {
   return (
@@ -897,8 +871,8 @@ export default function CourseDetails({ course: courseProp, token, user, onBack,
 
       <div className="cd-layout">
         <div className="cd-main-content">
-          <div className="cd-hero-image">
-            <CourseHeroImage thumbnail={course?.thumbnail} title={title} />
+          <div>
+            <CourseThumbnail thumbnail={course?.thumbnail} title={title} size="hero" />
           </div>
 
           <div className="cd-tabs-bar">
