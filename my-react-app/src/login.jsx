@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router';
 import axios from 'axios';
 import './Dashboard.css';
 import { API_URL as BASE_URL } from "./api/config";
+import GoogleSignInButton from "./GoogleSignInButton";
 
 const API_URL = `${BASE_URL}/api`;
 
@@ -137,6 +138,14 @@ const Login = ({ onLoginSuccess }) => {
             <button onClick={handleSubmit} disabled={loading} className="login-signin-btn login-anim login-anim-6">
               {loading ? 'Signing in...' : 'Sign In'}
             </button>
+
+            <div className="login-anim login-anim-6" style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '16px 0' }}>
+              <div style={{ flex: 1, height: 1, background: '#e5e7eb' }} />
+              <span style={{ fontSize: 12, color: '#9ca3af' }}>OR</span>
+              <div style={{ flex: 1, height: 1, background: '#e5e7eb' }} />
+            </div>
+
+            <GoogleSignInButton onLoginSuccess={onLoginSuccess} onError={setError} />
 
             <p className="login-register-text login-anim login-anim-6">
               Don't have an account?{' '}

@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const { body } = require('express-validator');
-const { register, login, getMe, updateMe, changePassword, forgotPassword, resetPassword } = require("../controllers/authController");
+const { register, login, googleLogin, getMe, updateMe, changePassword, forgotPassword, resetPassword } = require("../controllers/authController");
 const requireAuth = require("../middleware/auth");
 const validate = require("../middleware/validate");
 
@@ -29,8 +29,15 @@ router.post(
 );
 
 router.post(
+	"/google",
+	[body('credential').notEmpty().withMessage('Missing Google credential')],
+	validate,
+	googleLogin
+);
+
+router.post(
 	"/forgot-password",
-	[body('identifier').trim().notEmpty().withMessage('Email or username is required')],
+	[body('email').isEmail().withMessage('Valid email is required').normalizeEmail()],
 	validate,
 	forgotPassword
 );

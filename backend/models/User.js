@@ -6,7 +6,14 @@ const userSchema = new mongoose.Schema(
     lastName: { type: String, required: true },
     username: { type: String, required: true, unique: true },
     email: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
+    password: {
+      type: String,
+      required: function () {
+        return this.authProvider !== "google";
+      },
+    },
+    authProvider: { type: String, enum: ["local", "google"], default: "local" },
+    googleId: { type: String, unique: true, sparse: true },
     role: { type: String, enum: ["student", "instructor", "admin"], default: "student" },
     resetPasswordToken: { type: String, default: undefined },
     resetPasswordExpires: { type: Date, default: undefined },

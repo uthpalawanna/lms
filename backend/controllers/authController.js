@@ -1,8 +1,11 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
+const { OAuth2Client } = require("google-auth-library");
 const User = require("../models/User");
 const { sendPasswordResetEmail } = require("../config/mailer");
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 function generateToken(userId) {
   return jwt.sign({ id: userId }, process.env.JWT_SECRET, {
@@ -75,6 +78,86 @@ async function login(req, res, next) {
 
     const token = generateToken(user._id);
 
+    res.json({
+      token,
+      user: {
+        id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        username: user.username,
+        email: user.email,
+        role: user.role,
+      },
+    });
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
+}
+
+async function generateUniqueUsername(base) {
+  let candidate = (base || "user").replace(/[^a-zA-Z0-9_]/g, "").toLowerCase();
+  if (candidate.length < 3) candidate = candidate.padEnd(3, "0");
+  let username = candidate;
+  let suffix = 0;
+  // eslint-disable-next-line no-await-in-loop
+  while (await User.findOne({ username })) {
+    suffix += 1;
+    username = `${candidate}${suffix}`;
+  }
+  return username;
+}
+
+async function googleLogin(req, res, next) {
+  try {
+    const { credential } = req.body;
+    if (!credential) {
+      return res.status(400).json({ message: "Missing Google credential." });
+    }
+    if (!process.env.GOOGLE_CLIENT_ID) {
+      console.error("GOOGLE_CLIENT_ID is not set — Google sign-in cannot verify tokens.");
+      return res.status(500).json({ message: "Google sign-in is not configured on the server." });
+    }
+
+    let payload;
+    try {
+      const ticket = await googleClient.verifyIdToken({
+        idToken: credential,
+        audience: process.env.GOOGLE_CLIENT_ID,
+      });
+      payload = ticket.getPayload();
+    } catch (verifyError) {
+      console.error("Google token verification failed:", verifyError.message);
+      return res.status(401).json({ message: "Could not verify your Google sign-in. Please try again." });
+    }
+
+    const { sub: googleId, email, given_name: givenName, family_name: familyName, email_verified: emailVerified } = payload;
+    if (!email || !emailVerified) {
+      return res.status(401).json({ message: "Your Google account's email could not be verified." });
+    }
+
+    let user = await User.findOne({ $or: [{ googleId }, { email }] });
+
+    if (!user) {
+      const username = await generateUniqueUsername(email.split("@")[0]);
+      user = await User.create({
+        firstName: givenName || "Google",
+        lastName: familyName || "User",
+        username,
+        email,
+        authProvider: "google",
+        googleId,
+        role: "student",
+      });
+    } else if (!user.googleId) {
+      // An account with this email already exists from normal
+      // registration — link the Google identity to it instead of
+      // creating a duplicate account for the same person.
+      user.googleId = googleId;
+      await user.save();
+    }
+
+    const token = generateToken(user._id);
     res.json({
       token,
       user: {
@@ -289,4 +372,4 @@ async function resetPassword(req, res, next) {
   }
 }
 
-module.exports = { register, login, getMe, updateMe, changePassword, forgotPassword, resetPassword };
+module.exports = { register, login, googleLogin, getMe, updateMe, changePassword, forgotPassword, resetPassword };
