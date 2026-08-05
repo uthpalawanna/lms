@@ -15,10 +15,14 @@ async function calculateBalance(instructorId) {
   });
   const totalWithdrawn = paidOrApproved.reduce((sum, w) => sum + w.amount, 0);
 
+  const pending = await Withdrawal.find({ instructor: instructorId, status: "pending" });
+  const totalPending = pending.reduce((sum, w) => sum + w.amount, 0);
+
   return {
     totalRevenue,
     totalWithdrawn,
-    available: totalRevenue - totalWithdrawn,
+    totalPending,
+    available: totalRevenue - totalWithdrawn - totalPending,
   };
 }
 
@@ -71,4 +75,4 @@ async function getMyWithdrawals(req, res) {
   }
 }
 
-module.exports = { getBalance, requestWithdrawal, getMyWithdrawals };
+module.exports = { getBalance, requestWithdrawal, getMyWithdrawals, calculateBalance };

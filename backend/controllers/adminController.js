@@ -7,6 +7,7 @@ const Wishlist = require("../models/Wishlist");
 const QuizAttempt = require("../models/QuizAttempt");
 const Question = require("../models/Question");
 const { cascadeDeleteCourse } = require("./courseController");
+const { calculateBalance } = require("./withdrawalController");
 const { notifyUser } = require("../utils/notify");
 const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
@@ -159,6 +160,16 @@ async function updateWithdrawalStatus(req, res) {
     }
     const withdrawal = await Withdrawal.findById(req.params.id);
     if (!withdrawal) return res.status(404).json({ message: "Withdrawal not found." });
+
+    if (["approved", "paid"].includes(status) && withdrawal.status === "pending") {
+      const { available } = await calculateBalance(withdrawal.instructor);
+      if (available < 0) {
+        return res.status(400).json({
+          message: "Approving this would exceed the instructor's available balance (other pending requests may need to be resolved first).",
+        });
+      }
+    }
+
     withdrawal.status = status;
     await withdrawal.save();
 

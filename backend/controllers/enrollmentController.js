@@ -50,22 +50,6 @@ async function getMyEnrollments(req, res) {
   }
 }
 
-async function updateEnrollment(req, res) {
-  try {
-    const enrollment = await Enrollment.findById(req.params.id);
-    if (!enrollment) return res.status(404).json({ message: "Enrollment not found." });
-    if (enrollment.student.toString() !== req.userId) {
-      return res.status(403).json({ message: "This isn't your enrollment." });
-    }
-
-    
-    res.json(enrollment);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Could not update the enrollment." });
-  }
-}
-
 async function unenroll(req, res) {
   try {
     const enrollment = await Enrollment.findById(req.params.id);
@@ -118,4 +102,4 @@ async function toggleLessonComplete(req, res) {
   }
 }
 
-module.exports = { enroll, getMyEnrollments, updateEnrollment, unenroll, toggleLessonComplete };
+module.exports = { enroll, getMyEnrollments, unenroll, toggleLessonComplete };

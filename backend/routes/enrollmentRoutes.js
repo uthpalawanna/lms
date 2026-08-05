@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const { body, param } = require("express-validator");
-const { enroll, getMyEnrollments, updateEnrollment, unenroll, toggleLessonComplete } = require("../controllers/enrollmentController");
+const { enroll, getMyEnrollments, unenroll, toggleLessonComplete } = require("../controllers/enrollmentController");
 const requireAuth = require("../middleware/auth");
 const validate = require("../middleware/validate");
 
@@ -15,7 +15,6 @@ router.post(
   enroll
 );
 router.get("/", requireAuth, getMyEnrollments);
-router.put("/:id", requireAuth, idParam, validate, updateEnrollment);
 router.put(
   "/:id/lesson",
   requireAuth,
