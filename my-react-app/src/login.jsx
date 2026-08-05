@@ -41,7 +41,7 @@ const Login = ({ onLoginSuccess }) => {
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
       onLoginSuccess?.({ token: data.token, user: data.user });
-      navigate('/dashboard');
+      navigate(data.user?.role === 'admin' ? '/admin' : '/dashboard');
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed. Please try again.');
     } finally {
@@ -121,8 +121,6 @@ const Login = ({ onLoginSuccess }) => {
                 {showPassword ? <EyeOffIcon /> : <EyeIcon />}
               </button>
             </div>
-
-            <a href="#" className="login-bluehost-link login-anim login-anim-5">Login with Bluehost</a>
 
             <div className="login-row login-anim login-anim-5">
               <label className="login-checkbox-label">
