@@ -8,6 +8,8 @@ const QuizAttempt = require("../models/QuizAttempt");
 const Question = require("../models/Question");
 const { cascadeDeleteCourse } = require("./courseController");
 const { notifyUser } = require("../utils/notify");
+const bcrypt = require("bcryptjs");
+const crypto = require("crypto");
 
 async function getAllUsers(req, res) {
   try {
@@ -38,6 +40,30 @@ async function updateUserRole(req, res) {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Could not update the user's role." });
+  }
+}
+
+
+async function adminResetUserPassword(req, res) {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ message: "User not found." });
+
+    const tempPassword = crypto.randomBytes(6).toString("base64url"); 
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(tempPassword, salt);
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+    await user.save();
+
+    res.json({
+      message: "Temporary password generated. Share it with the user directly — it will not be shown again.",
+      tempPassword,
+      email: user.email,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Could not reset the user's password." });
   }
 }
 
@@ -154,6 +180,7 @@ module.exports = {
   getAllUsers,
   updateUserRole,
   deleteUser,
+  adminResetUserPassword,
   getAllCourses,
   deleteCourseAdmin,
   getPlatformStats,

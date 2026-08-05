@@ -95,6 +95,33 @@ export default function AdminDashboard({ token, currentUserId, onLogout }) {
     }
   };
 
+  const handleResetPassword = async (userId, name) => {
+    if (!window.confirm(`Generate a temporary password for "${name}"? Their current password will stop working immediately.`)) return;
+    setBusyId(userId);
+    try {
+      const res = await fetch(`${ADMIN_URL}/users/${userId}/reset-password`, {
+        method: "PUT",
+        headers: authHeaders,
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.message || "Could not reset the user's password.");
+        return;
+      }
+      // Shown once — the backend never stores or re-sends the plain
+      // password after this. Copy it before closing this dialog.
+      window.prompt(
+        `Temporary password for ${data.email} (copy this now — it won't be shown again):`,
+        data.tempPassword
+      );
+    } catch (err) {
+      console.error(err);
+      alert("Could not reach the server.");
+    } finally {
+      setBusyId(null);
+    }
+  };
+
   const handleDeleteUser = async (userId, name) => {
     if (!window.confirm(`Delete "${name}" permanently? This also removes their enrollments, reviews, and (if they're an admin) their courses.`)) return;
     setBusyId(userId);
@@ -257,15 +284,24 @@ export default function AdminDashboard({ token, currentUserId, onLogout }) {
                             {new Date(u.createdAt).toLocaleDateString()}
                           </td>
                           <td className="px-5 py-3">
-                            {u._id !== currentUserId && (
+                            <div className="flex items-center gap-3">
                               <button
-                                onClick={() => handleDeleteUser(u._id, `${u.firstName} ${u.lastName}`)}
+                                onClick={() => handleResetPassword(u._id, `${u.firstName} ${u.lastName}`)}
                                 disabled={busyId === u._id}
-                                className="text-red-600 text-[12px] font-semibold bg-transparent border-none cursor-pointer"
+                                className="text-[#16a085] text-[12px] font-semibold bg-transparent border-none cursor-pointer"
                               >
-                                {busyId === u._id ? "..." : "Delete"}
+                                {busyId === u._id ? "..." : "Reset Password"}
                               </button>
-                            )}
+                              {u._id !== currentUserId && (
+                                <button
+                                  onClick={() => handleDeleteUser(u._id, `${u.firstName} ${u.lastName}`)}
+                                  disabled={busyId === u._id}
+                                  className="text-red-600 text-[12px] font-semibold bg-transparent border-none cursor-pointer"
+                                >
+                                  {busyId === u._id ? "..." : "Delete"}
+                                </button>
+                              )}
+                            </div>
                           </td>
                         </tr>
                       ))}

@@ -7,7 +7,7 @@ import { API_URL as BASE_URL } from "./api/config";
 const API_URL = `${BASE_URL}/api`;
 
 const ForgotPassword = () => {
-  const [email, setEmail] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
@@ -15,13 +15,13 @@ const ForgotPassword = () => {
   const handleSubmit = async () => {
     setError('');
     setMessage('');
-    if (!email) {
-      setError('Please enter your email address.');
+    if (!identifier) {
+      setError('Please enter your email address or username.');
       return;
     }
     setLoading(true);
     try {
-      const { data } = await axios.post(`${API_URL}/auth/forgot-password`, { email });
+      const { data } = await axios.post(`${API_URL}/auth/forgot-password`, { identifier });
       setMessage(data.message || 'If an account with that email exists, a reset link has been sent.');
     } catch (err) {
       setError(err.response?.data?.message || 'Something went wrong. Please try again.');
@@ -35,7 +35,7 @@ const ForgotPassword = () => {
       <div className="login-card">
         <h1 className="login-title">Forgot Password?</h1>
         <p style={{ color: '#6b7280', fontSize: 14, marginBottom: 16 }}>
-          Enter your email and we'll send you a link to reset your password.
+          Enter your email or username and we'll send you a link to reset your password.
         </p>
 
         {error && <div className="login-error">{error}</div>}
@@ -46,13 +46,13 @@ const ForgotPassword = () => {
         )}
 
         <input
-          type="email"
+          type="text"
           className="login-input"
-          placeholder="user@example.com"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          placeholder="email or username"
+          value={identifier}
+          onChange={(e) => setIdentifier(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
-          autoComplete="email"
+          autoComplete="username"
         />
 
         <button onClick={handleSubmit} disabled={loading} className="login-signin-btn">

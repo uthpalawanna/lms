@@ -28,7 +28,12 @@ router.post(
 	login
 );
 
-router.post("/forgot-password", [body('email').isEmail().withMessage('Valid email is required').normalizeEmail()], validate, forgotPassword);
+router.post(
+	"/forgot-password",
+	[body('identifier').trim().notEmpty().withMessage('Email or username is required')],
+	validate,
+	forgotPassword
+);
 router.post("/reset-password/:token", [body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 characters')], validate, resetPassword);
 router.get("/me", requireAuth, getMe);
 router.put("/me", requireAuth, updateMe);

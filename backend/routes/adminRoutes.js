@@ -6,6 +6,7 @@ const {
   getAllUsers,
   updateUserRole,
   deleteUser,
+  adminResetUserPassword,
   getAllCourses,
   deleteCourseAdmin,
   getPlatformStats,
@@ -18,6 +19,7 @@ router.use(requireAuth, requireAdmin);
 router.get("/stats", getPlatformStats);
 router.get("/users", getAllUsers);
 router.put("/users/:id/role", updateUserRole);
+router.put("/users/:id/reset-password", adminResetUserPassword);
 router.delete("/users/:id", deleteUser);
 router.get("/courses", getAllCourses);
 router.delete("/courses/:id", deleteCourseAdmin);

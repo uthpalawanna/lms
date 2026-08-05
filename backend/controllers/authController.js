@@ -26,9 +26,6 @@ async function register(req, res, next) {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Role is never taken from the request body — every self-registration is a
-    // student. Instructor/admin access can only be granted afterwards by an
-    // existing admin via updateUserRole.
     const newUser = await User.create({
       firstName,
       lastName,
@@ -211,12 +208,18 @@ async function changePassword(req, res, next) {
 
 async function forgotPassword(req, res, next) {
   try {
-    const email = (req.body.email || "").toString().trim().toLowerCase();
-    if (!email) {
-      return res.status(400).json({ message: "Please provide your email address." });
+    const identifier = (req.body.identifier || "").toString().trim();
+    if (!identifier) {
+      return res.status(400).json({ message: "Please provide your email address or username." });
     }
 
-    const user = await User.findOne({ email });
+    const normalized = identifier.toLowerCase();
+    let user;
+    if (identifier.includes("@")) {
+      user = await User.findOne({ email: normalized });
+    } else {
+      user = await User.findOne({ $or: [{ username: identifier }, { email: normalized }] });
+    }
     if (user) {
       const rawToken = crypto.randomBytes(32).toString("hex");
       user.resetPasswordToken = crypto.createHash("sha256").update(rawToken).digest("hex");
@@ -224,19 +227,29 @@ async function forgotPassword(req, res, next) {
       await user.save();
 
       const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${rawToken}`;
+      const isProduction = process.env.NODE_ENV === "production";
 
       try {
         await sendPasswordResetEmail(user.email, resetUrl);
       } catch (mailError) {
         console.error("Failed to send password reset email:", mailError.message);
-        user.resetPasswordToken = undefined;
-        user.resetPasswordExpires = undefined;
-        await user.save();
-        return res.status(500).json({ message: "Could not send the reset email. Please try again later." });
+
+        if (isProduction) {
+          
+          user.resetPasswordToken = undefined;
+          user.resetPasswordExpires = undefined;
+          await user.save();
+          return res.status(500).json({ message: "Could not send the reset email. Please try again later." });
+        }
+
+        
+        console.warn("\n" + "=".repeat(60));
+        console.warn("DEV MODE: email send failed, but here's the reset link:");
+        console.warn(resetUrl);
+        console.warn("=".repeat(60) + "\n");
       }
     }
 
-    // Always respond the same way, whether or not the email exists, so we don't leak account info.
     res.json({ message: "If an account with that email exists, a reset link has been sent." });
   } catch (error) {
     console.error(error);
