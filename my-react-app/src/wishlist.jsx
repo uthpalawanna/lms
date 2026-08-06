@@ -1,6 +1,6 @@
 ﻿import { API_URL } from "./api/config";
 ﻿import React, { useState, useEffect } from "react";
-import CourseThumbnail from "./CourseThumbnail";
+import CourseThumbnail from "./Coursethumbnail";
 import SkeletonCourseGrid from "./SkeletonCourseGrid";
 
 const WISHLIST_URL = `${API_URL}/api/wishlist`;

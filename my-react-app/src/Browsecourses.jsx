@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import CheckoutModal from "./CheckoutModal";
 import { API_URL } from "./api/config";
-import CourseThumbnail from "./CourseThumbnail";
+import CourseThumbnail from "./Coursethumbnail";
 import SkeletonCourseGrid from "./SkeletonCourseGrid";
 
 const COURSES_URL = `${API_URL}/api/courses`;

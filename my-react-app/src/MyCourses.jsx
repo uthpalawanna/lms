@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import CourseBuilderModal from "./CourseBuilderModal";
 import { API_URL as BASE_URL } from "./api/config";
-import CourseThumbnail from "./CourseThumbnail";
+import CourseThumbnail from "./Coursethumbnail";
 import SkeletonCourseGrid from "./SkeletonCourseGrid";
 
 const API_URL = `${BASE_URL}/api/courses`;

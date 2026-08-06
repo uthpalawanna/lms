@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router';
 import axios from 'axios';
 import './Dashboard.css';
 import { API_URL as BASE_URL } from "./api/config";
-import GoogleSignInButton from "./GoogleSignInButton";
+import GoogleSignInButton from "./Googlesigninbutton";
 
 const API_URL = `${BASE_URL}/api`;
 

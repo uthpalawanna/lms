@@ -3,7 +3,7 @@ import CreateQuizModal from "./CreateQuizModal";
 import TakeQuizModal from "./TakeQuizModal";
 import CourseBuilderModal from "./CourseBuilderModal";
 import { API_URL } from "./api/config";
-import CourseThumbnail from "./CourseThumbnail";
+import CourseThumbnail from "./Coursethumbnail";
 
 const QUIZ_URL = `${API_URL}/api/quizzes`;
 const REVIEWS_URL = `${API_URL}/api/reviews`;
