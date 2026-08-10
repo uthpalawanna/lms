@@ -1,15 +1,3 @@
-// One-off script — creates N test student accounts and enrolls some of them
-// (with randomized progress) in your existing published courses, so pages
-// like your instructor dashboard have real numbers to show instead of just
-// your own account.
-//
-// Usage:
-//   node scripts/seedStudents.js            (creates 10 students)
-//   node scripts/seedStudents.js 25          (creates 25 students)
-//
-// All seeded accounts share the password below so you can log in and test
-// as any of them. Safe to run multiple times — it just adds more students
-// each time rather than touching existing data.
 
 require("dotenv").config();
 const mongoose = require("mongoose");
@@ -70,8 +58,6 @@ async function run() {
     });
     createdStudents.push(student);
 
-    // Enroll each seeded student in 1-3 random published courses, with
-    // randomized progress so enrollment/completion numbers look realistic.
     const enrollIn = courses
       .sort(() => Math.random() - 0.5)
       .slice(0, Math.floor(Math.random() * 3) + 1);
