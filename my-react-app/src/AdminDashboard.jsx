@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { API_URL } from "./api/config";
 
 const ADMIN_URL = `${API_URL}/api/admin`;
+const ENROLLMENTS_URL = `${API_URL}/api/enrollments`;
 
 const ROLE_STYLES = {
   admin: "bg-purple-100 text-purple-700",
@@ -33,9 +34,14 @@ export default function AdminDashboard({ token, currentUserId, onLogout }) {
   const [users, setUsers] = useState([]);
   const [courses, setCourses] = useState([]);
   const [withdrawals, setWithdrawals] = useState([]);
+  const [pendingEnrollments, setPendingEnrollments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [busyId, setBusyId] = useState(null);
+  const [manualEnrollStudent, setManualEnrollStudent] = useState("");
+  const [manualEnrollCourse, setManualEnrollCourse] = useState("");
+  const [manualEnrollBusy, setManualEnrollBusy] = useState(false);
+  const [manualEnrollMessage, setManualEnrollMessage] = useState("");
 
   const authHeaders = { Authorization: `Bearer ${token}` };
 
@@ -43,11 +49,12 @@ export default function AdminDashboard({ token, currentUserId, onLogout }) {
     setLoading(true);
     setError("");
     try {
-      const [statsRes, usersRes, coursesRes, withdrawalsRes] = await Promise.all([
+      const [statsRes, usersRes, coursesRes, withdrawalsRes, pendingEnrollRes] = await Promise.all([
         fetch(`${ADMIN_URL}/stats`, { headers: authHeaders }),
         fetch(`${ADMIN_URL}/users`, { headers: authHeaders }),
         fetch(`${ADMIN_URL}/courses`, { headers: authHeaders }),
         fetch(`${ADMIN_URL}/withdrawals`, { headers: authHeaders }),
+        fetch(`${ENROLLMENTS_URL}/pending`, { headers: authHeaders }),
       ]);
       if (statsRes.status === 403 || usersRes.status === 403) {
         setError("Admin access required.");
@@ -57,10 +64,12 @@ export default function AdminDashboard({ token, currentUserId, onLogout }) {
       const usersData = await usersRes.json();
       const coursesData = await coursesRes.json();
       const withdrawalsData = await withdrawalsRes.json();
+      const pendingEnrollData = await pendingEnrollRes.json();
       if (statsRes.ok) setStats(statsData);
       if (usersRes.ok) setUsers(usersData);
       if (coursesRes.ok) setCourses(coursesData);
       if (withdrawalsRes.ok) setWithdrawals(withdrawalsData);
+      if (pendingEnrollRes.ok) setPendingEnrollments(pendingEnrollData);
     } catch (err) {
       console.error(err);
       setError("Could not reach the server. Is the backend running?");
@@ -188,6 +197,85 @@ export default function AdminDashboard({ token, currentUserId, onLogout }) {
     }
   };
 
+  const handleEnrollmentDecision = async (enrollmentId, decision) => {
+    if (decision === "reject") {
+      const reason = window.prompt("Reason for rejecting this request (optional):") || "";
+      if (reason === null) return; // user hit Cancel
+      setBusyId(enrollmentId);
+      try {
+        const res = await fetch(`${ENROLLMENTS_URL}/${enrollmentId}/reject`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json", ...authHeaders },
+          body: JSON.stringify({ reason }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          alert(data.message || "Could not reject the enrollment request.");
+          return;
+        }
+        setPendingEnrollments((prev) => prev.filter((e) => e._id !== enrollmentId));
+      } catch (err) {
+        console.error(err);
+        alert("Could not reach the server.");
+      } finally {
+        setBusyId(null);
+      }
+      return;
+    }
+
+    setBusyId(enrollmentId);
+    try {
+      const res = await fetch(`${ENROLLMENTS_URL}/${enrollmentId}/approve`, {
+        method: "PUT",
+        headers: authHeaders,
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.message || "Could not approve the enrollment request.");
+        return;
+      }
+      setPendingEnrollments((prev) => prev.filter((e) => e._id !== enrollmentId));
+    } catch (err) {
+      console.error(err);
+      alert("Could not reach the server.");
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const handleManualEnroll = async (e) => {
+    e.preventDefault();
+    if (!manualEnrollStudent || !manualEnrollCourse) return;
+
+    setManualEnrollBusy(true);
+    setManualEnrollMessage("");
+    try {
+      const res = await fetch(`${ENROLLMENTS_URL}/admin-enroll`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...authHeaders },
+        body: JSON.stringify({ student: manualEnrollStudent, course: manualEnrollCourse }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setManualEnrollMessage(data.message || "Could not enroll the student.");
+        return;
+      }
+      setManualEnrollMessage("Student enrolled successfully.");
+      setManualEnrollStudent("");
+      setManualEnrollCourse("");
+      // If that student had a pending request for this course, it's now
+      // resolved — drop it from the pending list without a full refetch.
+      setPendingEnrollments((prev) =>
+        prev.filter((p) => !(p.student?._id === manualEnrollStudent && p.course?._id === manualEnrollCourse))
+      );
+    } catch (err) {
+      console.error(err);
+      setManualEnrollMessage("Could not reach the server.");
+    } finally {
+      setManualEnrollBusy(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#eef0f8]">
       <div className="flex justify-between items-center px-6 py-4 bg-white border-b border-[#e2e5ef]">
@@ -241,7 +329,78 @@ export default function AdminDashboard({ token, currentUserId, onLogout }) {
               >
                 Withdrawals ({withdrawals.length})
               </button>
+              <button
+                onClick={() => setTab("enrollments")}
+                className={`text-[13px] px-4 py-2 rounded-full border transition ${
+                  tab === "enrollments"
+                    ? "bg-[#eef0fb] border-[#c7d2fe] text-[#3d56c8] font-semibold"
+                    : "bg-white border-[#e2e5ef] text-slate-500"
+                }`}
+              >
+                Enrollment Requests ({pendingEnrollments.length})
+              </button>
             </div>
+
+            {tab === "enrollments" && (
+              <form
+                onSubmit={handleManualEnroll}
+                className="bg-white border border-[#e2e5ef] rounded-[10px] p-5 mb-4 flex flex-wrap items-end gap-3"
+              >
+                <div className="flex flex-col gap-1">
+                  <label className="text-[12px] text-slate-500 font-semibold">Student</label>
+                  <select
+                    value={manualEnrollStudent}
+                    onChange={(e) => setManualEnrollStudent(e.target.value)}
+                    className="text-sm border border-[#e2e5ef] rounded-lg px-3 py-2 min-w-[220px]"
+                    required
+                  >
+                    <option value="">Select a student…</option>
+                    {users
+                      .filter((u) => u.role === "student")
+                      .map((u) => (
+                        <option key={u._id} value={u._id}>
+                          {u.firstName} {u.lastName} ({u.email})
+                        </option>
+                      ))}
+                  </select>
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <label className="text-[12px] text-slate-500 font-semibold">Course</label>
+                  <select
+                    value={manualEnrollCourse}
+                    onChange={(e) => setManualEnrollCourse(e.target.value)}
+                    className="text-sm border border-[#e2e5ef] rounded-lg px-3 py-2 min-w-[220px]"
+                    required
+                  >
+                    <option value="">Select a course…</option>
+                    {courses.map((c) => (
+                      <option key={c._id} value={c._id}>
+                        {c.title} {c.price > 0 ? `(Rs${Number(c.price).toFixed(2)})` : "(Free)"}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={manualEnrollBusy || !manualEnrollStudent || !manualEnrollCourse}
+                  className="text-sm font-semibold text-white bg-[#3d56c8] rounded-lg px-4 py-2 disabled:opacity-50"
+                >
+                  {manualEnrollBusy ? "Enrolling…" : "Enroll without payment"}
+                </button>
+
+                {manualEnrollMessage && (
+                  <span
+                    className={`text-[13px] ${
+                      manualEnrollMessage.includes("successfully") ? "text-green-600" : "text-red-600"
+                    }`}
+                  >
+                    {manualEnrollMessage}
+                  </span>
+                )}
+              </form>
+            )}
 
             <div className="bg-white border border-[#e2e5ef] rounded-[10px] overflow-hidden">
               {loading ? (
@@ -345,7 +504,7 @@ export default function AdminDashboard({ token, currentUserId, onLogout }) {
                     </tbody>
                   </table>
                 </div>
-              ) : (
+              ) : tab === "withdrawals" ? (
                 <div className="overflow-x-auto">
                   <table className="w-full border-collapse min-w-[720px]">
                     <thead>
@@ -397,6 +556,54 @@ export default function AdminDashboard({ token, currentUserId, onLogout }) {
                                 Mark paid
                               </button>
                             )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : pendingEnrollments.length === 0 ? (
+                <p className="text-center py-12 text-slate-400">No pending enrollment requests.</p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse min-w-[640px]">
+                    <thead>
+                      <tr className="border-b border-[#eef0f8]">
+                        {["Student", "Course", "Requested", ""].map((h) => (
+                          <th key={h} className="text-left px-5 py-3 text-[13px] text-slate-500 font-semibold">
+                            {h}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {pendingEnrollments.map((e) => (
+                        <tr key={e._id} className="border-b border-[#f3f4f9] last:border-b-0">
+                          <td className="px-5 py-3 text-sm">
+                            {e.student?.firstName} {e.student?.lastName}
+                            <div className="text-[12px] text-slate-400">{e.student?.email}</div>
+                          </td>
+                          <td className="px-5 py-3 text-sm text-slate-500">{e.course?.title}</td>
+                          <td className="px-5 py-3 text-[13px] text-slate-500">
+                            {new Date(e.createdAt).toLocaleDateString()}
+                          </td>
+                          <td className="px-5 py-3">
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => handleEnrollmentDecision(e._id, "approve")}
+                                disabled={busyId === e._id}
+                                className="text-[#3d56c8] text-[12px] font-semibold bg-transparent border-none cursor-pointer"
+                              >
+                                {busyId === e._id ? "..." : "Approve"}
+                              </button>
+                              <button
+                                onClick={() => handleEnrollmentDecision(e._id, "reject")}
+                                disabled={busyId === e._id}
+                                className="text-red-600 text-[12px] font-semibold bg-transparent border-none cursor-pointer"
+                              >
+                                {busyId === e._id ? "..." : "Reject"}
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))}

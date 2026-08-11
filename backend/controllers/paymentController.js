@@ -4,7 +4,7 @@ const Course = require("../models/Course");
 const Enrollment = require("../models/Enrollment");
 const User = require("../models/User");
 const Cart = require("../models/Cart");
-const { notifyUser } = require("../utils/notify");
+const { notifyUser, notifyUsers } = require("../utils/notify");
 
 const MERCHANT_ID = process.env.PAYHERE_MERCHANT_ID;
 const MERCHANT_SECRET = process.env.PAYHERE_MERCHANT_SECRET;
@@ -192,6 +192,7 @@ exports.payHereNotify = async (req, res) => {
       await order.save();
 
       if (order.courses && order.courses.length > 0) {
+        const admins = await User.find({ role: "admin" }).select("_id");
         for (const item of order.courses) {
           const already = await Enrollment.findOne({ student: order.student, course: item.course });
           if (!already) {
@@ -199,14 +200,21 @@ exports.payHereNotify = async (req, res) => {
               student: order.student,
               course: item.course,
               pricePaid: item.price,
+              status: "pending",
             });
 
             const courseDoc = await Course.findById(item.course).select("title");
             await notifyUser({
               recipient: order.student,
               type: "payment",
-              title: "Enrollment confirmed",
-              body: `You're now enrolled in ${courseDoc?.title || "the course"}.`,
+              title: "Payment received",
+              body: `Payment received for ${courseDoc?.title || "the course"}. Your enrollment is pending admin approval.`,
+              course: item.course,
+            });
+            await notifyUsers(admins.map((a) => a._id), {
+              type: "payment",
+              title: "New paid enrollment request",
+              body: `A student paid for ${courseDoc?.title || "a course"} and is awaiting approval.`,
               course: item.course,
             });
           }
@@ -224,14 +232,22 @@ exports.payHereNotify = async (req, res) => {
             student: order.student,
             course: order.course,
             pricePaid: order.amount,
+            status: "pending",
           });
 
           const courseDoc = await Course.findById(order.course).select("title");
           await notifyUser({
             recipient: order.student,
             type: "payment",
-            title: "Enrollment confirmed",
-            body: `You're now enrolled in ${courseDoc?.title || "the course"}.`,
+            title: "Payment received",
+            body: `Payment received for ${courseDoc?.title || "the course"}. Your enrollment is pending admin approval.`,
+            course: order.course,
+          });
+          const admins = await User.find({ role: "admin" }).select("_id");
+          await notifyUsers(admins.map((a) => a._id), {
+            type: "payment",
+            title: "New paid enrollment request",
+            body: `A student paid for ${courseDoc?.title || "a course"} and is awaiting approval.`,
             course: order.course,
           });
         }
