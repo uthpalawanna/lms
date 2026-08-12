@@ -53,10 +53,36 @@ async function getMyReviews(req, res) {
 
 async function getCourseReviews(req, res) {
   try {
-    const reviews = await Review.find({ course: req.params.courseId })
-      .populate("student", "firstName lastName username")
-      .sort({ createdAt: -1 });
-    res.json(reviews);
+    const page = parseInt(req.query.page, 10);
+    const limit = parseInt(req.query.limit, 10);
+    const filter = { course: req.params.courseId };
+
+    if (!page) {
+      const reviews = await Review.find(filter)
+        .populate("student", "firstName lastName username")
+        .sort({ createdAt: -1 })
+        .limit(200);
+      return res.json(reviews);
+    }
+
+    const pageSize = Math.min(Math.max(limit || 20, 1), 50);
+    const skip = (Math.max(page, 1) - 1) * pageSize;
+
+    const [reviews, total] = await Promise.all([
+      Review.find(filter)
+        .populate("student", "firstName lastName username")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(pageSize),
+      Review.countDocuments(filter),
+    ]);
+
+    res.json({
+      reviews,
+      total,
+      page: Math.max(page, 1),
+      pages: Math.max(Math.ceil(total / pageSize), 1),
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Could not fetch reviews for this course." });
@@ -90,9 +116,6 @@ async function deleteReview(req, res) {
     }
 
     const isAuthor = review.student.toString() === req.userId;
-    // Course instructors can no longer delete reviews on their own courses —
-    // that let them silently remove negative feedback. Only the review's
-    // author, or a platform admin doing moderation, can remove it.
     const requester = isAuthor ? null : await User.findById(req.userId).select("role");
     const isPlatformAdmin = requester?.role === "admin";
 

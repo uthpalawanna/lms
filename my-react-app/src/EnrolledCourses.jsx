@@ -13,8 +13,17 @@ const TABS = [
   { id: "browse", label: "Browse Courses" },
   { id: "all", label: "Enrolled Courses" },
   { id: "active", label: "Active Courses" },
+  { id: "pending", label: "Pending Approval" },
+  { id: "rejected", label: "Declined" },
   { id: "completed", label: "Completed Courses" },
 ];
+
+const STATUS_BADGES = {
+  active: { label: "Active", color: "#16a34a", bg: "rgba(22,163,74,0.1)" },
+  completed: { label: "Completed", color: "#3d56c8", bg: "rgba(61,86,200,0.1)" },
+  pending: { label: "Pending approval", color: "#b45309", bg: "rgba(180,83,9,0.1)" },
+  rejected: { label: "Declined", color: "#dc2626", bg: "rgba(220,38,38,0.1)" },
+};
 
 function EmptyState({ text, color }) {
   return (
@@ -306,11 +315,17 @@ export default function EnrolledCourses({ token, user, onCourseClick }) {
             {visibleEnrollments.map((enrollment) => {
               const courseId = enrollment.course?._id;
               const isOpening = openingId === courseId;
+              const canOpen = enrollment.status === "active" || enrollment.status === "completed";
+              const badge = STATUS_BADGES[enrollment.status] || {
+                label: enrollment.status,
+                color: "#5c6b8a",
+                bg: "rgba(92,107,138,0.1)",
+              };
               return (
                 <div key={enrollment._id} className="course-card">
                   <div
-                    onClick={() => handleOpenEnrolledCourse(courseId)}
-                    style={{ cursor: "pointer" }}
+                    onClick={canOpen ? () => handleOpenEnrolledCourse(courseId) : undefined}
+                    style={{ cursor: canOpen ? "pointer" : "default" }}
                   >
                     <CourseThumbnail
                       thumbnail={enrollment.course?.thumbnail}
@@ -321,17 +336,39 @@ export default function EnrolledCourses({ token, user, onCourseClick }) {
                     <p className="course-date">{enrollment.course?.category}</p>
                     <h3
                       className="course-title"
-                      onClick={() => handleOpenEnrolledCourse(courseId)}
-                      style={{ cursor: "pointer" }}
+                      onClick={canOpen ? () => handleOpenEnrolledCourse(courseId) : undefined}
+                      style={{ cursor: canOpen ? "pointer" : "default" }}
                     >
                       {isOpening ? "Opening..." : enrollment.course?.title}
                     </h3>
+                    {enrollment.status === "pending" && (
+                      <p style={{ fontSize: 12, color: "#5c6b8a", marginTop: 4 }}>
+                        Payment received — an admin needs to approve this enrollment before you can start.
+                      </p>
+                    )}
+                    {enrollment.status === "rejected" && (
+                      <p style={{ fontSize: 12, color: "#5c6b8a", marginTop: 4 }}>
+                        {enrollment.rejectionReason
+                          ? `Declined: ${enrollment.rejectionReason}`
+                          : "This request was declined. Contact an admin for details."}
+                      </p>
+                    )}
                   </div>
                   <div className="course-footer" style={{ flexWrap: "wrap", gap: 8 }}>
                     <div>
-                      <span className="course-price">{enrollment.progress}% complete</span>
-                      <span style={{ fontSize: 12, color: "#5c6b8a", textTransform: "capitalize", marginLeft: 8 }}>
-                        {enrollment.status}
+                      {canOpen && <span className="course-price">{enrollment.progress}% complete</span>}
+                      <span
+                        style={{
+                          fontSize: 12,
+                          fontWeight: 600,
+                          color: badge.color,
+                          background: badge.bg,
+                          borderRadius: 999,
+                          padding: "3px 10px",
+                          marginLeft: canOpen ? 8 : 0,
+                        }}
+                      >
+                        {badge.label}
                       </span>
                     </div>
                     <button
@@ -348,7 +385,11 @@ export default function EnrolledCourses({ token, user, onCourseClick }) {
                         cursor: "pointer",
                       }}
                     >
-                      {unenrollingId === enrollment._id ? "Removing..." : "Unenroll"}
+                      {unenrollingId === enrollment._id
+                        ? "Removing..."
+                        : enrollment.status === "pending"
+                        ? "Cancel request"
+                        : "Unenroll"}
                     </button>
                   </div>
                 </div>
