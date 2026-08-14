@@ -13,8 +13,6 @@ const TABS = [
   { id: "browse", label: "Browse Courses" },
   { id: "all", label: "Enrolled Courses" },
   { id: "active", label: "Active Courses" },
-  { id: "pending", label: "Pending Approval" },
-  { id: "rejected", label: "Declined" },
   { id: "completed", label: "Completed Courses" },
 ];
 
